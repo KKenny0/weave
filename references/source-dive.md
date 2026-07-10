@@ -1,130 +1,233 @@
 # Source Dive Workflow
 
-Triggered when user provides: technical project name / GitHub URL / framework / library name. Output: Chinese technical deep-dive article on internal implementation, with doc-vs-source diffs surfaced and optionally transferable engineering patterns.
+Triggered when the user provides a technical project name, GitHub URL, framework, or library. Output is a Chinese technical deep-dive article that explains load-bearing behavior, verifies important claims, and surfaces documentation-versus-source differences.
 
 ## Phase 1: Discover
 
-Gather repo + docs + papers. Parallels `collect.md` but with technical-source specifics (GitHub API, repo structure, file-size classification).
+Build a source model around the user's question, not a generic repository inventory.
 
-### Step 1: Confirm input
+### Step 1: Parse the investigation
 
-User typically provides topic (required, like "Hermes Agent" / "LlamaIndex" / "Vite"), optional `repo_url`, optional `docs_url`, optional `paper_urls` (for academic projects), and optional focus areas. Preserve each named focus area as a dedicated analysis path and give it a dedicated chapter or clearly labeled section in the final plan.
+Capture:
 
-### Step 2: Search and locate (parallel)
+- topic and repository URL
+- official docs and papers when relevant
+- `q`: what the user wants to understand or decide
+- every named focus area
+- available repository capabilities: local checkout, remote tree reader, file reader, background agents, shell, and safe test execution
 
-Run in parallel: GitHub repo (`WebSearch "{topic} github"` if `repo_url` missing, verify official/main by stars + recent activity); official docs (`WebSearch "{topic} documentation"` if `docs_url` missing); papers (optional, `WebSearch "{topic} arxiv"`); community resources (`WebSearch "{topic} deep dive"` or `"{topic} 源码分析"`).
+Each focus area becomes a coverage obligation and later maps to a behavior path or a clearly labeled limitation.
 
-If repo can't be found, stop and ask user for explicit `repo_url`. Don't fabricate.
+### Step 2: Confirm the canonical source
 
-### Step 3: Get repo structure
+Prefer evidence in this order:
 
-Once GitHub repo confirmed, call `mcp__zread__get_repo_structure` for directory tree. Drill into root entries (README/CONTRIBUTING/entry files), core code dirs (src/, lib/, agent/, core/), config files (pyproject.toml, package.json), doc dirs. Drill key dirs until structure is clear.
+1. local checkout at a known commit
+2. official repository at a commit SHA or tag
+3. official docs tied to a version
+4. official engineering posts or papers
+5. community analysis for leads only
 
-### Step 4: Fetch core docs
+If the official repository cannot be identified, stop and ask for the URL. Record the commit or tag used so file evidence does not float with the default branch.
 
-`mcp__web-reader__webReader` on key doc pages. Priority: Getting Started / Overview, Architecture / Design, API Reference, Key guides. Per `SKILL.md` Pre-check fetch budget: 3 attempts max per source. On 429, switch to WebFetch or add 2-3s delay.
+### Step 3: Map the repository
 
-### Step 5: Identify key source files
+Use the best available tree reader. Inspect root docs and configs, entry points, core code, tests, generators, plugin or adapter directories, and release metadata. Tool names are implementation details: if a repository MCP or background agent is unavailable, fall back to local files, native fetch, or serial main-thread reads.
 
-Based on repo structure, identify files needing deep analysis. Selection criteria: entry points (main.py / app.py / index.ts), core logic (most likely to contain primary mechanism), state management (DB / cache / session), config and constants, tool/plugin registration.
+Classify files on two independent axes.
 
-Classify by size:
+#### Analysis priority
 
-| Size | Tag | Phase 2 handling |
-|---|---|---|
-| < 50KB | `small` | Main thread reads directly |
-| 50-200KB | `medium` | Background agent |
-| > 200KB | `large` | Save locally first, then background agent |
+| Priority signal | Why it matters |
+|---|---|
+| Public entry / command / API | Starts behavior visible to users |
+| State owner | Determines what persists and changes |
+| Router / registry / loader | Controls extension and dispatch |
+| Boundary / adapter | Defines dependencies and failure behavior |
+| User focus | Directly answers `q` |
+| Tests for a core path | Reveal intended invariants and edge cases |
+| Generated / vendored / fixture | Usually evidence, rarely the explanatory center |
 
-Count cap: 5-15 files. If more, rank by core-ness, take top 15.
+#### Read scheduling
 
-### Step 6: Read small files in main thread
+| Size | Handling |
+|---|---|
+| <50KB | Main thread can read directly |
+| 50-200KB | Segment or use a background agent |
+| >200KB | Save or segment first; inspect only relevant regions |
 
-While waiting on background setup, main thread reads `small` files via `mcp__zread__read_file`. Extract: core class names + inheritance, key function signatures + responsibilities, config constants + defaults, import dependencies (module interaction hints).
+Size controls reading mechanics, never analytical importance. A small state machine can outrank a large generated file.
 
-### Step 7: Discovery summary
+Select 5-15 files or symbols that cover the entry, state, dispatch, boundaries, failure path, and named focus areas. Explain why each is selected.
 
-Output as Phase 2 input: topic, repo URL (stars, last commit), docs URL (N pages fetched), papers (if any), key source files (path + size + tag + one-line description), doc core content (page + 2-3 sentence summary), initial observations.
+### Step 4: Read docs as claims
+
+Fetch overview, architecture, key guides, configuration, and extension documentation. Record every load-bearing doc statement as a claim to verify against code or behavior. Examples:
+
+- default value or supported mode
+- plugin discovery rule
+- lifecycle order
+- persistence promise
+- error or fallback behavior
+- packaging or generation claim
+
+Docs are evidence about intended behavior. Source and runtime evidence decide actual behavior.
+
+### Step 5: Discovery brief
+
+Produce internal Phase 2 input:
+
+- repository, commit, docs version
+- user question and focus obligations
+- selected entries, state owners, registries, boundaries, and tests
+- file size only as a read-scheduling tag
+- doc claims to verify
+- candidate behavior paths
+- safe runtime probes available
+- coverage gaps
 
 ## Phase 2: Analyze
 
-Parallel source-code analysis + knowledge map construction.
+Explain how the system behaves. Files and symbols are evidence nodes inside behavior paths.
 
-### Step 1: Prepare analysis
+### Step 1: Trace load-bearing paths
 
-Split Phase 1 files: main thread group (`small`) and parallel group (`medium`/`large`).
+Choose 2-5 paths that answer `q`. Use this shape:
 
-### Step 2: Launch parallel analysis
+```text
+trigger -> entry -> routing -> state change -> extension/boundary -> output or failure
+```
 
-For each `medium`/`large` file, spawn a background agent in a single message (parallel, not serial). If background agents are unavailable, read the same files serially in the main thread; reduced concurrency must not reduce coverage. Each agent or serial pass uses the best available repository reader (segmented if huge) and extracts: top 10 core classes/functions (one-sentence responsibility each), key mechanism (what + how, 2-3 sentences), module interactions (imports + who imports this), design patterns used (which + why), hardcoded constants/thresholds/defaults, non-obvious details (only visible from code, not docs), and — if the file implements an enum-style system (N layers / M stages / K modes / P adapters) — per-item: purpose, implementation mechanism (function/constant/config), trigger/scope, key differences from other items, concrete evidence.
+For each path capture:
 
-Agent output rules: 2-3 sentences per point, but 3-5 sentences per enum item (don't conflate different items into one paragraph); quote key code lines only, no large blocks; Chinese.
+- initiating command, request, hook, or API
+- functions and symbols crossed
+- state read and written
+- defaults, thresholds, and configuration
+- external boundary and fallback
+- observable result
+- failure propagation and recovery
+- tests that assert the path
 
-### Step 3: Main thread analyzes small files (parallel with agents)
+When paths share a segment, explain the shared mechanism once and show where they diverge.
 
-While agents run, main thread reads `small` files. Focus: what role does this module play in the whole system? What problem does it solve? Any non-obvious implementation details?
+### Step 2: Read in parallel when useful
 
-### Step 4: Collect background agent results
+Background agents may read independent medium or large regions. Dispatch them together. If unavailable, execute the same reads serially; reduced concurrency must not reduce the selected path coverage.
 
-Per agent: core findings (2-3), key mechanism description, module relationships, doc-undocumented details. If an agent's analysis is shallow (file too large, partial read), flag for follow-up.
+Agent or serial output must report behavior evidence, not a top-N symbol list. Enumerate classes or modes only when the taxonomy itself changes behavior. For an enumeration larger than 10 items, select the 5-8 items carrying the architecture or user focus, mark `[选取 N/M 项]`, and state the selection criterion.
 
-### Step 5: Build knowledge map
+### Step 3: Verify safe behavior
 
-Aggregate all analysis (main thread + agents) into a knowledge map with 6 subsections:
+When the checkout can run without new accounts, destructive actions, or external state changes:
 
-1. **Architecture overview**: one paragraph + ASCII module-relationship diagram
-2. **Core module list**: one line per module (`{module}: {responsibility} → depends on {others}`)
-3. **Key mechanism list**: one paragraph per mechanism (`**{name}**: {how}. Why designed this way.`)
-4. **Doc vs source diffs**: every place docs disagree with source (`**{diff}**: docs say {X}, source actually {Y}. Impact: {Z}.`)
-5. **Non-obvious findings**: only visible from reading source
-6. **Transferable patterns** (prep for optional final chapter): 0-3 groups — pattern name (short memorable, e.g. "Plugin Registry"), how this project uses it (specific to modules/functions), why it works here, applicable scenarios, optional architecture formula (e.g. `plugin system = interface contract + registry + loader + lifecycle hooks`). Also 0-2 anti-patterns (over-engineered / painful / wrong, mark "don't do this" with reason).
+- run existing focused tests for a core path;
+- run `--check`, dry-run, inspect, or read-only CLI commands;
+- compare generated metadata with its source;
+- inspect runtime defaults or a minimal local output.
 
-**Quality gate**: if material is too thin to extract real patterns, output "迁移素材不足" — the optional final chapter downgrades to a brief summary.
+Do not install a new service or mutate production state for an article. When a probe is unavailable or fails, mark the related conclusion `static inference` and include the reason. Never report inferred behavior as runtime-verified.
 
-### Step 6: Plan chapter skeleton
+### Step 4: Extract invariants and constraints
 
-Based on knowledge map, plan 6-8 chapters. Each chapter = one core theme (mechanism / architecture layer / comparison set). Chapters have logical dependency (earlier sets up later). Reader's path: macro → micro, concept → implementation.
+Across paths, find the small set of rules that explain multiple behaviors:
+
+- one source of truth
+- state ownership
+- ordering or lifecycle invariant
+- default-deny or allowlist boundary
+- idempotency or replay rule
+- extension contract
+- compatibility constraint
+
+For each candidate invariant, identify the code that enforces it, the test or behavior that exposes it, and what breaks when it is removed.
+
+### Step 5: Compare docs, source, and runtime
+
+Record differences explicitly:
+
+```text
+Claim: docs say X
+Source: code at commit Y implements Z
+Runtime: probe observed R, or not verified
+Impact: what a user or contributor would misunderstand
+```
+
+Source wins over prose for implemented behavior; runtime wins when environment and version match. Preserve version differences instead of calling them contradictions.
+
+### Step 6: Generate explanatory lenses
+
+Use the evidence to form 1-4 candidates. Useful lens families include:
+
+- behavior or data flow
+- state lifecycle
+- core constraint or invariant
+- extension and dispatch system
+- failure and recovery boundary
+- documentation-versus-reality delta
+
+These are search directions, not mandatory sections. A candidate must reorganize the behavior paths and explain more than one local fact. Discard a lens that only renames the module list.
+
+For transferable patterns, require:
+
+- concrete enforcing symbols and configuration;
+- why the pattern works in this project;
+- what fails when a component is removed;
+- applicable and inapplicable scenarios;
+- a counterexample or boundary.
+
+If evidence is thin, write `迁移素材不足` and skip a standalone migration chapter.
+
+### Step 7: Select the article spine
+
+Select the lens that best answers `q`, has the strongest verified evidence, and produces the clearest path dependency. Prefer a narrower verified explanation over a broad static one.
+
+Build a chapter map. Every chapter must serve one of: establish path, explain mechanism, contrast implementation, test invariant, expose boundary, or transfer pattern. Named focus areas must map to a chapter or an explicit coverage limitation.
 
 ## Phase 3: Compose
 
-Write the full technical article from the knowledge map.
+Write the technical article from the selected lens and behavior evidence.
 
-### Step 1: Confirm chapter plan + optional final chapter
+### Structure rules
 
-Each chapter title ≤10 字, one-sentence overview, logical dependency between chapters.
+- Let the selected lens determine chapter count and order; 6-8 chapters is a heuristic, not a gate.
+- Start with the user-visible behavior or load-bearing question, then trace inward.
+- Use diagrams for multi-module paths and tables for real multi-dimensional comparisons.
+- Do not organize the article by repository directory or read order.
+- Keep different modes or adapters separate when their behavior differs.
+- Merge items only when they share a mechanism and failure boundary.
 
-**Optional final chapter "Engineering Migration"**: if Phase 2 Section 5.6 produced valid transferable patterns (not "迁移素材不足"), include this chapter (reusable design patterns + architecture formulas + anti-patterns). If thin, skip.
+### Evidence rules
 
-Write directly, don't pause for user confirmation. List structure in delivery report; user can request restructure after. Exception: if any chapter needed more material mid-compose, flag explicitly.
+- Cite commit, path, symbol, configuration, test, or runtime probe for technical claims.
+- Prefer commit-pinned permalinks when available; line numbers alone drift.
+- Mark static inference and incomplete reads.
+- Surface documentation differences where they affect understanding.
+- Never turn a community explanation into source truth.
 
-### Step 2: Write chapter by chapter
+### Optional Engineering Migration
 
-Per chapter: recall relevant knowledge map content (mechanisms, source details, diffs, findings); optional Q-A skeleton for chapters with 3+ interrelated mechanisms (mix Q types: action / comparison / causal / boundary; bans: "what is X?", "how many steps?", "is X important?"); write following voice rules; chapter self-review (every claim sourced, doc-vs-source diffs flagged, no AI patterns).
+Include only if Phase 2 produced validated transferable patterns. For each pattern: name, definition, project mechanism, boundary, applicable scenario, inapplicable scenario, and evidence. One valid pattern is enough; do not pad to three.
 
-Voice: logically rigorous, narrative progression, direct, occasional first-person, occasionally colloquial ("说白了" / "说实话" as seasoning not filler), professional but conversational, critical (cover strengths and weaknesses).
+### Quality audit
 
-Per-chapter requirements: every technical claim cites source file / line / config value; source-over-docs (when they disagree, source wins, flag the diff); concrete > abstract (code snippets, config values, data flow); tables for multi-dimension comparison; stepwise/flow for complex mechanisms; no chapter-end summary sentences; **enumeration depth**: when a chapter has N parallel items (10 layers / 4 stages / 3 modes), each item gets its own paragraph with purpose (1 sentence), implementation mechanism (2-3 sentences with function/config names), design decision (1-2 sentences), concrete evidence (code snippet or config value). If an enumeration has more than 10 items, select the 5-8 items that carry the architecture or user focus, state `[选取 N/M 项]`, and list the selection criterion. If material is thin for a selected item, mark `[素材不足，待补充]` rather than glossing. Different items don't merge unless tightly coupled.
+Check:
 
-#### Optional final chapter: Engineering Migration
+- Can each named focus area be followed through a behavior path?
+- Does the article explain state changes and failure paths, not only happy-path classes?
+- Did file-size scheduling accidentally become an importance ranking?
+- Are runtime claims distinguished from static inference?
+- Does the selected lens change the chapter structure?
+- Do transfer patterns survive component-removal and counterexample tests?
 
-If confirmed, write from Phase 2 Section 5.6: 2-3 stealable design patterns (name + definition + how this project uses it + applicable scenarios + architecture formula if available), 0-2 anti-patterns (description + why not). Rules: no升华, only engineering facts; every pattern has source evidence; if only 1 valid pattern, write 1; chapter length ≈ half of others.
+### Voice Pass and output
 
-If 5.6 said "迁移素材不足", downgrades to 3-5 takeaway summary merged into existing final chapter, not standalone.
+Run `voice-pass.md`, then write `{topic}-source-dive_{YYYY-MM-DD}.md` per `output-spec.md`.
 
-### Step 4: Voice Pass
+Delivery report: article path, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, transferable patterns, anti-patterns, and coverage gaps.
 
-See `voice-pass.md`. Mandatory. De-AI scan + style scan. Same 10 patterns apply. Technical-article specifics: hedge phrases still banned, em-dash still banned, 段末收尾总结句 still cut, 工整并列 bold 标题 still varies tone. Style scan: if user has prior technical articles in workspace, scan 1-2 for voice/length/structure preferences.
+Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
 
-### Step 5: Write final file + delivery report
+## Optional vault integration
 
-Write `.md` per `output-spec.md`. File naming: `{topic}-source-dive_{YYYY-MM-DD}.md`.
-
-Delivery report (`voice-pass.md` Step 4): article path, word count, chapter count, Voice Pass execution (AI patterns caught), style reference used (or skipped). **Source-dive-specific**: doc-vs-source diffs found (count + brief), transferable patterns extracted (count + names), anti-patterns flagged (count).
-
-## Output
-
-After Voice Pass, write file. **Stop at publish confirmation.** Do NOT push, post, distribute, commit unless user explicitly asks.
-
-## Optional: Vault integration suggestion
-
-If `loom-maintain` skill is installed (check available skills), suggest user run it for vault integration. source-dive itself doesn't touch vault. If not installed, skip — output is self-contained.
+If `loom-maintain` is installed, suggest it for vault integration. Source-dive itself does not modify the vault.
