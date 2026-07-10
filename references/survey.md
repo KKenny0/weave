@@ -1,219 +1,217 @@
 # Survey Workflow
 
-Triggered when user provides: domain name / research direction (e.g., "RAG", "agent memory systems", "knowledge graph reasoning"). Output is a 学案体 Chinese domain map covering research programs, core disputes, evolution timeline, open problems, and entry recommendations.
+Triggered when the user provides a domain name or research direction such as "RAG", "agent memory systems", or "knowledge graph reasoning". Output is a Chinese domain map whose organizing lens is selected from evidence rather than imposed in advance.
 
-This workflow is for **mapping a domain**, not deep-reading specific sources. If user has specific sources, route to `deep-read.md` instead.
+This workflow maps a domain. If the user supplied concrete sources and wants those sources read closely, route to `deep-read.md`.
 
 ## Table of Contents
 
-- Phase 1: Scout — build source catalog with structural roles (5 steps)
-- Phase 2: Map — structure catalog into 5 modules (research programs / core disputes / evolution / open problems / entry recommendations)
-- Phase 3: Compose — write 学案体 domain map
+- Phase 1: Scout — build an evidence-typed Source Catalog
+- Phase 2: Map — generate and select domain-map lenses
+- Phase 3: Compose — write the map through the selected lens
 
 ## Phase 1: Scout
 
-Build a structured source catalog. Goal: identify structural roles sources play, not read every paper in depth (that's deep-read's job).
+Build a Source Catalog that reveals the domain's structure. The catalog is an internal working-memory artifact, not a separate user-facing file unless requested.
 
 ### Step 1: Parse input
 
-topic (domain name or research direction; if too broad like "AI" or "CS", suggest narrowing to sub-field); scope (`broad` for whole-domain, `focused` for specific sub-field/problem; default `broad`); context (user's research intent — use to skip redundant work).
+Capture:
 
-### Step 2: Multi-angle web search
+- `topic`: domain or research direction; narrow labels that are too broad to map honestly
+- `scope`: `broad` or `focused`; default `broad`
+- `q`: what the user wants the map to help them understand or decide
+- named subtopics: preserve each as a coverage obligation
 
-3-5 rounds of WebSearch with different query angles. Per `SKILL.md` Pre-check fetch budget: 3 attempts max per source. Suggested rounds: (1) surveys/overviews (`"{topic}" survey OR review OR 综述 OR "state of the art"`); (2) foundational work (`"{topic}" foundational OR seminal OR "key papers" OR 经典`); (3) core disputes (`"{topic}" debate OR controversy OR "open question" OR 争议`); (4) frontier (`"{topic}" "recent advances" OR "future directions" OR "open problems"`); (5) optional Chinese resources (`"{topic}" 综述 OR 教程 OR 研究现状`).
+### Step 2: Search from different angles
 
-If a search backend rejects boolean operators or quoted phrases, retry with short unquoted keywords. Search syntax is a convenience, not a dependency.
+Run 3-5 search rounds. Use short unquoted keywords when boolean or quoted syntax fails.
 
-After each round: scan titles + abstracts, drop obviously irrelevant. Keep 15-30 candidate sources.
+Useful angles:
 
-### Step 3: Quick-read filter
+1. definitions and systematic reviews
+2. foundational work and origin stories
+3. competing methods or architectures
+4. empirical comparisons and benchmarks
+5. open problems, failures, and recent shifts
+6. production or institutional evidence when relevant to `q`
 
-For each candidate: title + abstract + intro + conclusion only. Don't full-read.
+Search syntax is not methodology. If a backend rejects a complex query, simplify it rather than retrying the same expression.
 
-Tag structural role per source: 奠基性 (widely cited, defines core concepts/terms), 综述性 (systematic review), 桥梁性 (connects routes/sub-fields), 前沿性 (last 1-2 years, new methods/questions), 争议性 (challenges consensus). Tag domain label (which program/school, approximation OK). Tag availability: 全文可达 / 仅摘要 / 付费墙 (flag for user).
+### Step 3: Type the evidence
 
-### Step 4: Deep search
+Quick-read title, abstract or executive summary, introduction, and conclusion. Record what kind of claim each source can support:
 
-Targeted searches based on Round 1-5 findings: important program but material thin → search that program's key works; core dispute found but one side thin → supplement weaker side; time gap in catalog → try to fill.
+| Evidence type | Can support | Cannot support alone |
+|---|---|---|
+| Primary paper / official dataset | method, result, measured limitation | whole-field consensus |
+| Systematic review / strong survey | taxonomy, coverage, historical synthesis | current product behavior without verification |
+| Official docs / engineering post | implementation, defaults, adoption claim by its owner | independent comparative superiority |
+| Independent technical analysis | cross-source interpretation, implementation contrast | unverified proprietary facts |
+| Community discussion | practice signal, vocabulary, candidate problem | prevalence, consensus, or scientific result |
+
+Tag each source with: evidence type, domain label, availability, date, and one structural contribution. Treat product pages and SEO summaries as discovery leads, not final evidence.
+
+### Step 4: Search until structural saturation
+
+After the initial rounds, search specifically for:
+
+- a thin side of an important dispute;
+- an unexplained bottleneck;
+- a missing method family;
+- a time gap in a claimed transition;
+- the user's named focus area.
+
+Stop when two consecutive targeted rounds add no new method family, dispute axis, bottleneck, or evidence type. Source counts are a coverage heuristic, not a quality gate. Fewer than 10 strong sources requires a low-confidence warning; do not pad the catalog with weak pages.
 
 ### Step 5: Build Source Catalog
 
 ```markdown
 # Source Catalog — {topic}
 
-> Domain: {topic}
-> Scope: {scope}
-> Date: {YYYY-MM-DD}
-
-| ID | Title | Source | Structural role | Domain label | Availability | Key finding |
-|----|-------|--------|-----------------|--------------|--------------|-------------|
-| S1 | ... | URL | 奠基性 | Program A | 全文 | Defined concept X |
-| ... |
+| ID | Title | URL | Evidence type | Structural role | Domain label | Availability | Key contribution |
+|----|-------|-----|---------------|-----------------|--------------|--------------|------------------|
+| S1 | ... | ... | Primary paper | Defines method X | Route A | Full text | ... |
 ```
 
-Rules: total 15-40 sources; each research program gets at least 2-3 representatives; frontier sources ≤ 1/3 of total; if a direction is obviously thin, mark `[覆盖度有限: {direction}]` at catalog end.
+Completion check:
 
-Source Catalog is an internal working-memory structure. Do not save it as a separate user-facing artifact unless the user asks for it.
-
-**Completion check**: catalog with structural roles exists, rough impression of domain (how many main directions, where disputes live), coverage assessment (which directions well-covered, which thin).
+- named focus areas covered or explicitly marked thin;
+- important claims have an evidence type capable of supporting them;
+- opposing sides of a dispute are represented;
+- saturation rule reached or the search limitation is recorded.
 
 ## Phase 2: Map
 
-Structure the catalog into a domain map. Five modules, each with concrete steps. This phase is **not** "read more sources" — it's "place existing sources into correct structural positions".
+Generate candidate ways to organize the domain. These are lenses, not mandatory sections. Keep 1-4 candidates that genuinely change what becomes foreground, how sources group, or what the map predicts. Do not manufacture alternatives to satisfy a count.
 
-### Module 1: Research programs
+### Lens A: Research programs
 
-A domain usually has multiple research programs simultaneously. Each program has a hard core (unquestioned basic commitment) and a positive heuristic (what followers should research next).
+Use only when multiple sources reveal stable, shared commitments that organize follow-on work.
 
-Group catalog sources by core commitment (are they answering the same basic question? what unquestioned premises do they share?). Each cluster is a program — usually 2-5 per domain. For each program identify:
+For each program:
 
-- **Hard core**: what it considers unquestionable (infer from shared premises across multiple papers, don't extract from single-paper claims; hard core is what papers assume without arguing)
-- **Protective belt**: adjustable assumptions around the hard core (when counter-examples appear, the belt adjusts first, not the core)
-- **Representative work**: 2-3 most important products of the positive heuristic
-- **Status**: progressive (producing new predictions/discoveries, leading field) / degenerating (mostly patching counter-examples) / neutral (mark if uncertain, don't force)
+- **Core commitment**: premise followers repeatedly preserve
+- **Adjustable assumptions**: what changes when counterevidence arrives
+- **Representative work**: products of that commitment
+- **Momentum evidence**: measured growth, new predictions, benchmark gains, or clear decline
 
-Inter-program relationships: complementary (different-layer problems, coexist) / competing (different answers to same question, exclusive) / contained (one is special case of another) / evolved (split off).
+Do not label a program progressive or degenerating from two representative papers. If trend evidence is insufficient, describe the observable activity without a status verdict.
 
-### Module 2: Core disputes
+### Lens B: Method or architecture families
 
-Map arguments via Issue (question needing answer) → Position (one answer) → Argument (reason for/against). Usually 2-4 core disputes only — start from program competition from Module 1.
+Use when the domain is organized by competing mechanisms, representations, or system designs. Group sources by how they solve the same task. Compare inputs, mechanism, resource assumptions, strengths, failure modes, and compatibility.
 
-Per dispute: phrase as a question both sides must answer (not just one side cares about). Phrase Positions in each program's own language, don't reframe in opponent's terms. Arguments must cite specific sources (Source Catalog ID), no floating claims. Assess status: active (both sides producing new evidence) / approaching consensus / deadlocked (comparable evidence, value-based) / resolved.
+### Lens C: Bottleneck or value flow
 
-### Module 3: Evolution timeline
+Use when outcomes are constrained by a chain such as data → model → evaluation → deployment, or when power and value accumulate at different points. Identify where flow narrows, what controls the bottleneck, and which work tries to move it.
 
-Domains go through phase transitions: normal science → anomaly accumulation → crisis → revolution. Order key works/events by time, then mark transitions:
+### Lens D: Dispute or decision axes
 
-- **Normal science**: puzzle-solving within existing framework, stable consensus, converging terminology
-- **Anomaly accumulation**: more "existing methods can't solve X" cases, "why doesn't X work" papers, patch-style work increasing
-- **Crisis**: "does X have a future" questioning, researchers jumping to other frameworks, workshops featuring "reflection"
-- **Revolution**: new framework redefining "good questions", new terminology proliferates, old-framework work re-expressed in new terms
+Use when several positions answer the same load-bearing question differently. Phrase the issue so every side must answer it. Represent each side in its own terms, cite its evidence, and state which observation would change the dispute.
 
-Locate current phase — sets map's tone (normal-science maps emphasize consensus, crisis maps emphasize tension).
+### Lens E: Temporal evolution
 
-### Module 4: Open problems
+Use only when the evidence supports real changes in questions, methods, institutions, or evaluation standards. A chronology is not automatically a paradigm transition.
 
-Identify current P2 problems (problems the previous cycle produced but hasn't solved): from frontier sources (open problems/challenges/limitations explicitly mentioned), from survey "future work" sections, from dispute sources (problems both sides acknowledge unsolved).
+For each proposed transition, require:
 
-Per problem: one clear sentence (no jargon padding); who's attacking (teams/programs, with sources); what approach (improving existing / new tools / redefining problem); stuck where (data / theory / engineering bottleneck).
+- a before-state;
+- an observed anomaly or pressure;
+- a changed practice or vocabulary;
+- an after-state;
+- sources from both sides of the transition.
 
-Also identify neglected problems: important but no one working on them (don't fit any program's core, or cross-program intersection where each thinks "that's their problem"). Most discovery value, most uncertain — mark `[推测，需验证]`.
+Do not use crisis or revolution language without evidence of displaced questions or standards. If history is gradual, describe it as gradual.
 
-### Module 5: Entry recommendations
+### Cross-cutting modules
 
-Identify 3-5 entry-point sources for new readers via citation-network topology (no full bibliometrics needed):
+These modules are required evidence services, but they do not have to control the article's main frame.
 
-| Priority | Role | Reader gains |
-|---|---|---|
-| 1 | 奠基性 | Terminology + basic framework |
-| 2 | 桥梁性 | Global perspective |
-| 3-5 | 前沿性 | Current state |
+#### Open problems
 
-Per entry: don't just say "good paper" — what can reader understand after reading that they couldn't before? Where does it sit in the map (which program, which period)? What should they read next? If good surveys exist, prioritize one as first entry (surveys are mini domain maps).
+For each problem, record: one-sentence problem, who is working on it, approach, bottleneck, and sources. Replace "nobody studies this" with "under-covered in the current corpus" unless a systematic search supports the stronger claim.
 
-**Module completion check**: 2-5 programs fully described; 2-4 core disputes mapped; timeline with phase transitions marked; 3-5 open problems + 1-2 neglected directions; 3-5 entry recommendations with reasons. All conclusions cite catalog sources; uncited claims marked `[待验证]`.
+#### Entry recommendations
+
+Choose 3-5 sources that let a new reader enter the selected map. State what the reader can understand after each source, where it sits in the map, and what to read next.
+
+#### Coverage statement
+
+State which directions are well covered, which rely on weaker evidence types, which named subtopics remain thin, and which conclusions need verification.
+
+### Select the map lens
+
+For each surviving candidate, write internally:
+
+- the user's question it answers;
+- what it foregrounds and backgrounds;
+- how it groups the same evidence differently;
+- one boundary or counterexample;
+- what it predicts about the held-out frontier-source group.
+
+Select the lens with the strongest question fit and evidence. Prefer narrower claims when two are close. The research-program lens has no default priority.
+
+Completion check:
+
+- selected lens changes the body structure;
+- at least one real alternative was considered when evidence permits;
+- field-status claims use trend-capable evidence;
+- held-out frontier sources do not force a retrofit;
+- open problems, entry points, and coverage limits remain available.
 
 ## Phase 3: Compose
 
-Write Phase 2 results as a 学案体 domain map.
+Write the selected map as a Chinese longform article.
 
-### 学案体 structure
-
-学案体 originates from Chinese traditional academic history (黄宗羲《明儒学案》). Maps cleanly to domain structure: 学案 = research program, 案主 = representative work, 传授 = influence chain, 论学 = core debates, 未竟 = open problems, 著作 = entry recommendations.
-
-### Full template
+### Required outer structure
 
 ```markdown
 # {topic} Domain Map
 
 ## 总案
+{core question, selected lens, and most important current tension}
 
-[One paragraph: domain's core question, main routes, what's most worth watching. Reader gets global picture in 30 seconds.]
-
-## 研究纲领
-
-### Program A: {name}
-
-**Hard core**: {one sentence}
-**Protective belt**: {adjustable assumptions around the hard core}
-**Representative work**: {S1: why important}, {S3: why important}
-**Status**: progressive / degenerating / neutral
-**Currently exploring**: {positive heuristic's current direction}
-
-### Program B: {name}
-
-{same structure}
-
-### Inter-program relationships
-
-{complementary / competing / contained / evolved — brief}
-
-## 论争
-
-### Dispute 1: {Issue — phrased as question}
-
-**{Position A}**: {Program A's answer}
-Evidence: {specific, with sources}
-
-**{Position B}**: {Program B's answer}
-Evidence: {specific, with sources}
-
-**Current status**: active / approaching consensus / deadlocked
-
-## 源流
-
-| Period | Phase | Signature events/works | Paradigm state |
-|--------|-------|------------------------|----------------|
-| 20XX-20XX | {phase} | {event} | stable/shaking/restructuring |
-
-**Current phase assessment**: {where domain is now in phase-transition model}
+## {sections generated by the selected lens}
+...
 
 ## 未竟
-
-### Open problem 1: {one-sentence description}
-- **Attackers**: {teams/programs} ({sources})
-- **Approach**: {method}
-- **Bottleneck**: {stuck where}
-
-### Neglected direction
-- {description} — [推测，需验证]
+...
 
 ## 入门
-
-| # | Resource | Type | Why read first | Where next |
-|---|----------|------|----------------|------------|
-| 1 | [{title}]({URL}) | 奠基 | {reason} | → {next step} |
-| ... |
+...
 
 ## 覆盖度声明
-
-[Honest statement of coverage and limits. Which directions well-covered, which thin, which conclusions need further verification.]
+...
 ```
 
-### Writing process
+If the research-program lens wins, a 学案体 body is appropriate. If another lens wins, let section names and order follow that lens. Do not preserve program, dispute, or revolution sections merely because the old template had them.
 
-Plan first: 1-2 sentences per section, ensure consistency (programs / disputes / timeline / open problems must not contradict).
+### Writing rules
 
-Per section attention: **总案** write last (needs whole-domain judgment, only clear after everything else); **研究纲领** each program standalone in its own language; **论争** both sides need concrete evidence (mark `[证据偏少]` if thin); **源流** emphasize phase transitions, not timeline trivia — explain why this point is the shift; **未竟** open problems must have edge (specific "method Y fails under condition Z, no one knows why", not vague "more research needed"); **入门** each recommendation answers "what can reader do after reading that they couldn't before?"; **覆盖度声明** honest and specific.
-
-Write directly, don't pause for user confirmation. List structure in delivery report. Exception: if Phase 1 coverage unusually thin (< 10 sources total), flag before writing — map will be low-confidence.
+- Write `总案` last, after the map is stable.
+- Keep competing positions visible; do not manufacture consensus.
+- Cite claims with Source Catalog IDs and links where useful.
+- Mark unsupported synthesis `[待验证]` and weak sides `[证据偏少]`.
+- A product or community source may illustrate practice but cannot establish field-wide prevalence.
+- Make open problems specific: failure under condition Z, not "more research is needed".
+- Avoid theory names as authority; explain the observed structure directly.
 
 ### Quality audit
 
-Structure: missing programs? Covers most of catalog? Disputes really core or trivial? Timeline gaps?
-Evidence: every claim points to source? Uncited claims marked `[待验证]`? Direction bias from uneven coverage?
-Style: direct voice with judgment, no hedge. 9 Red Lines (mouth-test, no jargon, short words, one-thought-per-sentence, concrete, reasons-first, no filler, trust reader, honest). Native Chinese, no AI smell.
+Check:
 
-### Step 4: Voice Pass
+- Does the body follow the selected lens rather than a seven-section template?
+- Would another candidate produce materially different grouping or ordering?
+- Does any phase or momentum claim outrun its evidence type?
+- Do the table and prose contradict each other?
+- Did the held-out frontier group fit without changing the frame?
+- Are coverage limits specific and honest?
 
-See `voice-pass.md`. Mandatory. De-AI scan + style scan. 学案体-specific: hedge phrases still banned, em-dash still banned, 工整并列 bold 标题 still varies tone, 段末收尾总结句 still cut. Style scan: if user has prior survey/学案体 outputs in workspace, scan 1-2 for voice/structure preferences.
+### Voice Pass and output
 
-### Step 5: Write final file + delivery report
+Run `voice-pass.md`, then write the final file per `output-spec.md` as `{topic}-survey_{YYYY-MM-DD}.md`. YAML must include `topic` and `scope`.
 
-Write `.md` per `output-spec.md`. File naming: `{topic}-survey_{YYYY-MM-DD}.md`. YAML must include `topic: {领域}` and `scope: {broad/focused}`.
+Delivery report: article path, word count, body structure, selected lens, close alternative if material, source count by evidence type, open-problem count, and coverage limitations.
 
-Delivery report (`voice-pass.md` Step 4): article path, word count, section count (总案 / 研究纲领 / 论争 / 源流 / 未竟 / 入门 / 覆盖度声明), Voice Pass execution, style reference (or skipped). **Survey-specific**: program count, dispute count, open problem count, coverage limitations flagged.
-
-## Output
-
-After Voice Pass, write file. **Stop at publish confirmation.** Do NOT push, post, distribute, commit unless user explicitly asks.
+Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
