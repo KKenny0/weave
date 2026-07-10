@@ -186,6 +186,8 @@ Delete a chapter that does not serve the frame, or return to Phase 2 for missing
 
 Expose reasoning, preserve contradictions, and keep claims proportional to evidence. Use scene, comparison, formalism, or direct quotation only when it advances the selected frame. Keep speaker attribution exact and distinguish source conclusions from weave's synthesis.
 
+For an interview with an accessible transcript, use at least two short exact quotes as analytical anchors, normally from different turns or speakers. Each quote must establish a claim, uncertainty, concession, or change caused by questioning; decorative quotation does not count. Preserve wording and speaker attribution. If the transcript cannot be fetched reliably, paraphrase and state that exact quotation was unavailable rather than inventing one.
+
 ### Step 4: Explicit research review
 
 Audit without role-playing an advisor:
@@ -197,6 +199,7 @@ Audit without role-playing an advisor:
 - **Generalization**: what population, scale, or time range is justified?
 - **Novelty**: did the article produce a material cognitive shift or only reorganize summaries?
 - **Honesty**: are uncertainty and the hold-out result visible?
+- **Interview grounding**: when applicable, do exact attributed quotes anchor the analysis rather than merely decorate it?
 
 Revise concrete failures, then re-run the audit.
 
