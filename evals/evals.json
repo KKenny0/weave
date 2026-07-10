@@ -19,7 +19,9 @@
         "Contains at most 1 occurrence total of any hedge phrase from this list: 值得注意的是, 不可否认, 毫无疑问, 综上所述, 在某种程度上, 也许可以说, 不难发现, 由此可见, 众所周知",
         "Source material content is faithfully represented — no fabricated quotes or statistics",
         "Article has clear section structure with at least 3 headings",
-        "Output does NOT contain raw pipeline artifacts (Source Brief tables, Evidence Weight grids, Daily Notes) — only the finished article"
+        "Output does NOT contain raw pipeline artifacts (Source Brief tables, Evidence Weight grids, Daily Notes) — only the finished article",
+        "The selected frame is specific to this source, changes the chapter plan, and names at least one evidence-backed boundary",
+        "The selected frame explains the pre-designated hold-out section without being retrofitted after reveal"
       ]
     },
     {
@@ -39,7 +41,9 @@
         "Key technical terms from both sources are preserved in original English with Chinese explanation where needed",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
         "No fabricated claims — every assertion traces to at least one source",
-        "Each sentence expresses one complete thought (一念一句)"
+        "Each sentence expresses one complete thought (一念一句)",
+        "Retained candidate frames imply materially different evidence selection or chapter structures; paraphrases are merged",
+        "The selected frame wins on the user's RAG-vs-context-engineering question and explains the held-out Source Brief"
       ]
     },
     {
@@ -91,7 +95,9 @@
         "If valid transferable patterns found: Engineering Migration chapter present with name + definition + how-waza-uses-it + scenarios. If thin: explicit '迁移素材不足' downgrade to brief summary.",
         "Every technical claim cites source file / line / config value",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
-        "Article has 6-8 chapters with clear logical dependency (macro → micro)"
+        "Article has a chapter sequence with clear logical dependency rather than a file or symbol inventory",
+        "The selected frame follows load-bearing behavior paths and changes how the skills, MCP, and marketplace focus areas are organized",
+        "At least one boundary, failed assumption, or static-inference limit of the selected frame is explicit"
       ]
     },
     {
@@ -113,7 +119,10 @@
         "3-5 entry recommendations with concrete 'what reader gains after reading'",
         "覆盖度声明 honest about coverage limits (which directions well-covered, which thin)",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
-        "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) NOT used in output — methodology steps preserved without theorist-name scaffolding"
+        "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) NOT used in output — methodology steps preserved without theorist-name scaffolding",
+        "The domain-map lens is selected from evidence rather than forcing every field into research programs and paradigm revolution",
+        "Any field-status or phase-transition claim is supported by trend evidence and does not contradict the coverage statement",
+        "The selected frame explains the held-out frontier-source group without changing its load-bearing components"
       ]
     }
   ]
