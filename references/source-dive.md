@@ -8,7 +8,7 @@ Gather repo + docs + papers. Parallels `collect.md` but with technical-source sp
 
 ### Step 1: Confirm input
 
-User typically provides topic (required, like "Hermes Agent" / "LlamaIndex" / "Vite"), optional `repo_url`, optional `docs_url`, optional `paper_urls` (for academic projects).
+User typically provides topic (required, like "Hermes Agent" / "LlamaIndex" / "Vite"), optional `repo_url`, optional `docs_url`, optional `paper_urls` (for academic projects), and optional focus areas. Preserve each named focus area as a dedicated analysis path and give it a dedicated chapter or clearly labeled section in the final plan.
 
 ### Step 2: Search and locate (parallel)
 
@@ -56,7 +56,7 @@ Split Phase 1 files: main thread group (`small`) and parallel group (`medium`/`l
 
 ### Step 2: Launch parallel analysis
 
-For each `medium`/`large` file, spawn a background agent in a single message (parallel, not serial). Each agent uses `mcp__zread__read_file` (segmented if huge) and extracts: top 10 core classes/functions (one-sentence responsibility each), key mechanism (what + how, 2-3 sentences), module interactions (imports + who imports this), design patterns used (which + why), hardcoded constants/thresholds/defaults, non-obvious details (only visible from code, not docs), and — if the file implements an enum-style system (N layers / M stages / K modes / P adapters) — per-item: purpose, implementation mechanism (function/constant/config), trigger/scope, key differences from other items, concrete evidence.
+For each `medium`/`large` file, spawn a background agent in a single message (parallel, not serial). If background agents are unavailable, read the same files serially in the main thread; reduced concurrency must not reduce coverage. Each agent or serial pass uses the best available repository reader (segmented if huge) and extracts: top 10 core classes/functions (one-sentence responsibility each), key mechanism (what + how, 2-3 sentences), module interactions (imports + who imports this), design patterns used (which + why), hardcoded constants/thresholds/defaults, non-obvious details (only visible from code, not docs), and — if the file implements an enum-style system (N layers / M stages / K modes / P adapters) — per-item: purpose, implementation mechanism (function/constant/config), trigger/scope, key differences from other items, concrete evidence.
 
 Agent output rules: 2-3 sentences per point, but 3-5 sentences per enum item (don't conflate different items into one paragraph); quote key code lines only, no large blocks; Chinese.
 
@@ -103,7 +103,7 @@ Per chapter: recall relevant knowledge map content (mechanisms, source details, 
 
 Voice: logically rigorous, narrative progression, direct, occasional first-person, occasionally colloquial ("说白了" / "说实话" as seasoning not filler), professional but conversational, critical (cover strengths and weaknesses).
 
-Per-chapter requirements: every technical claim cites source file / line / config value; source-over-docs (when they disagree, source wins, flag the diff); concrete > abstract (code snippets, config values, data flow); tables for multi-dimension comparison; stepwise/flow for complex mechanisms; no chapter-end summary sentences; **enumeration depth**: when a chapter has N parallel items (10 layers / 4 stages / 3 modes), each item gets its own paragraph with purpose (1 sentence), implementation mechanism (2-3 sentences with function/config names), design decision (1-2 sentences), concrete evidence (code snippet or config value). If material thin for some item, mark `[素材不足，待补充]` rather than glossing. Different items don't merge unless tightly coupled.
+Per-chapter requirements: every technical claim cites source file / line / config value; source-over-docs (when they disagree, source wins, flag the diff); concrete > abstract (code snippets, config values, data flow); tables for multi-dimension comparison; stepwise/flow for complex mechanisms; no chapter-end summary sentences; **enumeration depth**: when a chapter has N parallel items (10 layers / 4 stages / 3 modes), each item gets its own paragraph with purpose (1 sentence), implementation mechanism (2-3 sentences with function/config names), design decision (1-2 sentences), concrete evidence (code snippet or config value). If an enumeration has more than 10 items, select the 5-8 items that carry the architecture or user focus, state `[选取 N/M 项]`, and list the selection criterion. If material is thin for a selected item, mark `[素材不足，待补充]` rather than glossing. Different items don't merge unless tightly coupled.
 
 #### Optional final chapter: Engineering Migration
 

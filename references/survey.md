@@ -22,6 +22,8 @@ topic (domain name or research direction; if too broad like "AI" or "CS", sugges
 
 3-5 rounds of WebSearch with different query angles. Per `SKILL.md` Pre-check fetch budget: 3 attempts max per source. Suggested rounds: (1) surveys/overviews (`"{topic}" survey OR review OR 综述 OR "state of the art"`); (2) foundational work (`"{topic}" foundational OR seminal OR "key papers" OR 经典`); (3) core disputes (`"{topic}" debate OR controversy OR "open question" OR 争议`); (4) frontier (`"{topic}" "recent advances" OR "future directions" OR "open problems"`); (5) optional Chinese resources (`"{topic}" 综述 OR 教程 OR 研究现状`).
 
+If a search backend rejects boolean operators or quoted phrases, retry with short unquoted keywords. Search syntax is a convenience, not a dependency.
+
 After each round: scan titles + abstracts, drop obviously irrelevant. Keep 15-30 candidate sources.
 
 ### Step 3: Quick-read filter
@@ -50,6 +52,8 @@ Targeted searches based on Round 1-5 findings: important program but material th
 ```
 
 Rules: total 15-40 sources; each research program gets at least 2-3 representatives; frontier sources ≤ 1/3 of total; if a direction is obviously thin, mark `[覆盖度有限: {direction}]` at catalog end.
+
+Source Catalog is an internal working-memory structure. Do not save it as a separate user-facing artifact unless the user asks for it.
 
 **Completion check**: catalog with structural roles exists, rough impression of domain (how many main directions, where disputes live), coverage assessment (which directions well-covered, which thin).
 
@@ -131,6 +135,7 @@ Write Phase 2 results as a 学案体 domain map.
 ### Program A: {name}
 
 **Hard core**: {one sentence}
+**Protective belt**: {adjustable assumptions around the hard core}
 **Representative work**: {S1: why important}, {S3: why important}
 **Status**: progressive / degenerating / neutral
 **Currently exploring**: {positive heuristic's current direction}
