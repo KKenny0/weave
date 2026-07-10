@@ -48,21 +48,23 @@
     },
     {
       "id": 3,
-      "name": "non-ai-interview",
-      "prompt": "帮我深度阅读这篇访谈：https://www.noemamag.com/ai-does-not-exist-yet/，把核心论点整理成研究文章。我关心的是：他们说的 'AI doesn't exist yet' 到底是什么意思？这个判断的依据是什么？",
-      "expected_output": "对访谈类素材的深度阅读。访谈有多位发言者，需要区分不同发言者的观点，识别共识和分歧。最终输出研究文章，聚焦用户关心的两个问题。",
+      "name": "multi-speaker-interview",
+      "prompt": "帮我深度阅读这篇完整访谈逐字稿：https://www.dwarkesh.com/p/dario-amodei。我想理解 Dario Amodei 为什么相信 scaling 会继续有效，他承认哪些限制和不确定性，以及 Dwarkesh 的追问如何改变或暴露了这套论证的边界。写成一篇研究文章。",
+      "expected_output": "对访谈逐字稿进行深度阅读，区分主持人的问题、假设和追问与受访者的主张、证据和不确定性，最终输出聚焦 scaling 论证及其边界的研究文章。",
       "files": [],
       "expectations": [
         "Output is a single .md file with proper YAML frontmatter",
         "Article body exceeds 2000 Chinese characters (excluding frontmatter)",
         "Article distinguishes between at least 2 different speakers' viewpoints — does not flatten all content into one perspective",
-        "Article directly answers both of the user's questions: what 'AI doesn't exist yet' means, and what evidence supports that claim",
+        "Article directly answers why Dario expects scaling to continue, which limits he acknowledges, and how Dwarkesh's questions expose the argument's boundaries",
         "At least 2 direct quotes from the interview are used to anchor key analytical points",
-        "Article identifies areas where speakers agree AND disagree",
-        "Article identifies at least 1 blind spot or unchallenged assumption in the interview",
+        "Questions, hypotheses, and claims are attributed to the correct speaker; an interviewer question is not rewritten as the interviewer's belief",
+        "Article identifies at least 1 blind spot, untested assumption, or unresolved uncertainty in the scaling argument",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
         "No fabricated quotes or misattributed statements",
-        "Each sentence expresses one complete thought (一念一句)"
+        "Each sentence expresses one complete thought (一念一句)",
+        "The selected frame preserves the interview's uncertainty rather than flattening it into one confident scaling thesis",
+        "The selected frame explains a held-out transcript section without changing its core components"
       ]
     },
     {
@@ -124,6 +126,25 @@
         "The domain-map lens is selected from evidence rather than forcing every field into research programs and paradigm revolution",
         "Any field-status or phase-transition claim is supported by trend evidence and does not contradict the coverage statement",
         "The selected frame explains the held-out frontier-source group without changing its load-bearing components"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "academic-paper-extraction",
+      "prompt": "帮我深度阅读这篇论文：https://arxiv.org/abs/2304.03442。我想理解 Generative Agents 的 memory stream、reflection 和 retrieval 为什么能产生 believable behavior，论文的消融实验真正证明了什么，哪些结论还不能推广。写成一篇研究文章。",
+      "expected_output": "使用学术论文提取镜头，区分架构设计、操作化指标、消融证据、作者结论和可推广边界，最终产出证据可追溯的研究文章。",
+      "files": [],
+      "expectations": [
+        "Output is a single .md file with proper YAML frontmatter and the arXiv URL in sources",
+        "Article explains memory stream, retrieval, reflection, and planning in plain language without reducing the paper to a component list",
+        "Measured believability and observed emergent behavior are distinguished from broader claims about human-like intelligence",
+        "Ablation evidence is described accurately: what components were removed, what changed, and what the experiment cannot establish",
+        "At least one alternative explanation or confound in the evaluation design is examined",
+        "The selected frame states generalization boundaries for the 25-agent sandbox and evaluation setup",
+        "Every key claim traces to the paper; no fabricated effect size, quote, or experimental condition",
+        "The academic extraction lens materially changes what is extracted compared with a narrative summary",
+        "The selected frame explains the held-out final load-bearing section without retrofit",
+        "Contains at most 1 occurrence total of any hedge phrase from the banned list"
       ]
     }
   ]

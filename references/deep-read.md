@@ -1,141 +1,207 @@
 # Deep Read Workflow
 
-Triggered when user provides: URL / PDF / file / pasted text containing non-technical prose (papers, articles, interviews, reports, book chapters). Output: polished Chinese research article with multi-perspective debate testing, generator-based analysis, academic advisor review, anchor-based narrative.
+Triggered when the user provides URLs, PDFs, files, or pasted non-code material such as papers, articles, interviews, reports, or book chapters. Output is a polished Chinese research article whose organizing frame is selected from evidence.
 
 ## Phase 1: Collect
 
-See `collect.md`. For deep-read, Phase 1 ends when sources are fetched and saved, each identified by type (paper / article / interview / report / book chapter) and length bucketed (short <3000 chars / medium 3000-10000 / long >10000 — decides serial vs parallel reading). Keep original key terms; notes in Chinese.
+Follow `collect.md`. Phase 1 ends when each source is fetched or its failure is reported, typed by reasoning shape, and assigned a stable identifier.
+
+Record:
+
+- `q`: the user's exact question or desired cognitive result
+- source type and reasoning shape
+- length and access status
+- original key terms
+- named focus areas
+
+Length controls read scheduling only. It does not determine analytical importance.
 
 ## Phase 2: Read
 
-Produce one Source Brief per source.
+Produce one isolated Source Brief per source.
 
-### Step 1: Choose reading method
+### Step 1: Select reading lens
 
-Pick by source type. Essay with argument → narrative reading. Academic paper → extraction (methodology, claims, evidence). Single concept → anatomy. Anything where surface isn't enough → vertical drilling.
+Use `reading-variants.md`. Choose a lead lens from argument and narrative, academic extraction, concept anatomy, or vertical drilling. Add a secondary lens only when it covers a concrete blind spot.
 
-### Step 2: Execute reading
+Record internally: why the lens fits `q`, what it foregrounds, its likely blind spot, and what evidence would trigger a switch. A lens must change extraction; naming a lens without changing the Source Brief is a failure.
 
-Per source: tag each paragraph as `[骨]` (load-bearing argument) / `[肌]` (evidence/data) / `[筋]` (transition/context), then extract core narrative using 亲历→旧路→新口 (witnessed problem → prior approaches → new framing). Quality check against 9 Red Lines: mouth-test, no jargon, short words, one-thought-per-sentence, concrete, reasons-first, no filler, trust reader, honest.
+### Step 2: Read for load-bearing evidence
 
-### Step 2.5: Digestion filter — what enters Source Brief
+Extract claims, evidence, assumptions, boundaries, distinctive terms, uncertainties, and internal tensions. Use paragraph-level structural tags only when they help locate a dense argument. Use witnessed-problem -> prior-route -> new-opening only when the source actually contains that movement.
 
-Before adding an observation to Source Brief, three questions:
+Apply the digestion filter before adding an observation:
 
-1. **复现性**: Does this observation appear independently in ≥2 places in the same source? (≥2: core evidence. 1 but critical: keep, tag `[单点]`. 1 and marginal: background, don't add.)
-2. **生成力**: Does this observation only explain one phenomenon, or can it predict what the source would say about a new problem? (Predicts: core. Explains one: background.)
-3. **专属性**: Is this unique to this source, or would any expert say it? (Unique: core. Generic common knowledge: don't add — wastes reader attention.)
+1. **Recurrence**: does it appear independently in at least two places? Keep a critical single point as `[single-point]`.
+2. **Generative power**: can it explain what the source would say about a new case?
+3. **Specificity**: is it distinctive to this source rather than generic expert knowledge?
 
-All three pass: core evidence, write in detail. Two pass: keep, 1-2 sentences max. Zero-one pass: drop.
+All three pass: core evidence. Two pass: keep briefly. Zero or one pass: background or drop.
 
-Source Brief is **not** a summary of the source. It's the evidence library Compose draws on. Stuffing background material in makes Compose confuse load-bearing walls with decoration.
+### Step 3: Build Source Brief
 
-### Step 3: Multi-source parallel reading (when ≥3 sources)
+Each Source Brief contains:
 
-Spawn one background agent per source in a single message (parallel, not serial). Each produces a Source Brief covering: core claim, 骨架段 [骨] (argument), 证据段 [肌] (evidence), 问题节 (亲历→旧路→新口 narrative), key quotes, tensions with other sources or internal, claims to verify, uncertainties. Chinese output, 2-3 sentences per point, keep original key terms, don't merge content across sources.
+- source identity and lead lens
+- exact problem or question
+- default answer or baseline, if evidenced
+- core claim and distinctive move
+- load-bearing evidence and its type
+- method or mechanism in plain language
+- assumptions and generalization conditions
+- counterevidence, internal tension, or missing comparison
+- key quotes with speaker attribution
+- uncertainties and claims requiring verification
+- lead-lens blind spot
+- possible connections to the user's question
 
-### Step 4: Source Brief isolation
+A Source Brief is an evidence library, not a source summary.
 
-One Source Brief per source, never merge. Source Brief only references its own source — cross-source analysis is Phase 3, not Source Brief.
+### Step 4: Multi-source reading
+
+For three or more independent sources, read in parallel when background agents are available. Each agent reads one source only and returns an isolated Source Brief. If agents are unavailable, read serially with the same schema. Never let one source's interpretation leak into another brief.
+
+### Step 5: Brief quality gate
+
+Check:
+
+- Can each core claim be distinguished from its evidence?
+- Are speaker positions separated in interviews?
+- Are measured findings separated from author generalization in papers?
+- Did the selected lens expose something another lens would miss?
+- Is at least one boundary or uncertainty explicit?
+
+If not, re-read the weak subsection rather than the entire source set.
 
 ## Phase 3: Synthesize
 
-Build Synthesis Pack from all Source Briefs.
+Turn Source Briefs into candidate explanations and select the article frame.
 
-### Step 1: Generator discovery (internal reasoning)
+### Step 1: Reserve hold-out evidence
 
-When sources ≤ 2: 4-step simplified path — lay out phenomena → list candidate generators → cut ones that can't independently explain anything → reverse-generate (use survivors to reproduce phenomena).
+Before candidate generation, reserve:
 
-When ≥3 sources: full 7-step — phenomena → candidates → recursive追问 (why does each candidate generate these phenomena?) → same-source merge → cut → reverse-generate → predict + variation test (what else does this candidate predict, what conditions break it).
+- the last load-bearing section for a single source; or
+- the last Source Brief for multiple sources.
 
-For each surviving candidate, internally evaluate 5 criteria: independence, necessity, generative power, simplicity, falsifiability. Write brief **Analysis Summary** (3-5 sentences): which survived, which criterion is weakest.
+Do not use it to construct candidates. Reveal it after selection to test reach.
 
-### Step 2: Multi-perspective debate (internal reasoning)
+### Step 2: Generate candidate frames
 
-Skip when only 1 source — run **single-source stress test** instead: invite 1-2 imaginary challengers (devil's advocate: what would the source's main claim miss, where's the boundary case? adjacent field: what would a researcher from a neighboring field complicate or question?). Each challenger must cite source evidence. Write brief Stress Test Summary: which challenges landed, which the source survived, what's now uncertain.
+Search from several directions without requiring each one to survive:
 
-When ≥2 sources: invite 3-5 real historical or contemporary people related to the topic. Each has a real stake and a clear stance; together they form a tension network (not simple pro/con); at least one comes from outside the field. Each round: every person must cite Source Brief evidence (no unsourced opinions), and respond to evidence plus other people. You as host dig one deepest crack per round (don't pave breadth), prioritize truth over harmony, and surface structural assumptions (not just retell content) when synthesizing. Write brief Stress Test Summary (3-5 sentences): convergence, divergence, evidence support.
+- **problem shift**: how the material changes the question or default answer
+- **generator**: smallest independent mechanisms that reproduce many observations
+- **tension**: conflict between claims, scales, values, or evidence types
+- **boundary**: where a common explanation works and where it stops
+- **reference axis**: which dimension places competing answers in a useful relation
 
-### Step 2.5: Stall signals and loopback
+For generator discovery: list phenomena, propose generators, remove candidates that explain nothing independently, reverse-generate the observations, then test prediction and failure conditions. Evaluate independence, necessity, generative power, simplicity, and falsifiability.
 
-If any of these fire during Step 1 or Step 2, Source Briefs aren't thick enough — return to Phase 2 for that sub-topic (not the whole article):
+Keep only candidates that change evidence selection or chapter structure. Merge paraphrases. One strong candidate is better than three decorative ones.
 
-- **Can't write Working Thesis**: 3+ attempts, still can't summarize evidence-backed conclusion in one sentence
-- **Single-source承重**: a Key Finding rests on only one Source Brief, no cross-source verification
-- **Debate hangs**: invited people have nothing to say on a key point because Source Briefs lack that evidence
-- **High-Risk Claims cluster**: multiple High-Risk Claims all point to the same evidence gap
+### Step 3: Adversarial stress test
 
-Other stable sub-topics don't re-do.
+Test candidates with arguments, not theatrical personas:
 
-### Step 3: Produce Synthesis Pack
+- strongest rival explanation
+- boundary or counterexample
+- scale shift: individual/system, short/long term, local/general
+- alternative evidence interpretation
+- premise-removal test: what collapses if one component is removed?
 
-```
+Use a real historical or contemporary person's position only when their published stance is part of the source set and materially changes the test. Do not simulate authority from a name.
+
+### Step 4: Loop back on evidence gaps
+
+Return to Phase 2 for the affected subtopic when:
+
+- no candidate can state an evidence-backed thesis after three attempts;
+- a load-bearing finding rests on one unverified point;
+- every candidate fails on the same missing comparison;
+- high-risk claims cluster around one evidence gap;
+- the user's named focus cannot map to evidence.
+
+Stable subtopics do not repeat.
+
+### Step 5: Select frame and test hold-out
+
+Choose the candidate that best answers `q`, has the strongest evidence, compresses the most observations with the fewest components, and states its boundary. Prefer a narrower supported claim over a broad elegant one.
+
+Reveal the hold-out. Pass when the frame explains it without changing its core components. Record a real miss and narrow the frame when necessary; do not retrofit and claim prediction.
+
+### Step 6: Produce Synthesis Pack
+
+```markdown
 ## Synthesis Pack
 
+### Selected Frame
+{one sentence}
+
+### Why It Won
+{question fit, evidence, compression, boundary}
+
+### Close Alternative
+{only when materially different}
+
 ### Key Findings
-- {finding 1}
-- {finding 2}
+- {finding}: {evidence}
 
-### Working Thesis
-{one sentence: best-supported conclusion}
+### Conflicts and Rival Explanations
+- {conflict}: {evidence on each side}
 
-### Analysis Summary
-{3-5 sentences: surviving generators, weakest criterion}
-
-### Stress Test Summary
-{3-5 sentences: convergence, divergence, evidence support}
-
-### Merged Conclusions
-- {conclusion 1}: {evidence}
-- {conclusion 2}: {evidence}
-
-### Conflicts
-- {conflict}: {which perspectives/sources disagree, evidence each side}
+### Hold-out Result
+{predicted, partial, or miss; frame adjustment if required}
 
 ### Evidence Weight
-- {claim A}: strong / medium / weak / disputed
+- {claim}: strong / medium / weak / disputed
 
-### High-Risk Claims
-- {claim}: {why risky, failure conditions}
+### Boundaries and High-Risk Claims
+- {claim}: {condition or failure mode}
 ```
 
-Rules: don't hide unresolved conflicts, don't manufacture false consensus; distinguish source consensus from user's own claims; flag high-risk claims; Synthesis Pack is read-only in Compose.
+Keep the Synthesis Pack internal and read-only during Compose.
 
 ## Phase 4: Compose
 
-Write the full research article from Synthesis Pack.
+Write the research article through the selected frame.
 
-### Step 1: Confirm anchor
+### Step 1: Choose narrative anchor after frame selection
 
-Pick one concrete anchor (specific scene / example) from Synthesis Pack that runs through the whole article. Don't switch. If one anchor can't support some chapters, introduce a sub-anchor in the same problem domain.
+Use a concrete scene or example only if it reveals the selected frame. An anchor is optional. Do not let a vivid example decide the frame or force every chapter to return to it.
 
-### Step 2: Chapter planning + hard gate
+### Step 2: Map chapters
 
-Plan final chapters (each title ≤10 字, 6-8 typical, logical dependency earlier→later). **Hard gate before writing**: every chapter must trace to a Source Brief / Synthesis Pack field.
+For every planned chapter record internally:
 
-| Chapter | Maps to |
-|---|---|
-| {chapter 1} | {Source Brief A section / Synthesis Pack Key Finding N} |
-| ... | ... |
+- selected-frame component served
+- evidence used
+- role: establish, explain, contrast, test, bound, or apply
 
-If a chapter can't trace: either delete it, or return to Phase 2 for that sub-topic (don't write from general knowledge). "Let me try writing it" is not allowed — every word traceable.
+Delete a chapter that does not serve the frame, or return to Phase 2 for missing evidence. Chapter count and short titles are writing heuristics, not quality gates.
 
-Write directly, don't pause for user confirmation. List chapter structure in delivery report (`voice-pass.md` Step 4). Exception: if any chapter triggered Phase 2 return mid-compose, flag explicitly.
+### Step 3: Write and review chapter by chapter
 
-### Step 3: Write chapter by chapter
+Expose reasoning, preserve contradictions, and keep claims proportional to evidence. Use scene, comparison, formalism, or direct quotation only when it advances the selected frame. Keep speaker attribution exact and distinguish source conclusions from weave's synthesis.
 
-Per chapter: recall relevant Source Brief + Synthesis Pack content, write, then self-review (mouth-test, 10 AI patterns from Voice Pass, anchor consistency).
+### Step 4: Explicit research review
 
-Voice: one anchor through the whole article (don't switch), morph concepts instead of defining relationships, expose reasoning (not just conclusions), end on what the reader can do (not what to rethink), cold cuts with direct speech. Argumentative sources follow a progressive cut structure (claim → first cut → deeper cut → irreducible bottom → look back); non-argumentative (interviews, reports, news) uses freer narrative but same voice rules. Use scene-over-claim, concessive bend, rhetorical-question chaining, exploratory tone, and short hammer sentences sparingly as needed.
+Audit without role-playing an advisor:
 
-### Step 4: Academic advisor review (博导审稿)
+- **Load-bearing premise**: what must be true, and is it supported?
+- **Alternative explanation**: what else fits the same evidence?
+- **Counterexample**: which case strains the frame?
+- **Inference chain**: where does evidence become interpretation?
+- **Generalization**: what population, scale, or time range is justified?
+- **Novelty**: did the article produce a material cognitive shift or only reorganize summaries?
+- **Honesty**: are uncertainty and the hold-out result visible?
 
-Switch persona: senior advisor who has supervised 20 years of grad students in this area. Audit: argument strength (every claim sourced?), foundational premise (does it hold? if it falls, does the article survive?), logic chain (leaps? circular reasoning?), counter-intuitive insight (only deep analysis finds this? if none, not deep enough), honesty (hidden uncertainty? forced conclusions?). Per issue, give concrete revision. Fix. Re-audit until pass.
+Revise concrete failures, then re-run the audit.
 
-### Step 5: Voice Pass
+### Step 5: Voice Pass and output
 
-See `voice-pass.md`. Mandatory — every output goes through de-AI scan + style scan.
+Run `voice-pass.md`, then write `{topic}-deep-read_{YYYY-MM-DD}.md` per `output-spec.md`.
 
-## Output
+Delivery report: article path, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, Voice Pass corrections, and style reference.
 
-After Voice Pass, write the `.md` file per `output-spec.md`. Delivery report to user. **Stop at publish confirmation.** Do NOT push, post, distribute, commit unless user explicitly asks.
+Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
