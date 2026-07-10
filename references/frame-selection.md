@@ -71,7 +71,7 @@ Reveal the pre-designated hold-out after selecting `f*`.
 
 The hold-out is a test, not another source to silently absorb.
 
-For evals or audit-sensitive runs, persist the Candidate Frame Brief, hold-out identifiers, and pre-reveal prediction before opening the hold-out. Save them under the run's internal workspace (for example `.weave-frame/pre-reveal.md`) and include the path in the run report. The final article must still exclude internal artifacts. A retrospective claim in the delivery report is not sufficient evidence of ordering.
+For evals or audit-sensitive runs, persist the Candidate Frame Brief, hold-out identifiers, and pre-reveal prediction before opening the hold-out. Save them under the run's internal workspace (for example `.weave-frame/pre-reveal.md`) and include the path in the run report. Capture the timestamp from the environment clock rather than inventing or manually estimating it. When tool transcripts are available, identify the later fetch or read event that reveals the hold-out. The final article must still exclude internal artifacts. A retrospective delivery claim or self-authored timestamp alone is not proof of ordering; if no access log or transcript is available, mark chronology `unverified` while preserving the prediction artifact.
 
 ## Build the Frame Decision
 

@@ -48,7 +48,7 @@ Choose the hold-out before candidate assembly:
 
 Reveal the hold-out after selecting `f*`. Pass when the frame explains the hold-out without changing its core components and reports a real miss honestly. Retrofitting the frame after reveal is a failure.
 
-For evals, persist the Candidate Frame Brief and prediction before revealing the hold-out. The artifact timestamp and content are the audit evidence; a retrospective run-report claim alone cannot prove ordering.
+For evals, persist the Candidate Frame Brief and prediction before revealing the hold-out. Use the environment clock, then identify the later hold-out fetch/read in the execution transcript when available. Artifact content proves what was predicted; transcript order proves when. A retrospective report or handwritten timestamp alone cannot prove chronology. If access logs are unavailable, grade prediction content normally but report chronology as unverified.
 
 ## Final-article trace
 
