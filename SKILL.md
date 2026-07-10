@@ -12,9 +12,9 @@ Take a research target — source bundle, technical project, or domain name — 
 
 ## Outcome Contract
 
-- **Outcome**: User gets a polished, evidence-grounded Chinese longform article on their topic, with multi-perspective debate testing, anchor-based narrative, and voice pass complete.
-- **Done when**: Sources collected (auto-scouted or user-provided), contradictions surfaced explicitly, every chapter traces to a Source Brief / Synthesis Pack field, voice pass complete.
-- **Evidence**: Source URLs/files, fetched content, Source Briefs, Synthesis Pack, Voice Pass diff observations.
+- **Outcome**: User gets a polished, evidence-grounded Chinese longform article organized by a frame selected for their material and question.
+- **Done when**: Sources are collected, a route-specific evidence model exists, candidate frames pass admission and hold-out testing, every chapter traces to the selected frame and evidence, and Voice Pass is complete.
+- **Evidence**: Source URLs/files, fetched content, route-specific evidence model, Frame Decision, hold-out result, and Voice Pass observations.
 - **Output**: Single `.md` file with YAML frontmatter (`title`, `date`, `tags`, `sources`, `status`), named `{topic}-{workflow}_{YYYY-MM-DD}.md`.
 - **Boundary**: One URL that only needs fetching belongs in `/read`. Single-article summary without multi-source synthesis belongs in chat. This skill is for full-pipeline research that produces a new structured longform.
 
@@ -33,7 +33,7 @@ This skill runs one of three workflows based on what the user provided. The rout
 |---|---|---|
 | URL / PDF / file / pasted text (non-technical prose — papers, articles, interviews, reports, book chapters) | `references/deep-read.md` | Source bundle → dialectical article |
 | Technical project name / GitHub URL / framework name | `references/source-dive.md` | Code/tech project → implementation deep-dive |
-| Domain name / research direction ("RAG", "agent memory systems", "knowledge graph reasoning") | `references/survey.md` | Domain → 学案体 map |
+| Domain name / research direction ("RAG", "agent memory systems", "knowledge graph reasoning") | `references/survey.md` | Domain → evidence-selected domain map |
 | Ambiguous ("研究 X" with no input-type signal) | **Ask user**: "要深读具体素材、研究技术实现、还是测绘领域？" | Never guess. Wrong route = wrong methodology. |
 
 When ambiguous, ask. Don't auto-pick — methodology choice is load-bearing.
