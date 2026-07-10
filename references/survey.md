@@ -52,6 +52,8 @@ Quick-read title, abstract or executive summary, introduction, and conclusion. R
 
 Tag each source with: evidence type, domain label, availability, date, and one structural contribution. Treat product pages and SEO summaries as discovery leads, not final evidence.
 
+Field-wide prevalence, momentum, consensus, decline, or frontier-shift claims require a systematic sample, bibliometric trend, repeated benchmark series, or a strong survey that explicitly makes that claim. Representative examples establish existence, not "most" or "the field is moving". Without trend-capable evidence, scope the sentence to `the current source set` and name the sampling limit.
+
 ### Step 4: Search until structural saturation
 
 After the initial rounds, search specifically for:
@@ -152,11 +154,14 @@ For each surviving candidate, write internally:
 
 Use the Candidate Frame Brief and admission gates in `frame-selection.md`. Select the lens with the strongest question fit and evidence. Prefer narrower claims when two are close. The research-program lens has no default priority.
 
+The selected lens must control the top-level body. Its load-bearing components become the main headings; method families, disputes, and chronology move inside those headings when they are supporting views. Reusing the old program / dispute / evolution skeleton is a failure unless those are themselves the selected frame's components. Confirm that the lens changes at least two of chapter order, evidence grouping, comparison set, causal explanation, or predicted boundary.
+
 Completion check:
 
 - selected lens changes the body structure;
 - at least one real alternative was considered when evidence permits;
 - field-status claims use trend-capable evidence;
+- prevalence and frontier-shift claims are either trend-supported or explicitly scoped to the current source set;
 - held-out frontier sources do not force a retrofit;
 - open problems, entry points, and coverage limits remain available.
 

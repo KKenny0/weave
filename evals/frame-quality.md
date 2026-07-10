@@ -48,6 +48,8 @@ Choose the hold-out before candidate assembly:
 
 Reveal the hold-out after selecting `f*`. Pass when the frame explains the hold-out without changing its core components and reports a real miss honestly. Retrofitting the frame after reveal is a failure.
 
+For evals, persist the Candidate Frame Brief and prediction before revealing the hold-out. The artifact timestamp and content are the audit evidence; a retrospective run-report claim alone cannot prove ordering.
+
 ## Final-article trace
 
 Before Compose, map every planned chapter to:
@@ -67,3 +69,5 @@ Delete a chapter that does not serve the selected frame. In the final audit, ver
 - The article contains the selected thesis but most chapters remain an inventory.
 - The frame explains included evidence only and collapses on the hold-out.
 - Runner-up candidates are obvious strawmen.
+- Field-wide prevalence or momentum is inferred from representative examples rather than trend-capable evidence.
+- The selected lens is named in the report but the article keeps the old top-level template.
