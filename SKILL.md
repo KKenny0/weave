@@ -42,11 +42,14 @@ When ambiguous, ask. Don't auto-pick — methodology choice is load-bearing.
 
 ## Shared Phases (all workflows)
 
-Every workflow runs these shared phases. Workflow-specific phases live in `references/{workflow}.md`:
+Every workflow runs these shared phases. Workflow-specific evidence and lens generation live in `references/{workflow}.md`:
 
 1. **Collect** — gather sources (auto-scout or user-provided). See `references/collect.md`.
-2 through N-1. **Workflow-specific** — see `references/{workflow}.md`.
-N. **Voice Pass** — de-AI scan + apply user-style from prior outputs. See `references/voice-pass.md`.
+2. **Build evidence model** — Source Briefs, behavior paths, or Source Catalog + map evidence.
+3. **Generate route-specific lenses** — use only lenses supported by the evidence and user question.
+4. **Frame Selection** — admit, compare, hold-out test, and map chapters. See `references/frame-selection.md`.
+5. **Compose** — write one article through the selected frame; keep candidate artifacts internal.
+6. **Voice Pass** — de-AI scan + apply user-style from prior outputs. See `references/voice-pass.md`.
 
 Output naming, paths, YAML frontmatter: see `references/output-spec.md`.
 
@@ -54,6 +57,8 @@ Output naming, paths, YAML frontmatter: see `references/output-spec.md`.
 
 - **No fabrication.** Every claim in the final article must trace to a source. Auto-scout finds sources first, then writes.
 - **No Phase N+1 before Phase N solid.** Section-source mapping must be confirmed before Compose begins — every chapter maps to a Source Brief / Synthesis Pack field, or the chapter gets cut.
+- **No frame before evidence.** Early intuitions may guide reading, but the article frame must pass `references/frame-selection.md` against the completed evidence model.
+- **No candidate-count theater.** Keep one strong frame when only one passes. Never retain paraphrases or strawmen to create an artificial choice.
 - **Stop at publish confirmation.** After user confirms article is ready, do NOT push, post, distribute, or commit (unless explicitly asked).
 - **Voice Pass is not optional.** Every output goes through de-AI scan + style scan.
 - **Ask when routing is ambiguous.** Don't guess workflow.

@@ -100,6 +100,8 @@ For generator discovery: list phenomena, propose generators, remove candidates t
 
 Keep only candidates that change evidence selection or chapter structure. Merge paraphrases. One strong candidate is better than three decorative ones.
 
+Use the Candidate Frame Brief and admission gates in `frame-selection.md` when turning these directions into retained candidates.
+
 ### Step 3: Adversarial stress test
 
 Test candidates with arguments, not theatrical personas:
@@ -126,7 +128,7 @@ Stable subtopics do not repeat.
 
 ### Step 5: Select frame and test hold-out
 
-Choose the candidate that best answers `q`, has the strongest evidence, compresses the most observations with the fewest components, and states its boundary. Prefer a narrower supported claim over a broad elegant one.
+Apply `frame-selection.md`. Choose the candidate that best answers `q`, has the strongest evidence, compresses the most observations with the fewest components, and states its boundary. Prefer a narrower supported claim over a broad elegant one.
 
 Reveal the hold-out. Pass when the frame explains it without changing its core components. Record a real miss and narrow the frame when necessary; do not retrofit and claim prediction.
 

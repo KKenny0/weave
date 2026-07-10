@@ -168,6 +168,8 @@ Use the evidence to form 1-4 candidates. Useful lens families include:
 
 These are search directions, not mandatory sections. A candidate must reorganize the behavior paths and explain more than one local fact. Discard a lens that only renames the module list.
 
+Use the Candidate Frame Brief and admission gates in `frame-selection.md` when retaining candidates.
+
 For transferable patterns, require:
 
 - concrete enforcing symbols and configuration;
@@ -180,7 +182,7 @@ If evidence is thin, write `迁移素材不足` and skip a standalone migration 
 
 ### Step 7: Select the article spine
 
-Select the lens that best answers `q`, has the strongest verified evidence, and produces the clearest path dependency. Prefer a narrower verified explanation over a broad static one.
+Apply `frame-selection.md`. Select the lens that best answers `q`, has the strongest verified evidence, and produces the clearest path dependency. Prefer a narrower verified explanation over a broad static one.
 
 Build a chapter map. Every chapter must serve one of: establish path, explain mechanism, contrast implementation, test invariant, expose boundary, or transfer pattern. Named focus areas must map to a chapter or an explicit coverage limitation.
 

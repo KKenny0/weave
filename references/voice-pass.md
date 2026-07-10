@@ -73,6 +73,9 @@ Tell user:
 - Article path
 - Word count (approximate)
 - Chapter count
+- Selected frame and why it won
+- Close alternative only when it would have produced a materially different article
+- Hold-out result: pass / partial / miss, with the final boundary when relevant
 - Voice Pass execution: how many AI patterns caught and fixed
 - Which style reference was used (path + how many preferences extracted). If no reference found, say so.
 

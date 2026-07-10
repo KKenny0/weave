@@ -150,7 +150,7 @@ For each surviving candidate, write internally:
 - one boundary or counterexample;
 - what it predicts about the held-out frontier-source group.
 
-Select the lens with the strongest question fit and evidence. Prefer narrower claims when two are close. The research-program lens has no default priority.
+Use the Candidate Frame Brief and admission gates in `frame-selection.md`. Select the lens with the strongest question fit and evidence. Prefer narrower claims when two are close. The research-program lens has no default priority.
 
 Completion check:
 
