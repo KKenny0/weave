@@ -1,0 +1,120 @@
+{
+  "skill_name": "weave",
+  "evals": [
+    {
+      "id": 1,
+      "name": "single-paper-analysis",
+      "prompt": "帮我深度阅读这篇文章：https://www.anthropic.com/research/building-effective-agents，我想理解 Anthropic 对 AI agent 架构的核心观点，写一篇研究文章。",
+      "expected_output": "完整四阶段流水线输出，最终产出一个自包含的研究文章 .md 文件。",
+      "files": [],
+      "expectations": [
+        "Output is a single .md file with YAML frontmatter containing title, date, tags, sources, status fields",
+        "File name follows the pattern {topic}-deep-read_{date}.md",
+        "Article body exceeds 2000 Chinese characters (excluding frontmatter)",
+        "Article content is self-contained — a reader can understand the core arguments without accessing the source",
+        "Every key claim in the article traces back to specific evidence from the Anthropic article",
+        "Each sentence expresses one complete thought — no compound clauses joining unrelated ideas with 而且/并且/同时 (一念一句)",
+        "Reasons precede conclusions — the 'why' appears before the 'what' in at least 3 argumentative passages (理由先行)",
+        "Concrete examples or specific details are used to support claims, not just abstract generalizations",
+        "Contains at most 1 occurrence total of any hedge phrase from this list: 值得注意的是, 不可否认, 毫无疑问, 综上所述, 在某种程度上, 也许可以说, 不难发现, 由此可见, 众所周知",
+        "Source material content is faithfully represented — no fabricated quotes or statistics",
+        "Article has clear section structure with at least 3 headings",
+        "Output does NOT contain raw pipeline artifacts (Source Brief tables, Evidence Weight grids, Daily Notes) — only the finished article"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "multi-source-synthesis",
+      "prompt": "我最近在做关于 'context engineering' 的调研，这里有两篇参考材料：\n\n1. https://www.anthropic.com/research/the-problem-with-rag\n2. https://www.philschmid.de/context-engineering\n\n帮我对比阅读，写一篇综合研究文章。我特别想知道：context engineering 和传统 RAG 的核心分歧在哪里？",
+      "expected_output": "两份素材经过独立精读后综合合并，撰写一篇完整的研究文章。文章直接回答用户关于 context engineering vs RAG 核心分歧的问题。",
+      "files": [],
+      "expectations": [
+        "Output is a single .md file with YAML frontmatter listing both sources",
+        "Article body exceeds 2000 Chinese characters (excluding frontmatter)",
+        "Article directly answers the user's question about context engineering vs traditional RAG divergence",
+        "Both sources are meaningfully represented — neither is ignored or treated as secondary",
+        "Points of agreement AND disagreement between sources are identified",
+        "When sources disagree, the article presents both positions with evidence rather than picking a side",
+        "Article is NOT structured as 'Source A says X... Source B says Y...' — structure reflects analytical logic, not source order",
+        "Key technical terms from both sources are preserved in original English with Chinese explanation where needed",
+        "Contains at most 1 occurrence total of any hedge phrase from the banned list",
+        "No fabricated claims — every assertion traces to at least one source",
+        "Each sentence expresses one complete thought (一念一句)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "non-ai-interview",
+      "prompt": "帮我深度阅读这篇访谈：https://www.noemamag.com/ai-does-not-exist-yet/，把核心论点整理成研究文章。我关心的是：他们说的 'AI doesn't exist yet' 到底是什么意思？这个判断的依据是什么？",
+      "expected_output": "对访谈类素材的深度阅读。访谈有多位发言者，需要区分不同发言者的观点，识别共识和分歧。最终输出研究文章，聚焦用户关心的两个问题。",
+      "files": [],
+      "expectations": [
+        "Output is a single .md file with proper YAML frontmatter",
+        "Article body exceeds 2000 Chinese characters (excluding frontmatter)",
+        "Article distinguishes between at least 2 different speakers' viewpoints — does not flatten all content into one perspective",
+        "Article directly answers both of the user's questions: what 'AI doesn't exist yet' means, and what evidence supports that claim",
+        "At least 2 direct quotes from the interview are used to anchor key analytical points",
+        "Article identifies areas where speakers agree AND disagree",
+        "Article identifies at least 1 blind spot or unchallenged assumption in the interview",
+        "Contains at most 1 occurrence total of any hedge phrase from the banned list",
+        "No fabricated quotes or misattributed statements",
+        "Each sentence expresses one complete thought (一念一句)"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "edge-case-no-sources",
+      "prompt": "帮我深度阅读一下，我想研究日本明治维新对现代东亚政治格局的影响。",
+      "expected_output": "Skill auto-scouts web for topic, either proceeds with found sources or honestly reports insufficient quality sources. Does NOT fabricate.",
+      "files": [],
+      "expectations": [
+        "Output shows the skill attempted auto-scout (web search for the topic)",
+        "Output either (a) found sources via auto-scout and proceeded with the workflow, or (b) honestly reported insufficient quality sources and asked user to supplement",
+        "Output does NOT fabricate content from general knowledge without sources",
+        "Response includes the auto-scouted source list (even if quality is limited)"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "source-dive-real-repo",
+      "prompt": "帮我 source dive 这个项目：https://github.com/tw93/waza — 我想看它的内部实现，特别是 skill 系统、MCP 集成、和 plugin marketplace 机制。",
+      "expected_output": "完整 source-dive 三阶段输出（Discover / Analyze / Compose），最终产出一个自包含的技术深度文章 .md 文件。覆盖 waza 的 skill 系统、MCP、plugin marketplace。",
+      "files": [],
+      "expectations": [
+        "Output is a single .md file with YAML frontmatter containing title, date, tags, sources (GitHub URL), status",
+        "File name follows the pattern waza-source-dive_{date}.md",
+        "Article body exceeds 2000 Chinese characters (excluding frontmatter)",
+        "File size classification table fired during Phase 2 (small/medium/large buckets used to dispatch files to main thread vs background agent)",
+        "Knowledge map built with all 6 subsections: architecture overview (+ ASCII diagram), core module list, key mechanism list, doc-vs-source diffs, non-obvious findings, transferable patterns (or '迁移素材不足' gate fired)",
+        "Doc-vs-source diffs are explicitly surfaced (places where docs disagree with source)",
+        "Parallel items (skills / MCP types / marketplace components) each get own paragraph — not merged",
+        "If valid transferable patterns found: Engineering Migration chapter present with name + definition + how-waza-uses-it + scenarios. If thin: explicit '迁移素材不足' downgrade to brief summary.",
+        "Every technical claim cites source file / line / config value",
+        "Contains at most 1 occurrence total of any hedge phrase from the banned list",
+        "Article has 6-8 chapters with clear logical dependency (macro → micro)"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "survey-real-domain",
+      "prompt": "帮我做 survey：agent memory systems 这个方向。我想看这个领域的主要研究纲领、核心争论、演化脉络、和开放问题。scope 选 broad。",
+      "expected_output": "完整 survey 三阶段输出（Scout / Map / Compose），最终产出一个学案体中文领域地图 .md 文件，覆盖 agent memory systems 领域。",
+      "files": [],
+      "expectations": [
+        "Output is a single .md file with YAML frontmatter containing topic: agent memory systems, scope: broad, date, tags, status",
+        "File name follows the pattern agent-memory-systems-survey_{date}.md",
+        "Article body exceeds 2500 Chinese characters (excluding frontmatter) — survey needs more breadth than deep-read",
+        "Source Catalog built first with 15-40 sources, each tagged with structural role (奠基性 / 综述性 / 桥梁性 / 前沿性 / 争议性) and availability",
+        "学案体 template structure complete with all 7 sections: 总案 / 研究纲领 / 论争 / 源流 / 未竟 / 入门 / 覆盖度声明",
+        "2-5 research programs mapped, each with: hard core / protective belt / representative work / status (progressive / degenerating / neutral)",
+        "2-4 core disputes mapped as Issue → Position A vs B → Evidence → Status",
+        "Evolution timeline with phase transitions marked (normal science / anomaly accumulation / crisis / revolution) — not just a timeline of events",
+        "3-5 open problems + 1-2 neglected directions (neglected marked [推测，需验证])",
+        "3-5 entry recommendations with concrete 'what reader gains after reading'",
+        "覆盖度声明 honest about coverage limits (which directions well-covered, which thin)",
+        "Contains at most 1 occurrence total of any hedge phrase from the banned list",
+        "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) NOT used in output — methodology steps preserved without theorist-name scaffolding"
+      ]
+    }
+  ]
+}
