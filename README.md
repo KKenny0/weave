@@ -1,6 +1,12 @@
-# weave
+<p align="center">
+  <img src="assets/weave-mark.svg" alt="weave logo" width="96" />
+</p>
 
-简体中文 | [English](README.en.md)
+<h1 align="center">weave</h1>
+
+<p align="center"><strong>证据先行，取景框决定文章。</strong></p>
+
+<p align="center">简体中文 · <a href="README.en.md">English</a></p>
 
 weave 是一个面向深度研究的 Agent Skill。给它一组文章、一篇论文、一个技术项目，或者一个领域名称，它会产出一篇有证据、有判断、可以独立阅读的中文长文。
 

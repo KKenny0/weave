@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="weave-mark-title weave-mark-description">
+  <title id="weave-mark-title">weave mark</title>
+  <desc id="weave-mark-description">An open crop frame with a selected point at its center.</desc>
+  <path d="M28 48V28h20M80 28h20v20M100 80v20H80M48 100H28V80" fill="none" stroke="#416f82" stroke-linecap="square" stroke-linejoin="miter" stroke-width="8" />
+  <rect x="58" y="58" width="12" height="12" rx="1.5" fill="#bb5542" transform="rotate(45 64 64)" />
+</svg>
