@@ -66,6 +66,8 @@ git clone https://github.com/KKenny0/weave.git ~/.codex/skills/weave
 
 其他支持 Agent Skills 结构的宿主，只需把仓库放到它能扫描的 skills 目录。
 
+如果你从 Loom 迁移，请先看 [MIGRATION.md](MIGRATION.md)。现有 `.loom/config.yaml` 路径暂时保持兼容，不需要改写已有 vault。
+
 ## 用法
 
 深读论文或访谈：
@@ -115,6 +117,7 @@ git clone https://github.com/KKenny0/weave.git ~/.codex/skills/weave
 ```text
 weave/
 ├── SKILL.md
+├── MIGRATION.md
 ├── references/
 │   ├── collect.md
 │   ├── deep-read.md
@@ -126,10 +129,12 @@ weave/
 │   └── output-spec.md
 └── evals/
     ├── evals.json
-    └── frame-quality.md
+    ├── frame-quality.md
+    └── smoke.md
 ```
 
 `evals/evals.json` 包含 7 个回归场景，覆盖单素材、多素材、访谈、主题自动搜集、技术项目、领域地图和学术论文。`evals/frame-quality.md` 定义候选框准入、预留测试与成文追溯的评估方法。
+`evals/smoke.md` 提供安装后逐路线执行的人工回归协议。
 
 ## 边界
 
