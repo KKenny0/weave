@@ -44,7 +44,7 @@ Run the applicable cases in each available host. A simulated host label is not e
 Each run passes only when all of these are true:
 
 1. The route is correct and the output is one self-contained `.md` article with `title`, `date`, `tags`, `sources`, and `status` frontmatter.
-2. A Candidate Frame Brief records at least one admitted candidate, the selected frame, the hold-out identifier, and a prediction before the hold-out is revealed.
+2. A pre-reveal artifact records only the allowed Candidate Frame Brief, provisional selection, hold-out identifier, prediction, timestamp, workflow, and non-personal topic fields; it contains no raw question, personal context, Context Envelope, source model, or Impact Brief.
 3. The selected frame changes the chapter map, names a boundary, and explains the hold-out without changing its load-bearing components after reveal.
 4. The final article traces its chapters to evidence and contains no Source Brief, Source Catalog, Candidate Frame Brief, or internal scoring table.
 5. The delivery report distinguishes verified runtime behavior, static inference, source gaps, and chronology that is unavailable or unverified.

@@ -71,7 +71,19 @@ Reveal the pre-designated hold-out after selecting `f*`.
 
 The hold-out is a test, not another source to silently absorb.
 
-For evals or audit-sensitive runs, persist the Candidate Frame Brief, hold-out identifiers, and pre-reveal prediction before opening the hold-out. Save them under the run's internal workspace (for example `.weave-frame/pre-reveal.md`) and include the path in the run report. Capture the timestamp from the environment clock rather than inventing or manually estimating it. When tool transcripts are available, identify the later fetch or read event that reveals the hold-out. The final article must still exclude internal artifacts. A retrospective delivery claim or self-authored timestamp alone is not proof of ordering; if no access log or transcript is available, mark chronology `unverified` while preserving the prediction artifact.
+For evals or audit-sensitive runs, persist the Candidate Frame Brief, hold-out identifiers, and pre-reveal prediction before opening the hold-out. Save them under the run's internal workspace (for example `.weave-frame/pre-reveal.md`) and include the path in the run report. Capture the timestamp from the environment clock rather than inventing or manually estimating it.
+
+The persisted pre-reveal artifact has a strict allowlist:
+
+- environment timestamp;
+- workflow and non-personal topic label;
+- hold-out identifier and pre-reveal prediction;
+- Candidate Frame Brief fields defined above;
+- provisional selection and comparative judgment.
+
+Persist nothing else. In particular, exclude the Context Envelope under any name, Capability Manifest, host identity, context source categories, memory facts, user baseline or preference, personal constraints, raw `q`, Source Briefs, Source Catalog, Synthesis Pack, and Impact Brief. When `Question answered` would repeat personal context, rewrite it as an impersonal research question such as “which subsystem should be built first”; keep the original `q` only in working context. Inspect the artifact against this allowlist before revealing the hold-out, and remove any prohibited field.
+
+When tool transcripts are available, identify the later fetch or read event that reveals the hold-out. The final article must still exclude internal artifacts. A retrospective delivery claim or self-authored timestamp alone is not proof of ordering; if no access log or transcript is available, mark chronology `unverified` while preserving the prediction artifact.
 
 ## Build the Frame Decision
 
