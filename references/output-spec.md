@@ -51,6 +51,20 @@ The filename and YAML schema do not change when Impact Pass runs.
 
 The section is finished article content, not a dump of internal fields.
 
+## Delivery report allowlist
+
+When a delivery report or `smoke-report.md` is requested, persist only:
+
+- output path and size or chapter metrics;
+- selected frame, why it won, material close alternative, and final boundary;
+- hold-out identifier, prediction summary, result, chronology status, and pre-reveal artifact path;
+- detected host label, context source category names, and material degradation;
+- admitted impact count or `delta ~= 0` reason, without Impact Brief fields;
+- Voice Pass result and scoped style-reference status;
+- runtime verification, static inference, source gaps, and coverage limits.
+
+Never use report sections named `Capability Manifest`, `Context Envelope`, `Source Brief`, `Source Catalog`, `Candidate Frame Brief`, `Synthesis Pack`, or `Impact Brief`, and never reproduce their schemas or raw contents. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
+
 ## Never
 
 - Don't change the naming pattern

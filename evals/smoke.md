@@ -44,13 +44,13 @@ Run the applicable cases in each available host. A simulated host label is not e
 Each run passes only when all of these are true:
 
 1. The route is correct and the output is one self-contained `.md` article with `title`, `date`, `tags`, `sources`, and `status` frontmatter.
-2. A pre-reveal artifact records only the allowed Candidate Frame Brief, provisional selection, hold-out identifier, prediction, timestamp, workflow, and non-personal topic fields; it contains no raw question, personal context, Context Envelope, source model, or Impact Brief.
+2. An audit/smoke run creates and reads back `.weave-frame/pre-reveal.md` before reveal. The file records only the allowed Candidate Frame Brief, provisional selection, hold-out identifier, prediction, timestamp, workflow, and non-personal topic fields; without it, chronology and hold-out validation fail.
 3. The selected frame changes the chapter map, names a boundary, and explains the hold-out without changing its load-bearing components after reveal.
 4. The final article traces its chapters to evidence and contains no Source Brief, Source Catalog, Candidate Frame Brief, or internal scoring table.
 5. The delivery report distinguishes verified runtime behavior, static inference, source gaps, and chronology that is unavailable or unverified.
 6. Voice Pass is reported, uses only already-scoped style references, performs no recursive discovery across home, temp, vault, project, or unrelated workspace trees, and introduces no unsupported quote, statistic, or field-wide claim.
 7. Every final source title, URL, and stable identifier matches an opened canonical source page; no guessed, mismatched, duplicate, or provisional citation remains.
-8. A provenance-bearing Context Envelope is built from actual capabilities and remains ephemeral; Capability Manifest, Context Envelope, renamed or paraphrased context summaries, and Impact Brief are absent from every persisted artifact and the final article. The delivery report contains only host, context source category names, and material degradation.
+8. A provenance-bearing Context Envelope is built from actual capabilities and remains ephemeral; Capability Manifest, Context Envelope, renamed or paraphrased context summaries, and Impact Brief are absent from every persisted artifact and the final article. The delivery report follows `output-spec.md`'s allowlist and contains no internal-artifact section names or schemas.
 9. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation without exposing raw memory.
 10. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
 11. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.

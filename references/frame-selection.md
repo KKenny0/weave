@@ -73,6 +73,8 @@ The hold-out is a test, not another source to silently absorb.
 
 For evals or audit-sensitive runs, persist the Candidate Frame Brief, hold-out identifiers, and pre-reveal prediction before opening the hold-out. Save them under the run's internal workspace (for example `.weave-frame/pre-reveal.md`) and include the path in the run report. Capture the timestamp from the environment clock rather than inventing or manually estimating it.
 
+Treat requests for a smoke report, full pipeline verification, or complete delivery report as audit-sensitive. Before reveal, verify that the pre-reveal file exists and can be read back. Without that file, do not claim verified chronology or a hold-out pass; report the run as failed or chronology unverified and rerun from before reveal.
+
 The persisted pre-reveal artifact has a strict allowlist:
 
 - environment timestamp;
