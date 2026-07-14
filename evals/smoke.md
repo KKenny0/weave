@@ -55,6 +55,7 @@ Each run passes only when all of these are true:
 10. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
 11. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.
 12. An explicit first-person baseline, preference, decision, goal, or constraint renders the literal heading `## 对我意味着什么`; a genuinely question-only run renders the literal heading `## 对当前问题意味着什么`. Neither heading is paraphrased or specialized. An explicit opt-out renders neither.
+13. `scripts/check-run.ps1` exits zero for the run directory and the expected `personal`, `question`, or `none` mode. A self-authored pass statement cannot substitute for this result.
 
 ## Record
 

@@ -174,7 +174,8 @@ weave/
 ├── SKILL.md
 ├── MIGRATION.md
 ├── scripts/
-│   └── check.ps1
+│   ├── check.ps1
+│   └── check-run.ps1
 ├── references/
 │   ├── collect.md
 │   ├── context-acquisition.md
@@ -202,6 +203,14 @@ pwsh -File scripts/check.ps1
 ```
 
 它会检查 skill frontmatter、eval 数据、文档引用、机器路径泄漏、Git 空白错误和 skills CLI 发现，并在临时 HOME 中完成隔离安装与打包内容比对。离线时可加 `-SkipInstall`，但这不会验证实际安装面。
+
+需要审计一次真实 weave 输出时，使用运行产物验证入口：
+
+```powershell
+pwsh -File scripts/check-run.ps1 -RunDirectory <output-dir> -ImpactMode personal
+```
+
+`ImpactMode` 可取 `personal`、`question` 或 `none`。它会机械检查文章 frontmatter、字面意义层标题、pre-reveal 文件及其隐私边界、交付报告字段和 hold-out 时间顺序状态。非零退出码表示本次运行不能声明通过。
 
 ## 边界
 

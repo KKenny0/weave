@@ -12,6 +12,7 @@ $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $skillPath = Join-Path $repoRoot 'SKILL.md'
 $evalPath = Join-Path $repoRoot 'evals/evals.json'
 $scriptPath = Join-Path $repoRoot 'scripts/check.ps1'
+$runCheckPath = Join-Path $repoRoot 'scripts/check-run.ps1'
 $skillsCliPackage = 'skills@1.5.17'
 
 function Invoke-Check {
@@ -66,6 +67,7 @@ try {
             'SKILL.md',
             'README.md',
             'scripts/check.ps1',
+            'scripts/check-run.ps1',
             'evals/evals.json',
             'evals/smoke.md',
             'references/collect.md',
@@ -160,7 +162,7 @@ try {
 
     Invoke-Check 'text hygiene and machine-path leakage' {
         $contentFiles = @(Get-ProductMarkdownFiles) + $evalPath
-        foreach ($file in $contentFiles + $scriptPath) {
+        foreach ($file in $contentFiles + @($scriptPath, $runCheckPath)) {
             $lineNumber = 0
             foreach ($line in Get-Content -LiteralPath $file) {
                 $lineNumber++
@@ -177,6 +179,59 @@ try {
     Invoke-Check 'Git whitespace errors' {
         $git = (Get-Command git -ErrorAction Stop).Source
         $null = Invoke-NativeCommand -Command $git -Arguments @('-C', $repoRoot, 'diff', '--check')
+    }
+
+    Invoke-Check 'run verifier fixtures' {
+        $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('weave-run-check-' + [guid]::NewGuid().ToString('N'))
+        try {
+            New-Item -ItemType Directory -Path (Join-Path $fixtureRoot '.weave-frame') -Force | Out-Null
+            @'
+---
+title: test
+date: 2026-07-14
+tags: [deep-read]
+sources:
+  - https://example.com
+status: draft
+---
+## 对我意味着什么
+Material impact.
+'@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Encoding utf8NoBOM
+            @'
+Timestamp: 2026-07-14T00:00:00Z
+Workflow: deep-read
+Topic: agent architecture
+Hold-out identifier: source-2
+Hold-out prediction: the boundary remains stable
+Provisional selection: boundary-first
+Comparative judgment: strongest evidence coverage
+'@ | Set-Content -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Encoding utf8NoBOM
+            @'
+# Smoke Report
+Host: Codex
+Context source categories: explicit current request
+Admitted impacts: 1
+Voice Pass: passed
+Chronology: verified
+Artifact: .weave-frame/pre-reveal.md
+'@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Encoding utf8NoBOM
+
+            $pwsh = (Get-Command pwsh -ErrorAction Stop).Source
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $fixtureRoot, '-ImpactMode', 'personal')
+
+            Add-Content -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Value "Why: fits the user's decision"
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $fixtureRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted a personal-context leak fixture.'
+            }
+        }
+        finally {
+            $resolved = [System.IO.Path]::GetFullPath($fixtureRoot)
+            $tempBase = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
+            if ($resolved.StartsWith($tempBase, [System.StringComparison]::OrdinalIgnoreCase) -and (Split-Path -Leaf $resolved).StartsWith('weave-run-check-')) {
+                Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
 
     if (-not $SkipInstall) {
@@ -234,7 +289,7 @@ try {
                     throw 'Isolated install did not create .agents/skills/weave.'
                 }
 
-                $runtimeFiles = @('SKILL.md', 'scripts/check.ps1')
+                $runtimeFiles = @('SKILL.md', 'scripts/check.ps1', 'scripts/check-run.ps1')
                 $runtimeFiles += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
                 foreach ($relativePath in $runtimeFiles) {
                     $source = Join-Path $repoRoot $relativePath

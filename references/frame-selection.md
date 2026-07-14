@@ -75,6 +75,8 @@ For evals or audit-sensitive runs, persist the Candidate Frame Brief, hold-out i
 
 Treat requests for a smoke report, full pipeline verification, or complete delivery report as audit-sensitive. Before reveal, verify that the pre-reveal file exists and can be read back. Without that file, do not claim verified chronology or a hold-out pass; report the run as failed or chronology unverified and rerun from before reveal.
 
+If the primary source can only be fetched atomically and that fetch exposes the entire candidate hold-out, do not reuse a section of that source as if it were unseen. For an audit-sensitive run, reserve an independent, unopened supporting source by canonical title/URL as the hold-out, persist the prediction, then open it. If no independent hold-out can be collected, chronology remains unverified and the executable run gate must fail.
+
 The persisted pre-reveal artifact has a strict allowlist:
 
 - environment timestamp;
