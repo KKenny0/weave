@@ -53,6 +53,7 @@ Each run passes only when all of these are true:
 8. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation without exposing raw memory.
 9. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
 10. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.
+11. An explicit first-person baseline, preference, decision, goal, or constraint renders `对我意味着什么`; `对当前问题意味着什么` appears only in genuinely question-only runs.
 
 ## Record
 

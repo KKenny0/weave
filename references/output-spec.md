@@ -43,8 +43,8 @@ Workflow-specific extra fields:
 
 The filename and YAML schema do not change when Impact Pass runs.
 
-- Use `## 对我意味着什么` only when the Context Envelope supports a personal baseline or decision.
-- Use `## 对当前问题意味着什么` with question-only context.
+- Use `## 对我意味着什么` when the Context Envelope supports any personal baseline, preference, decision, goal, or constraint tied to the research. An explicit current-request statement such as “我正在决定…” or “我目前偏向…” is sufficient; user role and persistent memory are not required.
+- Use `## 对当前问题意味着什么` only when none of those personal fields is supported and the context is genuinely question-only.
 - When no impact passes admission, keep the applicable heading and state the `delta ~= 0` reason briefly.
 - Omit the section when the user explicitly requests a pure research article without personal implications.
 - Place the section after the explanatory body and before a final evidence-boundary or coverage statement when the workflow has one.

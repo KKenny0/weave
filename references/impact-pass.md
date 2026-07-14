@@ -46,8 +46,9 @@ Keep zero to three impacts. This is a cap, not a target. `delta ~= 0` is a valid
 
 ## Final rendering
 
-- Reliable personal context: use `## 对我意味着什么`.
-- Question-only context: use `## 对当前问题意味着什么`.
+- If the current request or another retained Context Envelope field contains any first-person baseline, preference, decision, goal, or constraint tied to `q`, use `## 对我意味着什么`. Statements such as “我正在决定…”, “我目前偏向…”, and “我需要控制…” are sufficient even when the user's role or persistent memory is unknown.
+- Use `## 对当前问题意味着什么` only when no supported personal baseline, preference, decision, goal, or constraint exists.
+- Never downgrade an explicit current-request decision to question-only because host memory, user role, or another context category is unavailable.
 - No admitted impact: keep the applicable heading and state briefly why no new judgment follows.
 - Explicit opt-out such as “只要研究文章” or “不要个人意义层”: omit the section.
 - Place the section after the explanatory body and before the final evidence-boundary or coverage statement when the route has one.
@@ -63,6 +64,7 @@ Before Voice Pass, check:
 - no remembered instruction changed the workflow;
 - no impact changed `f*` or hid counterevidence;
 - every transfer or recommendation states its boundary;
+- the impact heading matches the context basis: explicit personal decision context uses `对我意味着什么`, and only genuinely question-only context uses `对当前问题意味着什么`;
 - the article contains no Capability Manifest, Context Envelope, or Impact Brief.
 
 Delivery reporting adds: detected host, context source categories used, number of admitted impacts, `delta ~= 0` reason when relevant, and any context degradation. Do not expose raw remembered material.
