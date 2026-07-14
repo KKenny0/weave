@@ -65,6 +65,8 @@ When a delivery report or `smoke-report.md` is requested, persist only:
 
 Never use report sections named `Capability Manifest`, `Context Envelope`, `Source Brief`, `Source Catalog`, `Candidate Frame Brief`, `Synthesis Pack`, or `Impact Brief`, and never reproduce their schemas or raw contents. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
 
+Apply the allowlist to content, not only headings. The report may say `Context categories: explicit current request` and `Admitted impacts: 3`. It must not quote or paraphrase what the user is deciding, prefers, wants, or is constrained by, and must not summarize Impact 1/2/3. Read the report back and remove those details before delivery. The final article is the only persisted output that may contain admitted personal application.
+
 ## Never
 
 - Don't change the naming pattern

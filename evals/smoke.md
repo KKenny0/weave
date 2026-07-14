@@ -51,10 +51,10 @@ Each run passes only when all of these are true:
 6. Voice Pass is reported, uses only already-scoped style references, performs no recursive discovery across home, temp, vault, project, or unrelated workspace trees, and introduces no unsupported quote, statistic, or field-wide claim.
 7. Every final source title, URL, and stable identifier matches an opened canonical source page; no guessed, mismatched, duplicate, or provisional citation remains.
 8. A provenance-bearing Context Envelope is built from actual capabilities and remains ephemeral; Capability Manifest, Context Envelope, renamed or paraphrased context summaries, and Impact Brief are absent from every persisted artifact and the final article. The delivery report follows `output-spec.md`'s allowlist and contains no internal-artifact section names or schemas.
-9. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation without exposing raw memory.
+9. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation. It does not quote or paraphrase personal baselines, decisions, preferences, goals, constraints, raw memory, or individual admitted impacts.
 10. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
 11. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.
-12. An explicit first-person baseline, preference, decision, goal, or constraint renders `对我意味着什么`; `对当前问题意味着什么` appears only in genuinely question-only runs.
+12. An explicit first-person baseline, preference, decision, goal, or constraint renders the literal heading `## 对我意味着什么`; a genuinely question-only run renders the literal heading `## 对当前问题意味着什么`. Neither heading is paraphrased or specialized. An explicit opt-out renders neither.
 
 ## Record
 

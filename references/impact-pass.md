@@ -48,6 +48,7 @@ Keep zero to three impacts. This is a cap, not a target. `delta ~= 0` is a valid
 
 - If the current request or another retained Context Envelope field contains any first-person baseline, preference, decision, goal, or constraint tied to `q`, use `## 对我意味着什么`. Statements such as “我正在决定…”, “我目前偏向…”, and “我需要控制…” are sufficient even when the user's role or persistent memory is unknown.
 - Use `## 对当前问题意味着什么` only when no supported personal baseline, preference, decision, goal, or constraint exists.
+- These are literal output headings. Do not paraphrase, specialize, or replace them with a topic-specific heading such as `## 对理解 agent 架构意味着什么`.
 - Never downgrade an explicit current-request decision to question-only because host memory, user role, or another context category is unavailable.
 - No admitted impact: keep the applicable heading and state briefly why no new judgment follows.
 - Explicit opt-out such as “只要研究文章” or “不要个人意义层”: omit the section.
