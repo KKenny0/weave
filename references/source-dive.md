@@ -13,6 +13,7 @@ Capture:
 - topic and repository URL
 - official docs and papers when relevant
 - `q`: what the user wants to understand or decide
+- `C`: the Context Envelope from `context-acquisition.md`
 - every named focus area
 - available repository capabilities: local checkout, remote tree reader, file reader, background agents, shell, and safe test execution
 
@@ -79,6 +80,7 @@ Produce internal Phase 2 input:
 
 - repository, commit, docs version
 - user question and focus obligations
+- context-supported user goal, decision, and constraints; keep project instructions separate from personal baselines
 - selected entries, state owners, registries, boundaries, and tests
 - file size only as a read-scheduling tag
 - doc claims to verify
@@ -178,13 +180,15 @@ For transferable patterns, require:
 - applicable and inapplicable scenarios;
 - a counterexample or boundary.
 
-If evidence is thin, write `迁移素材不足` and skip a standalone migration chapter.
+If evidence is thin, write `迁移素材不足` and do not admit a transfer into the Impact Brief.
 
 ### Step 7: Select the article spine
 
 Apply `frame-selection.md`. Select the lens that best answers `q`, has the strongest verified evidence, and produces the clearest path dependency. Prefer a narrower verified explanation over a broad static one.
 
 Build a chapter map. Every chapter must serve one of: establish path, explain mechanism, contrast implementation, test invariant, expose boundary, or transfer pattern. Named focus areas must map to a chapter or an explicit coverage limitation.
+
+Run `impact-pass.md` after the selected lens passes hold-out testing. Candidate engineering transfers enter the Impact Brief only when their enforcing components, component-removal failure, applicable and inapplicable scenarios, and evidence are all present. If not, retain `迁移素材不足` rather than generating advice.
 
 ## Phase 3: Compose
 
@@ -207,9 +211,9 @@ Write the technical article from the selected lens and behavior evidence.
 - Surface documentation differences where they affect understanding.
 - Never turn a community explanation into source truth.
 
-### Optional Engineering Migration
+### Context-aware engineering impact
 
-Include only if Phase 2 produced validated transferable patterns. For each pattern: name, definition, project mechanism, boundary, applicable scenario, inapplicable scenario, and evidence. One valid pattern is enough; do not pad to three.
+Render validated transferable patterns through `impact-pass.md` instead of adding a second migration chapter. When `C` contains a real engineering decision, explain which criterion changes and why. With question-only context, describe only what the mechanism means for evaluating similar systems. One valid pattern is enough; do not pad to three.
 
 ### Quality audit
 
@@ -221,12 +225,14 @@ Check:
 - Are runtime claims distinguished from static inference?
 - Does the selected lens change the chapter structure?
 - Do transfer patterns survive component-removal and counterexample tests?
+- Does every personal engineering constraint trace to `C` rather than a project instruction or host-memory guess?
+- Did Impact Pass remain downstream of the verified behavior paths and selected lens?
 
 ### Voice Pass and output
 
 Run `voice-pass.md`, then write `{topic}-source-dive_{YYYY-MM-DD}.md` per `output-spec.md`.
 
-Delivery report: article path, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, transferable patterns, anti-patterns, and coverage gaps.
+Delivery report: article path, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, transferable patterns, anti-patterns, and coverage gaps.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
 

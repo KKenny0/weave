@@ -9,6 +9,7 @@ Follow `collect.md`. Phase 1 ends when each source is fetched or its failure is 
 Record:
 
 - `q`: the user's exact question or desired cognitive result
+- `C`: the Context Envelope from `context-acquisition.md`
 - source type and reasoning shape
 - length and access status
 - original key terms
@@ -164,6 +165,12 @@ Reveal the hold-out. Pass when the frame explains it without changing its core c
 
 Keep the Synthesis Pack internal and read-only during Compose.
 
+### Step 7: Run Impact Pass
+
+Apply `impact-pass.md` with `q`, `C`, the completed Source Brief / Synthesis evidence, and the selected frame after hold-out testing. A Source Brief's possible connection to the user's question is only an impact candidate; it cannot become a personal claim until it passes Context Envelope provenance and the Impact Pass admission gates.
+
+Keep the resulting Impact Brief internal and read-only during Compose. Do not let a desired personal implication reopen or retrofit the selected frame.
+
 ## Phase 4: Compose
 
 Write the research article through the selected frame.
@@ -186,6 +193,8 @@ Delete a chapter that does not serve the frame, or return to Phase 2 for missing
 
 Expose reasoning, preserve contradictions, and keep claims proportional to evidence. Use scene, comparison, formalism, or direct quotation only when it advances the selected frame. Keep speaker attribution exact and distinguish source conclusions from weave's synthesis.
 
+Render the admitted impacts near the end of the article per `impact-pass.md`. Use `对我意味着什么` only when `C` supports a personal baseline; otherwise use `对当前问题意味着什么`. Do not turn an absent impact into generic advice.
+
 For an interview with an accessible transcript, use at least two short exact quotes as analytical anchors, normally from different turns or speakers. Each quote must establish a claim, uncertainty, concession, or change caused by questioning; decorative quotation does not count. Preserve wording and speaker attribution. If the transcript cannot be fetched reliably, paraphrase and state that exact quotation was unavailable rather than inventing one.
 
 ### Step 4: Explicit research review
@@ -198,6 +207,8 @@ Audit without role-playing an advisor:
 - **Inference chain**: where does evidence become interpretation?
 - **Generalization**: what population, scale, or time range is justified?
 - **Novelty**: did the article produce a material cognitive shift or only reorganize summaries?
+- **Context fidelity**: does every personal baseline trace to `C`, with question-only language when it does not?
+- **Impact separation**: are source findings, weave synthesis, and context-bound application still distinguishable?
 - **Honesty**: are uncertainty and the hold-out result visible?
 - **Interview grounding**: when applicable, do exact attributed quotes anchor the analysis rather than merely decorate it?
 
@@ -207,6 +218,6 @@ Revise concrete failures, then re-run the audit.
 
 Run `voice-pass.md`, then write `{topic}-deep-read_{YYYY-MM-DD}.md` per `output-spec.md`.
 
-Delivery report: article path, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, Voice Pass corrections, and style reference.
+Delivery report: article path, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, Voice Pass corrections, and style reference.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.

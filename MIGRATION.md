@@ -13,10 +13,10 @@
 Install the new skill with:
 
 ```bash
-git clone https://github.com/KKenny0/weave.git ~/.claude/skills/weave
+npx skills add KKenny0/weave --skill weave -g -y
 ```
 
-The same repository can be placed in the equivalent skills directory for Codex or another Agent Skills host.
+For a host-specific installation, append `-a codex`, `-a claude-code`, or another supported agent identifier. Manual clone fallback and host-specific paths are documented in [README.md](README.md#安装).
 
 ## What remains archived
 

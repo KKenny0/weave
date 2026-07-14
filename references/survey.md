@@ -21,6 +21,7 @@ Capture:
 - `topic`: domain or research direction; narrow labels that are too broad to map honestly
 - `scope`: `broad` or `focused`; default `broad`
 - `q`: what the user wants the map to help them understand or decide
+- `C`: the Context Envelope from `context-acquisition.md`
 - named subtopics: preserve each as a coverage obligation
 
 ### Step 2: Search from different angles
@@ -165,6 +166,8 @@ Completion check:
 - held-out frontier sources do not force a retrofit;
 - open problems, entry points, and coverage limits remain available.
 
+After the selected lens passes hold-out testing, run `impact-pass.md`. Use `C` to distinguish a real positioning or entry decision from a generic reader recommendation. Representative examples may shape an entry path, but they cannot support field-wide action advice.
+
 ## Phase 3: Compose
 
 Write the selected map as a Chinese longform article.
@@ -185,6 +188,9 @@ Write the selected map as a Chinese longform article.
 
 ## 入门
 ...
+
+## {对我意味着什么 | 对当前问题意味着什么}
+{unless the user explicitly opted out, render one applicable heading and the admitted impacts or delta ~= 0 result from Impact Pass}
 
 ## 覆盖度声明
 ...
@@ -212,11 +218,13 @@ Check:
 - Do the table and prose contradict each other?
 - Did the held-out frontier group fit without changing the frame?
 - Are coverage limits specific and honest?
+- Does every personal goal or constraint trace to `C`?
+- Did the impact section avoid turning representative examples into prevalence or momentum claims?
 
 ### Voice Pass and output
 
 Run `voice-pass.md`, then write the final file per `output-spec.md` as `{topic}-survey_{YYYY-MM-DD}.md`. YAML must include `topic` and `scope`.
 
-Delivery report: article path, word count, body structure, selected lens, close alternative if material, source count by evidence type, open-problem count, and coverage limitations.
+Delivery report: article path, word count, body structure, selected lens, close alternative if material, source count by evidence type, open-problem count, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, and coverage limitations.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.

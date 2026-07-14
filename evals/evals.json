@@ -21,7 +21,10 @@
         "Article has clear section structure with at least 3 headings",
         "Output does NOT contain raw pipeline artifacts (Source Brief tables, Evidence Weight grids, Daily Notes) — only the finished article",
         "The selected frame is specific to this source, changes the chapter plan, and names at least one evidence-backed boundary",
-        "The selected frame explains the pre-designated hold-out section without being retrofitted after reveal"
+        "The selected frame explains the pre-designated hold-out section without being retrofitted after reveal",
+        "A Context Envelope is built from capabilities actually exposed by the host; host identity alone does not imply memory access",
+        "With question-only context, the article uses 对当前问题意味着什么 and does not invent a personal role, baseline, or decision",
+        "The final article contains no Capability Manifest, Context Envelope, or Impact Brief"
       ]
     },
     {
@@ -40,7 +43,7 @@
         "Article is NOT structured as 'Source A says X... Source B says Y...' — structure reflects analytical logic, not source order",
         "Key technical terms from both sources are preserved in original English with Chinese explanation where needed",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
-        "No fabricated claims — every assertion traces to at least one source",
+        "No fabricated research claims — every research assertion traces to at least one source, while any context-bound implication traces to the Context Envelope",
         "Each sentence expresses one complete thought (一念一句)",
         "Retained candidate frames imply materially different evidence selection or chapter structures; paraphrases are merged",
         "The selected frame wins on the user's RAG-vs-context-engineering question and explains the held-out Source Brief"
@@ -100,7 +103,10 @@
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
         "Article has a chapter sequence with clear logical dependency rather than a file or symbol inventory",
         "The selected frame follows load-bearing behavior paths and changes how the skills, MCP, and marketplace focus areas are organized",
-        "At least one boundary, failed assumption, or static-inference limit of the selected frame is explicit"
+        "At least one boundary, failed assumption, or static-inference limit of the selected frame is explicit",
+        "Transferable patterns are rendered through Impact Pass rather than duplicated in a second migration chapter",
+        "If no user engineering decision is supported by context, impact stays question-level and does not invent project constraints",
+        "The delivery report names context source categories and impact count without exposing raw remembered material"
       ]
     },
     {
@@ -127,7 +133,10 @@
         "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) NOT used in output — methodology steps preserved without theorist-name scaffolding",
         "The domain-map lens is selected from evidence rather than forcing every field into research programs and paradigm revolution",
         "Any field-status or phase-transition claim is supported by trend evidence and does not contradict the coverage statement",
-        "A persisted pre-reveal artifact records candidate frames, hold-out identifiers, and prediction; transcript/tool order supports chronology when available, otherwise chronology is reported unverified; the selected frame explains the hold-out without changing load-bearing components"
+        "A persisted pre-reveal artifact records candidate frames, hold-out identifiers, and prediction; transcript/tool order supports chronology when available, otherwise chronology is reported unverified; the selected frame explains the hold-out without changing load-bearing components",
+        "The article renders an evidence-bounded impact section before 覆盖度声明 when personal or decision context is available",
+        "Representative examples are not converted into field-wide action advice",
+        "The final article contains no Capability Manifest, Context Envelope, or Impact Brief"
       ]
     },
     {
@@ -148,6 +157,45 @@
         "A persisted pre-reveal artifact records the frame and hold-out prediction; transcript/tool order supports chronology when available, otherwise chronology is reported unverified",
         "The selected frame explains the held-out final load-bearing section without retrofit",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "explicit-decision-impact",
+      "prompt": "帮我深度阅读这篇文章：https://www.anthropic.com/research/building-effective-agents。我正在决定一个 coding agent 应该从固定 workflow 起步，还是直接采用自主 agent loop。我目前偏向直接使用 agent loop，但必须控制调试和失败恢复成本。请写成研究文章，并说明它对这个决策意味着什么。",
+      "expected_output": "完成证据化深读，并把文章的证据和选中框转换成针对显式决策背景的有限认知与决策增量。",
+      "files": [],
+      "expectations": [
+        "The Context Envelope records the explicit baseline, decision, and debugging constraint with current-request provenance",
+        "The impact section uses 对我意味着什么 and changes or confirms a specific decision criterion rather than offering generic agent advice",
+        "Every impact traces to the selected frame and source evidence and states a boundary",
+        "Impact Pass runs only after hold-out testing and does not retrofit the selected frame",
+        "The final article does not expose Context Envelope or Impact Brief fields"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "question-only-impact-degradation",
+      "prompt": "帮我深度阅读这篇文章：https://www.anthropic.com/research/building-effective-agents。写成研究文章，并说明它对理解 agent 架构意味着什么。",
+      "expected_output": "在没有个人角色、既有判断或项目约束时，正常完成研究并退化到问题级意义层。",
+      "files": [],
+      "expectations": [
+        "Missing personal context does not block source collection, frame selection, composition, or delivery",
+        "The article uses 对当前问题意味着什么 rather than 对我意味着什么",
+        "No personal role, project, preference, or prior belief is invented",
+        "The delivery report states question-only context and any unavailable context category"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "impact-opt-out",
+      "prompt": "帮我深度阅读这篇文章：https://www.anthropic.com/research/building-effective-agents。只要纯研究文章，不要个人意义层。",
+      "expected_output": "完成完整证据和取景框流程，但按用户要求省略最终意义层。",
+      "files": [],
+      "expectations": [
+        "Context acquisition and the evidence workflow may still run, but the final article omits 对我意味着什么 and 对当前问题意味着什么",
+        "Opt-out does not skip frame selection, hold-out testing, or Voice Pass",
+        "The delivery report records that the impact section was omitted by explicit request"
       ]
     }
   ]
