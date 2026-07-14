@@ -87,7 +87,9 @@ The internal Context Envelope contains:
 - unknown fields;
 - conflicts or stale items that were excluded.
 
-The envelope is read-only after Frame Selection begins. Keep it in working context only: do not write it to `.weave-frame/` or any other file, persist it, publish it, place it in article frontmatter, or expose raw memory content. Audit-sensitive persistence applies to Candidate Frame Briefs and hold-out predictions, not to the Context Envelope.
+The envelope is read-only after Frame Selection begins. Keep it in working context only. Do not write it to `.weave-frame/` or any other file, even under another name such as `context-summary.md`, `context-notes.md`, `capabilities.md`, or a paraphrased run record. Do not persist, publish, or place its fields in article frontmatter. Audit-sensitive persistence applies only to Candidate Frame Briefs and hold-out predictions, not to any context, capability, baseline, preference, goal, or constraint artifact.
+
+The delivery report is the only persisted context-related surface. It may contain the detected host, source category names, and material degradation required below, but never the Context Envelope, a context summary, raw memory, private paths, or the user's baseline fields as a diagnostic dump.
 
 ## Failure and degradation
 
