@@ -87,7 +87,7 @@ The internal Context Envelope contains:
 - unknown fields;
 - conflicts or stale items that were excluded.
 
-The envelope is read-only after Frame Selection begins. It is an internal working artifact: do not persist it, publish it, place it in article frontmatter, or expose raw memory content.
+The envelope is read-only after Frame Selection begins. Keep it in working context only: do not write it to `.weave-frame/` or any other file, persist it, publish it, place it in article frontmatter, or expose raw memory content. Audit-sensitive persistence applies to Candidate Frame Briefs and hold-out predictions, not to the Context Envelope.
 
 ## Failure and degradation
 

@@ -48,8 +48,8 @@ Each run passes only when all of these are true:
 3. The selected frame changes the chapter map, names a boundary, and explains the hold-out without changing its load-bearing components after reveal.
 4. The final article traces its chapters to evidence and contains no Source Brief, Source Catalog, Candidate Frame Brief, or internal scoring table.
 5. The delivery report distinguishes verified runtime behavior, static inference, source gaps, and chronology that is unavailable or unverified.
-6. Voice Pass is reported, and no unsupported quote, statistic, or field-wide claim is introduced.
-7. A provenance-bearing Context Envelope is built from actual capabilities, while Capability Manifest, Context Envelope, and Impact Brief remain absent from the final article.
+6. Voice Pass is reported, uses only already-scoped style references, performs no recursive discovery across home, temp, vault, project, or unrelated workspace trees, and introduces no unsupported quote, statistic, or field-wide claim.
+7. A provenance-bearing Context Envelope is built from actual capabilities and remains ephemeral; Capability Manifest, Context Envelope, and Impact Brief are absent from every persisted artifact and the final article.
 8. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation without exposing raw memory.
 9. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
 10. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.

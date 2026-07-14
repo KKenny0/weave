@@ -36,15 +36,18 @@ Scan the full article against the 10 AI-pattern checklist. Anything that fails g
 
 任何一条不过，回去改。改完重新过。
 
-## Step 2: Apply user-style (scan user's recent weave outputs)
+## Step 2: Apply user-style from already scoped outputs
 
-Pattern from `/write` SKILL.md:134-141 — scan existing artifacts for style reference, no persistent profile, no trigger word.
+Use existing artifacts only when the current task or host has already placed them in scope. Do not turn style matching into a second context-discovery pass.
 
-Find user's recent weave outputs in priority order:
+Use style references in priority order:
 
-1. `*-workspace/iteration-*/with_skill/outputs/*.md` across all weave workspaces (most recent first by mtime)
-2. User's current working directory, recent `.md` files by mtime
-3. If nothing found → skip this step, use only Step 1 universal rules
+1. files the user explicitly supplied as style references;
+2. prior weave outputs explicitly exposed by the host or named in the Context Envelope;
+3. recent final `.md` outputs in the current output directory, without recursing into parent or sibling directories;
+4. If nothing found → skip this step, use only Step 1 universal rules
+
+Never search an entire home directory, temp directory, vault, project tree, or collection of unrelated workspaces to discover a style reference. Never inspect hidden/internal run artifacts such as `.weave-frame/`. A missing style reference is normal and is not a reason to broaden filesystem scope.
 
 Take **1-2 most recent** as style reference. Extract:
 

@@ -170,6 +170,8 @@
         "The impact section uses 对我意味着什么 and changes or confirms a specific decision criterion rather than offering generic agent advice",
         "Every impact traces to the selected frame and source evidence and states a boundary",
         "Impact Pass runs only after hold-out testing and does not retrofit the selected frame",
+        "The Context Envelope remains ephemeral and is not written into frame, smoke, source, or delivery artifacts",
+        "Voice Pass uses only already-scoped style references and does not recursively scan home, temp, vault, project, or unrelated workspace trees",
         "The final article does not expose Context Envelope or Impact Brief fields"
       ]
     },
