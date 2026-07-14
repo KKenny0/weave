@@ -53,6 +53,15 @@ Quick-read title, abstract or executive summary, introduction, and conclusion. R
 
 Tag each source with: evidence type, domain label, availability, date, and one structural contribution. Treat product pages and SEO summaries as discovery leads, not final evidence.
 
+Before assigning a Source Catalog ID, verify source identity on the canonical landing page or full text:
+
+- title matches the page;
+- URL and stable identifier such as DOI, arXiv ID, repository, or dataset ID refer to that same title;
+- authoring institution or authors are consistent when shown;
+- the page was actually opened, not inferred from a search-result snippet.
+
+If any identity field is missing or mismatched, keep the item as a discovery lead and do not cite it, place it in frontmatter, or use it in the evidence model. Never borrow an identifier from a neighboring paper. A title followed by `?`, “possibly”, “replaced by”, or another provisional marker is not a valid catalog entry.
+
 Field-wide prevalence, momentum, consensus, decline, or frontier-shift claims require a systematic sample, bibliometric trend, repeated benchmark series, or a strong survey that explicitly makes that claim. Representative examples establish existence, not "most" or "the field is moving". Without trend-capable evidence, scope the sentence to `the current source set` and name the sampling limit.
 
 ### Step 4: Search until structural saturation
@@ -79,6 +88,7 @@ Stop when two consecutive targeted rounds add no new method family, dispute axis
 
 Completion check:
 
+- every admitted source passed title-URL-identifier verification on its canonical page;
 - named focus areas covered or explicitly marked thin;
 - important claims have an evidence type capable of supporting them;
 - opposing sides of a dispute are represented;
@@ -212,6 +222,7 @@ If the research-program lens wins, a 学案体 body is appropriate. If another l
 
 Check:
 
+- Does every source in frontmatter, prose, and any final source list match a verified Source Catalog title, URL, and stable identifier? Re-open canonical pages for the final citation set and remove every mismatch or provisional entry.
 - Does the body follow the selected lens rather than a seven-section template?
 - Would another candidate produce materially different grouping or ordering?
 - Does any phase or momentum claim outrun its evidence type?

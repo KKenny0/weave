@@ -49,11 +49,12 @@ Each run passes only when all of these are true:
 4. The final article traces its chapters to evidence and contains no Source Brief, Source Catalog, Candidate Frame Brief, or internal scoring table.
 5. The delivery report distinguishes verified runtime behavior, static inference, source gaps, and chronology that is unavailable or unverified.
 6. Voice Pass is reported, uses only already-scoped style references, performs no recursive discovery across home, temp, vault, project, or unrelated workspace trees, and introduces no unsupported quote, statistic, or field-wide claim.
-7. A provenance-bearing Context Envelope is built from actual capabilities and remains ephemeral; Capability Manifest, Context Envelope, renamed or paraphrased context summaries, and Impact Brief are absent from every persisted artifact and the final article. The delivery report contains only host, context source category names, and material degradation.
-8. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation without exposing raw memory.
-9. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
-10. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.
-11. An explicit first-person baseline, preference, decision, goal, or constraint renders `对我意味着什么`; `对当前问题意味着什么` appears only in genuinely question-only runs.
+7. Every final source title, URL, and stable identifier matches an opened canonical source page; no guessed, mismatched, duplicate, or provisional citation remains.
+8. A provenance-bearing Context Envelope is built from actual capabilities and remains ephemeral; Capability Manifest, Context Envelope, renamed or paraphrased context summaries, and Impact Brief are absent from every persisted artifact and the final article. The delivery report contains only host, context source category names, and material degradation.
+9. The delivery report names the detected host, context source categories, admitted impact count or `delta ~= 0` reason, and any degradation without exposing raw memory.
+10. Every personal baseline traces to explicit, provided, conversation, project, or host-memory context; project instructions are not silently rewritten as personal beliefs.
+11. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.
+12. An explicit first-person baseline, preference, decision, goal, or constraint renders `对我意味着什么`; `对当前问题意味着什么` appears only in genuinely question-only runs.
 
 ## Record
 

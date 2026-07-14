@@ -120,6 +120,7 @@
         "File name follows the pattern agent-memory-systems-survey_{date}.md",
         "Article body exceeds 2500 Chinese characters (excluding frontmatter) — survey needs more breadth than deep-read",
         "Source Catalog is built first, reaches structural saturation, and tags each source by evidence type, structural contribution, domain label, and availability",
+        "Every admitted source title, URL, and stable identifier is verified against an opened canonical page; search snippets, mismatched IDs, and provisional citations never enter frontmatter or the final article",
         "Final structure contains 总案 / 未竟 / 入门 / 覆盖度声明; the selected lens changes at least two of chapter order, evidence grouping, comparison set, causal explanation, or predicted boundary",
         "At least two materially different map lenses are considered when evidence permits; the research-program lens has no default priority",
         "Research-program commitments use cross-source evidence, while every field-wide prevalence, momentum, consensus, or frontier-shift claim uses trend-capable evidence or is explicitly scoped to the current source set",
