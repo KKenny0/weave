@@ -44,7 +44,7 @@ Run the applicable cases in each available host. A simulated host label is not e
 Each run passes only when all of these are true:
 
 1. The route is correct and the output is one self-contained `.md` article with `title`, `date`, `tags`, `sources`, and `status` frontmatter.
-2. An audit/smoke run creates and reads back `.weave-frame/pre-reveal.md` before reveal. The file records only the allowed Candidate Frame Brief, provisional selection, hold-out identifier, prediction, timestamp, workflow, and non-personal topic fields; without it, chronology and hold-out validation fail.
+2. An audit/smoke run creates and reads back `.weave-frame/pre-reveal.md` before reveal. The file records only the allowed Candidate Frame Brief, provisional selection, hold-out identifier, prediction, timestamp, workflow, and non-personal topic fields. Every line, including selection rationale inside allowed fields, excludes the user, team/project, current decision, preference, goal, constraint, memory, and context-fit rationale. Without a clean file, chronology and hold-out validation fail.
 3. The selected frame changes the chapter map, names a boundary, and explains the hold-out without changing its load-bearing components after reveal.
 4. The final article traces its chapters to evidence and contains no Source Brief, Source Catalog, Candidate Frame Brief, or internal scoring table.
 5. The delivery report distinguishes verified runtime behavior, static inference, source gaps, and chronology that is unavailable or unverified.

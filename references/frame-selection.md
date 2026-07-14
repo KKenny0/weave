@@ -85,6 +85,15 @@ The persisted pre-reveal artifact has a strict allowlist:
 
 Persist nothing else. In particular, exclude the Context Envelope under any name, Capability Manifest, host identity, context source categories, memory facts, user baseline or preference, personal constraints, raw `q`, Source Briefs, Source Catalog, Synthesis Pack, and Impact Brief. When `Question answered` would repeat personal context, rewrite it as an impersonal research question such as “which subsystem should be built first”; keep the original `q` only in working context. Inspect the artifact against this allowlist before revealing the hold-out, and remove any prohibited field.
 
+Use this content test on **every line**, including prose inside otherwise allowed fields:
+
+- it may explain why a frame fits the evidence or the impersonal research topic;
+- it must not explain why a frame fits the user, their team or project, their current choice, stated leaning, goal, constraint, history, role, or remembered context;
+- it must not contain phrases such as “user's decision”, “user context”, “team choosing”, “my preference”, or paraphrases of those ideas;
+- the topic may be `workflow and agent architecture`; it may not be `the user's team deciding whether to start with a workflow`.
+
+After writing, read the file back from disk and perform that line-level scrub before opening the hold-out. If any personal or contextual rationale remains, delete it and restart the audit-sensitive run from before reveal. A field name being allowlisted does not make prohibited content inside that field safe.
+
 When tool transcripts are available, identify the later fetch or read event that reveals the hold-out. The final article must still exclude internal artifacts. A retrospective delivery claim or self-authored timestamp alone is not proof of ordering; if no access log or transcript is available, mark chronology `unverified` while preserving the prediction artifact.
 
 ## Build the Frame Decision
