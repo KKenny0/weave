@@ -577,6 +577,7 @@ Artifact: .weave-frame/pre-reveal.md
 
     Write-Host ''
     Write-Host 'All automated weave checks passed.' -ForegroundColor Green
+    exit 0
 }
 catch {
     Write-Error "[FAIL] $($_.Exception.Message)"
