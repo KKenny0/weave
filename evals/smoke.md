@@ -20,7 +20,8 @@ Run each prompt in a fresh host session after installing weave. Preserve the del
 | --- | --- | --- |
 | `deep-read` | `帮我深度阅读这篇文章：https://www.anthropic.com/research/building-effective-agents。我正在决定一个 coding agent 应该从固定 workflow 起步，还是直接采用自主 agent loop。我目前偏向后者，但调试成本必须可控。请写成研究文章，并说明它对这个决策意味着什么。` | Select a source-specific frame, reserve a hold-out section, and trace the impact back to the explicit decision context. |
 | `source-dive` | `帮我 source dive 这个项目：https://github.com/tw93/waza。我正在设计一个可扩展的本地工具，想判断它的 skill、MCP 和 plugin marketplace 机制哪些可以迁移，哪些依赖它自己的宿主环境。写成技术深度文章。` | Trace at least two behavior paths, separate runtime evidence from static inference, and gate every transfer by enforcing components and boundaries. |
-| `survey` | `帮我做 survey：agent memory systems。我想决定一个新项目应该先做短期上下文压缩、长期事实记忆，还是用户画像。scope 选 broad。` | Select a domain-map lens from the source set, state coverage limits, and turn the explicit decision into evidence-bounded positioning rather than field-wide advice. |
+| `survey (orient)` | `帮我做 survey：agent memory systems。我想理解这个领域由哪些机制和争论构成，但现在不做产品或架构选型。scope 选 broad。` | Build an orient Map Use Contract, select a lens that changes a concrete distinction or failure boundary under a named condition, and do not force product advice. |
+| `survey (choose)` | `帮我做 survey：agent memory systems。我想决定一个新项目应该先做短期上下文压缩、长期事实记忆，还是用户画像。scope 选 broad。` | Build a choose Map Use Contract, close a condition-dependent Map Payoff after hold-out testing, and turn the explicit decision into evidence-bounded positioning rather than field-wide advice. |
 
 ## Host and context matrix
 
@@ -56,6 +57,9 @@ Each run passes only when all of these are true:
 11. Impact Pass runs after hold-out testing and does not change the selected frame, suppress counterevidence, or turn weak evidence into advice.
 12. An explicit first-person baseline, preference, decision, goal, or constraint renders the literal heading `## 对我意味着什么`; a genuinely question-only run renders the literal heading `## 对当前问题意味着什么`. Neither heading is paraphrased or specialized. An explicit opt-out renders neither.
 13. `scripts/check-run.ps1` exits zero for the run directory and the expected `personal`, `question`, or `none` mode. A self-authored pass statement cannot substitute for this result.
+14. A survey run identifies one primary `orient`, `choose`, `enter`, or `evaluate` intent before search, records an evidence ceiling after source collection, and keeps Map Use Contract and Map Payoff fields out of the final article and delivery report.
+15. An `orient` survey changes a concrete distinction or failure boundary without forcing selection. A `choose` survey expresses `condition -> choice -> cost -> verification evidence`, and no survey recommendation exceeds the Map Payoff's evidence ceiling.
+16. Survey Impact Pass traces to the completed Map Payoff: it may personalize or prioritize the payoff, but it does not create a recommendation or field-wide claim absent from that payoff.
 
 ## Record
 

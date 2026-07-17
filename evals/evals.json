@@ -112,8 +112,8 @@
     {
       "id": 6,
       "name": "survey-real-domain",
-      "prompt": "帮我做 survey：agent memory systems 这个方向。我想看这个领域的主要研究纲领、核心争论、演化脉络、和开放问题。scope 选 broad。",
-      "expected_output": "完整 survey 三阶段输出（Scout / Map / Compose），从证据中选择最合适的领域地图镜头，最终产出一个中文领域地图 .md 文件。",
+      "prompt": "帮我做 survey：agent memory systems 这个方向。我想看这个领域的主要研究纲领、核心争论、演化脉络、和开放问题。scope 选 broad。我现在只想建立领域地图，不做产品或架构选型。",
+      "expected_output": "完整 survey 三阶段输出（Scout / Map / Compose），将任务识别为 orient，从证据中选择最合适的领域地图镜头，最终产出一个不强行给出产品选型的中文领域地图 .md 文件。",
       "files": [],
       "expectations": [
         "Output is a single .md file with YAML frontmatter containing topic: agent memory systems, scope: broad, date, tags, status",
@@ -123,21 +123,25 @@
         "Every admitted source title, URL, and stable identifier is verified against an opened canonical page; search snippets, mismatched IDs, and provisional citations never enter frontmatter or the final article",
         "Final structure contains 总案 / 未竟 / 入门 / 覆盖度声明; the selected lens changes at least two of chapter order, evidence grouping, comparison set, causal explanation, or predicted boundary",
         "At least two materially different map lenses are considered when evidence permits; the research-program lens has no default priority",
+        "A working-memory Map Use Contract identifies orient as the primary intent, names the comparison object and payoff question, and is not rendered in the final article",
+        "The selected lens passes the survey payoff check: it changes a concrete distinction, mechanism, or failure boundary under a named condition rather than only reorganizing headings",
+        "A working-memory Map Payoff records the supported distinctions, condition-dependent changes, unresolved conditions, and a descriptive or comparative evidence ceiling without becoming a final-article field dump",
         "Research-program commitments use cross-source evidence, while every field-wide prevalence, momentum, consensus, or frontier-shift claim uses trend-capable evidence or is explicitly scoped to the current source set",
         "Every claimed historical transition identifies a before-state, pressure, changed practice, after-state, and sources on both sides",
         "The coverage statement is consistent with the confidence and scope of field-level claims in the body",
         "The article does not force normal science / crisis / revolution labels when the evidence shows gradual or uncertain change",
         "3-5 open problems plus 1-2 directions described as under-covered in the current corpus rather than proven to have no researchers",
         "3-5 entry recommendations with concrete 'what reader gains after reading'",
+        "Because the request is orient-only, the entry path removes named uncertainties and the article does not force a product or architecture recommendation",
         "覆盖度声明 honest about coverage limits (which directions well-covered, which thin)",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
         "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) NOT used in output — methodology steps preserved without theorist-name scaffolding",
         "The domain-map lens is selected from evidence rather than forcing every field into research programs and paradigm revolution",
         "Any field-status or phase-transition claim is supported by trend evidence and does not contradict the coverage statement",
         "A persisted pre-reveal artifact records candidate frames, hold-out identifiers, and prediction; transcript/tool order supports chronology when available, otherwise chronology is reported unverified; the selected frame explains the hold-out without changing load-bearing components",
-        "The article renders an evidence-bounded impact section before 覆盖度声明 when personal or decision context is available",
+        "The article renders 对当前问题意味着什么 before 覆盖度声明, preserves the orient payoff, and does not invent personal or decision context",
         "Representative examples are not converted into field-wide action advice",
-        "The final article contains no Capability Manifest, Context Envelope, or Impact Brief"
+        "The final article contains no Capability Manifest, Context Envelope, Impact Brief, Map Use Contract, or Map Payoff"
       ]
     },
     {

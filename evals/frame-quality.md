@@ -37,6 +37,17 @@ Rank admitted candidates without artificial numeric weights:
 
 Prefer the candidate with stronger evidence and narrower claims when two candidates remain close. Record the runner-up only when it would produce a materially different article.
 
+## Survey payoff check
+
+For a survey candidate, structural change is necessary but not sufficient. Check it against the route's Map Use Contract:
+
+- **Intent closure**: it changes a distinction, choice, entry sequence, or claim confidence tied to the primary intent.
+- **Conditional delta**: at least one named condition changes that result; a static list of strengths and weaknesses does not pass.
+- **Evidence ceiling**: descriptive evidence does not become comparative superiority, and representative examples do not become field-wide guidance.
+- **No forced action**: an `orient` or `evaluate` request is not rewritten as a product-selection problem.
+
+A survey frame fails this check when it produces an elegant taxonomy but the reader would make the same interpretation or decision under every condition. After hold-out testing, the Map Payoff must preserve the passing result without adding new evidence or changing the selected frame.
+
 ## Hold-out protocol
 
 Choose the hold-out before candidate assembly:
@@ -71,3 +82,5 @@ Delete a chapter that does not serve the selected frame. In the final audit, ver
 - Runner-up candidates are obvious strawmen.
 - Field-wide prevalence or momentum is inferred from representative examples rather than trend-capable evidence.
 - The selected lens is named in the report but the article keeps the old top-level template.
+- A survey lens reorganizes the domain but does not close its primary `orient`, `choose`, `enter`, or `evaluate` intent.
+- A survey article gives unconditional advice even though its evidence ceiling supports only description or comparison.

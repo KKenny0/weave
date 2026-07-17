@@ -6,15 +6,15 @@ This workflow maps a domain. If the user supplied concrete sources and wants tho
 
 ## Table of Contents
 
-- Phase 1: Scout — build an evidence-typed Source Catalog
-- Phase 2: Map — generate and select domain-map lenses
+- Phase 1: Scout — define the map's use and build an evidence-typed Source Catalog
+- Phase 2: Map — generate, select, and close domain-map lenses against that use
 - Phase 3: Compose — write the map through the selected lens
 
 ## Phase 1: Scout
 
 Build a Source Catalog that reveals the domain's structure. The catalog is an internal working-memory artifact, not a separate user-facing file unless requested.
 
-### Step 1: Parse input
+### Step 1: Parse input and define the map use
 
 Capture:
 
@@ -23,6 +23,15 @@ Capture:
 - `q`: what the user wants the map to help them understand or decide
 - `C`: the Context Envelope from `context-acquisition.md`
 - named subtopics: preserve each as a coverage obligation
+
+Build a working-memory **Map Use Contract** before search:
+
+- **Primary intent**: choose one of `orient`, `choose`, `enter`, or `evaluate`. Keep at most one secondary intent when it does not change the evidence plan.
+- **Comparison object**: the methods, architectures, research programs, value-chain stages, claims, or other units the map must place in relation.
+- **Payoff question**: what the reader should be able to distinguish, choose, enter, or evaluate after reading.
+- **Condition set**: the constraints or observations that would materially change the interpretation or choice.
+
+Infer the intent from `q` when it is clear. Ask only when two plausible primary intents require materially different evidence. The contract stays in working memory; do not persist it or render its fields in the final article.
 
 ### Step 2: Search from different angles
 
@@ -92,7 +101,8 @@ Completion check:
 - named focus areas covered or explicitly marked thin;
 - important claims have an evidence type capable of supporting them;
 - opposing sides of a dispute are represented;
-- saturation rule reached or the search limitation is recorded.
+- saturation rule reached or the search limitation is recorded;
+- the Map Use Contract has an **evidence ceiling** of `descriptive`, `comparative`, or `conditional guidance`, based on the admitted evidence rather than the certainty the user wants.
 
 ## Phase 2: Map
 
@@ -158,12 +168,24 @@ State which directions are well covered, which rely on weaker evidence types, wh
 For each surviving candidate, write internally:
 
 - the user's question it answers;
+- the Map Use Contract intent it closes;
 - what it foregrounds and backgrounds;
 - how it groups the same evidence differently;
+- which interpretation, choice, entry sequence, or claim confidence changes under a named condition;
+- whether that payoff stays within the evidence ceiling;
 - one boundary or counterexample;
 - what it predicts about the held-out frontier-source group.
 
 Use the Candidate Frame Brief and admission gates in `frame-selection.md`. Select the lens with the strongest question fit and evidence. Prefer narrower claims when two are close. The research-program lens has no default priority.
+
+In addition to the shared frame gates, discard a survey candidate when it only reorganizes headings. A retained candidate must change at least one result tied to the primary intent:
+
+- `orient`: a distinction, mechanism, or failure boundary becomes visible;
+- `choose`: named conditions lead to materially different choices or tradeoffs;
+- `enter`: the learning or research sequence changes because an earlier step removes a later uncertainty;
+- `evaluate`: the support for a claim becomes stronger, weaker, conditional, or unresolved.
+
+Every retained candidate must state the condition that changes the result and must remain within the evidence ceiling. A beautiful taxonomy with no such payoff is not an admissible map lens.
 
 The selected lens must control the top-level body. Its load-bearing components become the main headings; method families, disputes, and chronology move inside those headings when they are supporting views. Reusing the old program / dispute / evolution skeleton is a failure unless those are themselves the selected frame's components. Confirm that the lens changes at least two of chapter order, evidence grouping, comparison set, causal explanation, or predicted boundary.
 
@@ -176,11 +198,33 @@ Completion check:
 - held-out frontier sources do not force a retrofit;
 - open problems, entry points, and coverage limits remain available.
 
-After the selected lens passes hold-out testing, run `impact-pass.md`. Use `C` to distinguish a real positioning or entry decision from a generic reader recommendation. Representative examples may shape an entry path, but they cannot support field-wide action advice.
+### Close the map payoff
+
+After the selected lens passes hold-out testing, build a working-memory **Map Payoff**:
+
+- primary intent served;
+- the distinctions or choices the selected lens changes;
+- the conditions under which each interpretation, path, or choice holds;
+- the cost, failure mode, or evidence that should be checked next;
+- unresolved conditions that prevent a stronger conclusion;
+- the evidence ceiling and trace to the selected lens and Source Catalog.
+
+The Map Payoff answers the research question without personalizing it. It is read-only during Compose, stays in working memory, and must not appear as a field dump or named internal section in the article or delivery report. If no supported payoff survives, return to candidate comparison, narrow `q`, or report the evidence limit; do not improvise advice after frame selection.
+
+Then run `impact-pass.md`. Use `C` to distinguish a real positioning or entry decision from a generic reader recommendation. The Impact Pass may personalize or prioritize the Map Payoff, but it cannot create a survey recommendation that the payoff and evidence ceiling do not support. Representative examples may shape an entry path, but they cannot support field-wide action advice.
 
 ## Phase 3: Compose
 
 Write the selected map as a Chinese longform article.
+
+Close the primary intent in the article without forcing a standard heading or table:
+
+- `orient`: explain the load-bearing differences, mechanisms, and failure boundaries that let a reader navigate the field;
+- `choose`: express `condition -> choice -> cost -> verification evidence`; do not give an unconditional recommendation;
+- `enter`: give a learning or research sequence and state which uncertainty each step removes;
+- `evaluate`: separate supported, contradicted, conditional, and unresolved parts of the target claim.
+
+These are reasoning outcomes, not a fixed article template. Let the selected lens decide whether prose, a compact comparison, or another form communicates them best.
 
 ### Required outer structure
 
@@ -228,9 +272,14 @@ Check:
 - Does any phase or momentum claim outrun its evidence type?
 - Do the table and prose contradict each other?
 - Did the held-out frontier group fit without changing the frame?
+- Does the article close the primary intent recorded in the Map Use Contract?
+- Does at least one named condition change the interpretation, choice, entry sequence, or claim confidence?
+- Does every comparison or recommendation stay within the evidence ceiling recorded in the Map Payoff?
+- Did an `orient` run avoid forced product or architecture advice, and did a `choose` run avoid unconditional recommendation?
 - Are coverage limits specific and honest?
 - Does every personal goal or constraint trace to `C`?
 - Did the impact section avoid turning representative examples into prevalence or momentum claims?
+- Are Map Use Contract and Map Payoff fields absent from the final article?
 
 ### Voice Pass and output
 
