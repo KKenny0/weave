@@ -61,9 +61,10 @@ When a delivery report or `smoke-report.md` is requested, persist only:
 - detected host label, context source category names, and material degradation;
 - admitted impact count or `delta ~= 0` reason, without Impact Brief fields;
 - Voice Pass result and scoped style-reference status;
+- deep-read Article Integrity result and any material degradation, without Article Closure Contract fields;
 - runtime verification, static inference, source gaps, and coverage limits.
 
-Never use report sections named `Capability Manifest`, `Context Envelope`, `Source Brief`, `Source Catalog`, `Candidate Frame Brief`, `Synthesis Pack`, or `Impact Brief`, and never reproduce their schemas or raw contents. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
+Never use report sections named `Capability Manifest`, `Context Envelope`, `Source Brief`, `Source Catalog`, `Candidate Frame Brief`, `Synthesis Pack`, `Impact Brief`, or `Article Closure Contract`, and never reproduce their schemas or raw contents. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
 
 Apply the allowlist to content, not only headings. The report may say `Context categories: explicit current request` and `Admitted impacts: 3`. It must not quote or paraphrase what the user is deciding, prefers, wants, or is constrained by, and must not summarize Impact 1/2/3. Read the report back and remove those details before delivery. The final article is the only persisted output that may contain admitted personal application.
 
@@ -71,5 +72,5 @@ Apply the allowlist to content, not only headings. The report may say `Context c
 
 - Don't change the naming pattern
 - Don't omit YAML fields
-- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Source Brief tables, Synthesis Pack, Candidate Frame Brief, Impact Brief, Evidence Weight grids, internal notes) in the output file — only the finished article
+- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Source Brief tables, Synthesis Pack, Candidate Frame Brief, Impact Brief, Article Closure Contract, Evidence Weight grids, internal notes) in the output file — only the finished article
 - Don't expose raw remembered material, private memory paths, or unrelated user context

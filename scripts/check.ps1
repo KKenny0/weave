@@ -13,6 +13,7 @@ $skillPath = Join-Path $repoRoot 'SKILL.md'
 $evalPath = Join-Path $repoRoot 'evals/evals.json'
 $scriptPath = Join-Path $repoRoot 'scripts/check.ps1'
 $runCheckPath = Join-Path $repoRoot 'scripts/check-run.ps1'
+$articleCheckPath = Join-Path $repoRoot 'scripts/check-article.ps1'
 $skillsCliPackage = 'skills@1.5.17'
 
 function Invoke-Check {
@@ -67,10 +68,12 @@ try {
             'SKILL.md',
             'README.md',
             'scripts/check.ps1',
+            'scripts/check-article.ps1',
             'scripts/check-run.ps1',
             'evals/evals.json',
             'evals/smoke.md',
             'references/collect.md',
+            'references/article-integrity.md',
             'references/context-acquisition.md',
             'references/deep-read.md',
             'references/frame-selection.md',
@@ -162,7 +165,7 @@ try {
 
     Invoke-Check 'text hygiene and machine-path leakage' {
         $contentFiles = @(Get-ProductMarkdownFiles) + $evalPath
-        foreach ($file in $contentFiles + @($scriptPath, $runCheckPath)) {
+        foreach ($file in $contentFiles + @($scriptPath, $articleCheckPath, $runCheckPath)) {
             $lineNumber = 0
             foreach ($line in Get-Content -LiteralPath $file) {
                 $lineNumber++
@@ -192,10 +195,19 @@ date: 2026-07-14
 tags: [deep-read]
 sources:
   - https://example.com
+  - https://x.com/i/article/2052898104039657472
 status: draft
 ---
+# test
+
 ## 对我意味着什么
 Material impact.
+
+```text
+# code heading
+```not-a-closing-fence
+Code samples may contain prose-like tokens such as 。， and >broken.
+```
 '@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Encoding utf8NoBOM
             @'
 Timestamp: 2026-07-14T00:00:00Z
@@ -212,12 +224,187 @@ Host: Codex
 Context source categories: explicit current request
 Admitted impacts: 1
 Voice Pass: passed
+Article Integrity: passed
 Chronology: verified
 Artifact: .weave-frame/pre-reveal.md
 '@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Encoding utf8NoBOM
 
             $pwsh = (Get-Command pwsh -ErrorAction Stop).Source
             $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $fixtureRoot, '-ImpactMode', 'personal')
+
+            $surveyRouteRoot = Join-Path $fixtureRoot 'survey-route'
+            New-Item -ItemType Directory -Path (Join-Path $surveyRouteRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $surveyRouteRoot '.weave-frame/pre-reveal.md')
+            $surveyArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', "tags: [survey]`nrelated:`n  - deep-read")
+            $surveyArticle | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'test-survey_2026-07-14.md') -Encoding utf8NoBOM
+            $surveyReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) -replace '(?m)^Article Integrity: passed\r?\n', ''
+            $surveyReport | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $surveyRouteRoot, '-ImpactMode', 'personal')
+
+            $reportLeakRoot = Join-Path $fixtureRoot 'report-leak'
+            New-Item -ItemType Directory -Path (Join-Path $reportLeakRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $reportLeakRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $reportLeakRoot 'test-deep-read_2026-07-14.md')
+            $reportWithContract = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) + "`n## Article Closure Contract`n`nInternal fields.`n"
+            $reportWithContract | Set-Content -LiteralPath (Join-Path $reportLeakRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $reportLeakRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted an Article Closure Contract heading in the delivery report.'
+            }
+
+            $inlineRouteRoot = Join-Path $fixtureRoot 'inline-route'
+            New-Item -ItemType Directory -Path (Join-Path $inlineRouteRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $inlineRouteRoot 'smoke-report.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $inlineRouteRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $inlineRouteRoot 'nonstandard-name.md')
+            Add-Content -LiteralPath (Join-Path $inlineRouteRoot 'nonstandard-name.md') -Value "`n正文结束。，"
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $inlineRouteRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier skipped Article Integrity for an inline deep-read tag with a nonstandard filename.'
+            }
+
+            $articleFixtureRoot = Join-Path $fixtureRoot 'article-fixtures'
+            New-Item -ItemType Directory -Path $articleFixtureRoot | Out-Null
+            $negativeFixtures = @{
+                'malformed-punctuation.md' = @'
+---
+title: malformed punctuation
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# malformed punctuation
+
+正文在这里结束。，下一句从这里开始。
+'@
+                'noncanonical-source.md' = @'
+---
+title: noncanonical source
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://x.com/example/article/2053127519872614419
+status: draft
+---
+# noncanonical source
+
+正文保持完整。
+'@
+                'damaged-blockquote.md' = @'
+---
+title: damaged blockquote
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# damaged blockquote
+
+>损坏的引用没有空格。
+'@
+                'dangling-blockquote.md' = @'
+---
+title: dangling blockquote
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# dangling blockquote
+
+> 正文引用末尾带有损坏标记。>
+'@
+                'repeated-fragment.md' = @'
+---
+title: repeated fragment
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# repeated fragment
+
+这段文字用于验证重复片段检测能够发现正文中的长句再次出现而没有任何解释。
+
+这段文字用于验证重复片段检测能够发现正文中的长句再次出现而没有任何解释。
+'@
+                'title-mismatch.md' = @'
+---
+title: frontmatter title
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# different H1 title
+
+正文保持完整。
+'@
+                'duplicate-source.md' = @'
+---
+title: duplicate source
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+  - https://example.com/source
+status: draft
+---
+# duplicate source
+
+正文保持完整。
+'@
+                'unclosed-fence.md' = @'
+---
+title: unclosed fence
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# unclosed fence
+
+```text
+code remains open
+'@
+                'internal-heading.md' = @'
+---
+title: internal heading
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal heading
+
+## Article Closure Contract
+
+Internal fields leaked into the article.
+'@
+            }
+            foreach ($fixtureName in $negativeFixtures.Keys) {
+                $negativePath = Join-Path $articleFixtureRoot $fixtureName
+                $negativeFixtures[$fixtureName] | Set-Content -LiteralPath $negativePath -Encoding utf8NoBOM
+                $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $negativePath 2>&1)
+                if ($LASTEXITCODE -eq 0) {
+                    throw "Article verifier accepted negative fixture: $fixtureName"
+                }
+            }
+
+            $oversizedPath = Join-Path $articleFixtureRoot 'oversized.md'
+            ('a' * (512KB + 1)) | Set-Content -LiteralPath $oversizedPath -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $oversizedPath 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Article verifier accepted an article above the size limit.'
+            }
 
             Add-Content -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Value "Why: fits the user's decision"
             $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $fixtureRoot -ImpactMode personal 2>&1)
@@ -289,7 +476,7 @@ Artifact: .weave-frame/pre-reveal.md
                     throw 'Isolated install did not create .agents/skills/weave.'
                 }
 
-                $runtimeFiles = @('SKILL.md', 'scripts/check.ps1', 'scripts/check-run.ps1')
+                $runtimeFiles = @('SKILL.md', 'scripts/check.ps1', 'scripts/check-article.ps1', 'scripts/check-run.ps1')
                 $runtimeFiles += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
                 foreach ($relativePath in $runtimeFiles) {
                     $source = Join-Path $repoRoot $relativePath
@@ -300,6 +487,56 @@ Artifact: .weave-frame/pre-reveal.md
                     if ((Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $copy).Hash) {
                         throw "Packaged runtime file differs: $relativePath"
                     }
+                }
+
+                $runtimeSmoke = Join-Path $tempRoot 'runtime-smoke'
+                New-Item -ItemType Directory -Path (Join-Path $runtimeSmoke '.weave-frame') -Force | Out-Null
+                $runtimeArticle = @'
+---
+title: installed runtime
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# installed runtime
+
+## 对我意味着什么
+
+Material impact.
+'@
+                $runtimeArticlePath = Join-Path $runtimeSmoke 'installed-runtime-deep-read_2026-07-17.md'
+                $runtimeArticle | Set-Content -LiteralPath $runtimeArticlePath -Encoding utf8NoBOM
+                @'
+Timestamp: 2026-07-17T00:00:00Z
+Prediction: installed runtime resolves sibling scripts.
+'@ | Set-Content -LiteralPath (Join-Path $runtimeSmoke '.weave-frame/pre-reveal.md') -Encoding utf8NoBOM
+                @'
+Host: Codex
+Context source categories: explicit current request
+Admitted impacts: 1
+Voice Pass: passed
+Article Integrity: passed
+Chronology: verified
+Artifact: .weave-frame/pre-reveal.md
+'@ | Set-Content -LiteralPath (Join-Path $runtimeSmoke 'smoke-report.md') -Encoding utf8NoBOM
+
+                $runtimePwsh = (Get-Command pwsh -ErrorAction Stop).Source
+                $installedArticleCheck = Join-Path $installed 'scripts/check-article.ps1'
+                $installedRunCheck = Join-Path $installed 'scripts/check-run.ps1'
+                Push-Location $tempRoot
+                try {
+                    $null = Invoke-NativeCommand -Command $runtimePwsh -Arguments @('-NoProfile', '-File', $installedArticleCheck, '-ArticlePath', $runtimeArticlePath)
+                    $null = Invoke-NativeCommand -Command $runtimePwsh -Arguments @('-NoProfile', '-File', $installedRunCheck, '-RunDirectory', $runtimeSmoke, '-ImpactMode', 'personal')
+                    ($runtimeArticle + "`n正文结束。，") | Set-Content -LiteralPath $runtimeArticlePath -Encoding utf8NoBOM
+                    $null = @(& $runtimePwsh -NoProfile -File $installedArticleCheck -ArticlePath $runtimeArticlePath 2>&1)
+                    if ($LASTEXITCODE -eq 0) {
+                        throw 'Installed Article Integrity checker accepted a malformed article.'
+                    }
+                }
+                finally {
+                    Pop-Location
                 }
 
                 $noiseNames = @('.git', 'node_modules', '__pycache__', '.pytest_cache', '.ruff_cache', '.mypy_cache', '.DS_Store')

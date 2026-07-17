@@ -157,7 +157,7 @@ git clone https://github.com/KKenny0/weave.git ~/.codex/skills/weave
 {topic}-{workflow}_{YYYY-MM-DD}.md
 ```
 
-文件头包含 `title`、`date`、`tags`、`sources` 和 `status`。最终文章只保留成文，不混入 Capability Manifest、Context Envelope、Source Brief、Source Catalog、Candidate Frame Brief、Impact Brief 或内部评分表。交付报告会说明选中框、胜出理由、有实质差异的备选框、预留测试结果、检测到的宿主、实际使用的背景来源类别，以及 Impact Pass 的结果。
+文件头包含 `title`、`date`、`tags`、`sources` 和 `status`。最终文章只保留成文，不混入 Capability Manifest、Context Envelope、Source Brief、Source Catalog、Candidate Frame Brief、Impact Brief、Article Closure Contract 或内部评分表。交付报告会说明选中框、胜出理由、有实质差异的备选框、预留测试结果、检测到的宿主、实际使用的背景来源类别，以及 Impact Pass 的结果；deep-read 还会记录最终文件的 Article Integrity 结果。
 
 输出路径的优先级：用户指定目录；`.loom/config.yaml` 配置的知识库长文目录；当前工作目录。
 
@@ -177,8 +177,10 @@ weave/
 ├── MIGRATION.md
 ├── scripts/
 │   ├── check.ps1
+│   ├── check-article.ps1
 │   └── check-run.ps1
 ├── references/
+│   ├── article-integrity.md
 │   ├── collect.md
 │   ├── context-acquisition.md
 │   ├── deep-read.md
@@ -212,7 +214,7 @@ pwsh -File scripts/check.ps1
 pwsh -File scripts/check-run.ps1 -RunDirectory <output-dir> -ImpactMode personal
 ```
 
-`ImpactMode` 可取 `personal`、`question` 或 `none`。它会机械检查文章 frontmatter、字面意义层标题、pre-reveal 文件及其隐私边界、交付报告字段和 hold-out 时间顺序状态。非零退出码表示本次运行不能声明通过。
+`ImpactMode` 可取 `personal`、`question` 或 `none`。它会机械检查文章 frontmatter、字面意义层标题、pre-reveal 文件及其隐私边界、交付报告字段和 hold-out 时间顺序状态；对于 deep-read，还会对实际写入的 Markdown 执行 Article Integrity 检查。非零退出码表示本次运行不能声明通过。
 
 ## 边界
 

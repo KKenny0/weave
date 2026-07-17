@@ -68,6 +68,6 @@ Before Voice Pass, check:
 - every survey impact traces to the Map Payoff and stays within its evidence ceiling;
 - every transfer or recommendation states its boundary;
 - the impact heading matches the context basis: explicit personal decision context uses `对我意味着什么`, and only genuinely question-only context uses `对当前问题意味着什么`;
-- the article and delivery report contain no Capability Manifest, Context Envelope, Impact Brief, Map Use Contract, or Map Payoff fields.
+- the article and delivery report contain no Capability Manifest, Context Envelope, Impact Brief, Article Closure Contract, Map Use Contract, or Map Payoff fields.
 
 Delivery reporting adds: detected host, context source categories used, number of admitted impacts, `delta ~= 0` reason when relevant, and any context degradation. Do not expose raw remembered material.

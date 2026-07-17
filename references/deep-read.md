@@ -189,6 +189,8 @@ For every planned chapter record internally:
 
 Delete a chapter that does not serve the frame, or return to Phase 2 for missing evidence. Chapter count and short titles are writing heuristics, not quality gates.
 
+Build the working-memory Article Closure Contract from `article-integrity.md`: title promise, closure locations, attribution boundary, time boundary, editorial-note policy, and final boundary. The contract controls Compose but never appears as a final-article section or delivery-report field.
+
 ### Step 3: Write and review chapter by chapter
 
 Expose reasoning, preserve contradictions, and keep claims proportional to evidence. Use scene, comparison, formalism, or direct quotation only when it advances the selected frame. Keep speaker attribution exact and distinguish source conclusions from weave's synthesis.
@@ -214,10 +216,10 @@ Audit without role-playing an advisor:
 
 Revise concrete failures, then re-run the audit.
 
-### Step 5: Voice Pass and output
+### Step 5: Voice Pass, write, and Article Integrity
 
-Run `voice-pass.md`, then write `{topic}-deep-read_{YYYY-MM-DD}.md` per `output-spec.md`.
+Run `voice-pass.md`, then write `{topic}-deep-read_{YYYY-MM-DD}.md` per `output-spec.md`. Apply `article-integrity.md` to the serialized file, including its semantic, evidence/time, and mechanical layers. If wording changes, rerun Voice Pass before the final integrity check.
 
-Delivery report: article path, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, Voice Pass corrections, and style reference.
+Delivery report: article path, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, Voice Pass corrections, style reference, and `Article Integrity: passed` or an explicit degradation. Do not reproduce the internal Article Closure Contract.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
