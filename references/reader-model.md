@@ -26,6 +26,35 @@ The target capability must be observable. Reject goals such as “understand dee
 
 The contract stays in working memory. Do not persist it, place it in frontmatter, reproduce it in a delivery report, or add it to `.weave-frame/`. The starting model is a hypothesis to test, not a conclusion to confirm.
 
+## Publication Reader Extension
+
+Run this optional extension only when the current request explicitly says the research will be published publicly, posted as a WeChat Official Account or X longform article, written for a named public readership, or intended to earn broader or sustained reading. A normal request to research deeply or write a research article does not activate it.
+
+The extension prevents an upstream failure: researching a correct question that has no clear public use. It is not a marketing persona, packaging brief, account strategy, or hidden handoff to an editorial skill.
+
+Record in working memory:
+
+- **Public reader**: the reader class supported by the current request; use `question-level reader` when no class is supplied, and never infer demographics, role, expertise, or account identity from paths, project rules, memory, or generic personas;
+- **Recurring situation**: the reproducible situation in which that reader encounters the question;
+- **Missing capability**: whether the reader lacks a fact, distinction, mechanism, prediction ability, or decision frame;
+- **Durable payoff**: the structural judgment that may remain after a launch, version, policy window, or news event passes; use `time-bound` when no durable claim is supported;
+- **Research consequence**: the concrete change this extension makes to source search, scope, evidence selection, or candidate-frame requirements.
+
+`Research consequence` is the admission gate. If the extension would change only the title, opening, paragraph order, pacing, platform packaging, or reason to share, record an internal no-op and leave that work to Weave Editorial. Do not manufacture research work to keep the extension active.
+
+If two plausible public-reader interpretations would materially change sources, scope, or the evidence model, ask one load-bearing clarification question. If they would not, continue with a question-level reader instead of asking for demographic or professional detail.
+
+When admitted, apply the extension without changing evidence standards:
+
+- source collection may broaden or narrow to answer the recurring situation;
+- evidence selection may foreground a missing distinction or mechanism;
+- candidate frames must support a usable result in that situation and separate durable structure from volatile facts;
+- counterevidence, uncertainty, attribution, and source quality remain unchanged.
+
+Do not add a fifth Comprehension Gate probe. Use the existing novel-case probe to test the recurring situation and question repair to determine whether the public question survived. A time-bound result may pass when its date, version, or event boundary is explicit.
+
+The extension stays in working memory. Do not persist its fields, create `editorial-brief.md`, add frontmatter, place it in `.weave-frame/`, reproduce it in the article or delivery report, or treat it as an interface requirement for Weave Editorial. If the final article does not make its public problem legible, fix the article rather than relying on hidden metadata.
+
 ## Keep the question revisable
 
 Carry the initial question through evidence collection without forcing every observation into it. Record a possible reframing when any of these occurs:

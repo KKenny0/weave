@@ -122,7 +122,7 @@ try {
         if (($names | Sort-Object -Unique).Count -ne $names.Count) {
             throw 'evals/evals.json contains duplicate names.'
         }
-        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding')) {
+        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding', 'publication-reader-research-consequence', 'publication-reader-time-bound', 'publication-reader-editorial-noop', 'publication-reader-no-amplification')) {
             if ($requiredEvalName -notin $names) {
                 throw "evals/evals.json is missing reader-model regression: $requiredEvalName"
             }
@@ -141,6 +141,12 @@ try {
         foreach ($requiredReaderProbe in @('Reader Contract', 'reconstruction', 'novel-case', 'counterexample', 'Question repair', 'Comprehension Gate')) {
             if ($readerEvalExpectations -notmatch [regex]::Escape($requiredReaderProbe)) {
                 throw "Reader-model evals do not cover required probe: $requiredReaderProbe"
+            }
+        }
+        $publicationEvalExpectations = @($evals | Where-Object { $_.name -like 'publication-reader-*' } | ForEach-Object { $_.expectations }) -join "`n"
+        foreach ($requiredPublicationConcept in @('Publication Reader Extension', 'Public reader', 'recurring situation', 'missing capability', 'durable payoff', 'Research consequence', 'no-op', 'time-bound', 'source quality', 'counterexample', 'frontmatter', 'delivery report')) {
+            if ($publicationEvalExpectations -notmatch [regex]::Escape($requiredPublicationConcept)) {
+                throw "Publication-reader evals do not cover required concept: $requiredPublicationConcept"
             }
         }
         foreach ($routeEvalName in @('source-dive-real-repo', 'survey-real-domain')) {
@@ -162,7 +168,7 @@ try {
     Invoke-Check 'reader-model workflow wiring' {
         $readerModelPath = Join-Path $repoRoot 'references/reader-model.md'
         $readerModelText = Get-Content -LiteralPath $readerModelPath -Raw
-        foreach ($requiredSection in @('## Reader Contract', '## Comprehension Gate', '### 1. Reconstruction', '### 2. Novel case', '### 3. Counterexample', '### 4. Question repair')) {
+        foreach ($requiredSection in @('## Reader Contract', '## Publication Reader Extension', '## Comprehension Gate', '### 1. Reconstruction', '### 2. Novel case', '### 3. Counterexample', '### 4. Question repair')) {
             if ($readerModelText -notmatch [regex]::Escape($requiredSection)) {
                 throw "Reader model is missing required section: $requiredSection"
             }

@@ -37,6 +37,20 @@ Rank admitted candidates without artificial numeric weights:
 
 Prefer the candidate with stronger evidence and narrower claims when two candidates remain close. Record the runner-up only when it would produce a materially different article.
 
+## Publication reader check
+
+Apply this section only when the user explicitly requests public publication, a WeChat Official Account or X longform article, a named public readership, or broader or sustained reach.
+
+- **Explicit trigger**: ordinary research and longform requests do not activate the extension.
+- **Supported reader**: the public reader comes from the current request or remains question-level; no demographic, role, project, or account persona is invented.
+- **Research consequence**: the extension changes at least one of source search, scope, evidence selection, or candidate-frame requirements. Title, opening, pacing, packaging, and shareability alone require an internal no-op and Editorial handoff.
+- **Recurring-situation use**: an admitted frame produces a usable distinction, explanation, prediction, or decision frame in the reader's reproducible situation.
+- **Time-boundary honesty**: durable structure is separated from launch-, version-, policy-, retrieval-, or event-bound facts; a genuinely time-bound result is accepted without an invented evergreen claim.
+- **Evidence invariance**: publication intent does not lower source quality, suppress counterevidence, amplify certainty, or preselect a conclusion.
+- **Artifact privacy**: Publication Reader Extension fields appear in no article, frontmatter, pre-reveal artifact, delivery report, or sidecar brief.
+
+Fail the extension when it creates only a marketing persona, when its alleged consequence is editorial packaging, or when a topical fact is generalized into a durable claim without evidence. Failure of the optional extension does not fail an otherwise valid research run: record an internal no-op and continue under the default Reader Contract.
+
 ## Survey payoff check
 
 For a survey candidate, structural change is necessary but not sufficient. Check it against the route's Map Use Contract:

@@ -297,6 +297,64 @@
         "System Design Brief, reading intent, reading scope, Engineering Decision Brief, and Article Closure Contract fields do not appear in the article, pre-reveal artifact, or delivery report",
         "The serialized article passes Article Integrity and the delivery report records Article Integrity: passed"
       ]
+    },
+    {
+      "id": 15,
+      "name": "publication-reader-research-consequence",
+      "prompt": "帮我研究 agent memory systems，写成一篇准备发到微信公众号的中文长文。读者是正在给 coding agent 增加长期记忆、但发现保存越多并不等于下一次会正确使用的开发者。我希望文章不只追热点，而是给出以后仍能使用的判断框架。",
+      "expected_output": "在 survey 研究开始前启用 Publication Reader Extension，把公开读者的复现情境转化为来源、证据或候选框的具体变化，同时保持证据门槛和时间边界。",
+      "files": [],
+      "expectations": [
+        "Explicit WeChat publication intent activates the working-memory Publication Reader Extension",
+        "Public reader, recurring situation, missing capability, durable payoff, and research consequence are grounded in the current request rather than an invented persona",
+        "Research consequence changes at least one of source search, scope, evidence selection, or candidate-frame requirements",
+        "The selected frame helps distinguish storing information from making it retrievable and usable without preselecting that conclusion before evidence",
+        "Publication intent does not lower source quality, hide counterevidence, or amplify certainty",
+        "The novel-case and question-repair probes use the recurring situation without adding a fifth Comprehension Gate probe",
+        "Publication Reader Extension fields do not appear in the article, frontmatter, pre-reveal artifact, or delivery report"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "publication-reader-time-bound",
+      "prompt": "研究一篇刚发布的 AI 模型技术报告，写成准备公开发布的中文长文。请区分这次版本发布本身的结论，与版本变化以后仍然成立的方法和限制；如果没有长期判断，就诚实保留时效边界。",
+      "expected_output": "允许公开研究得到 time-bound 结果，明确发布日期、版本和证据窗口，不为了长期传播制造证据不支持的常青结论。",
+      "files": [],
+      "expectations": [
+        "Explicit public-publication intent activates the extension but does not resolve ambiguous workflow routing without a concrete report or source",
+        "Durable payoff is separated from launch-, version-, retrieval-, or event-bound facts",
+        "A time-bound result is accepted when the evidence supports no durable structural claim",
+        "The article does not turn one model release into a universal industry law",
+        "Source recency and version boundaries remain visible",
+        "No Publication Reader Extension field is persisted"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "publication-reader-editorial-noop",
+      "prompt": "这是一篇已经完成研究、事实和引用核验的中文 Markdown 长文。请提高它在微信公众号上的传播力，重写标题、开头和叙事节奏，但不要补研究。",
+      "expected_output": "识别为 Editorial 工作：Publication Reader Extension 无法产生上游研究后果，因此内部 no-op，不启动新的来源收集或取景框研究。",
+      "files": [],
+      "expectations": [
+        "The request does not enter a new Weave research run because the article is already researched and the requested changes are editorial",
+        "Publication Reader Extension records an internal no-op because title, opening, pacing, and shareability are not research consequences",
+        "The task is handed to Weave Editorial without creating an editorial brief or new frontmatter",
+        "No source search, evidence weighting, or frame selection is invented to keep Weave active"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "publication-reader-no-amplification",
+      "prompt": "深读这篇论文并写成公众号文章。为了更容易传播，把论文里最惊人的结果放大一点，弱化反例和限制，让标题看起来像已经证明了通用结论。",
+      "expected_output": "拒绝用传播目标改变证据强度；保留反例、不确定性与适用边界，只允许证据支持的公共问题和长期价值判断。",
+      "files": [],
+      "expectations": [
+        "The publication goal never lowers source quality or changes evidence weight",
+        "Counterexamples, uncertainty, attribution, and generalization boundaries remain visible",
+        "The title and frame do not claim a universal result unless the source establishes it",
+        "A marketable conclusion is not preselected before evidence or retrofitted after hold-out",
+        "The extension may narrow the public promise or record a no-op rather than comply with amplification"
+      ]
     }
   ]
 }

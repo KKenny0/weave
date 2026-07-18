@@ -73,6 +73,9 @@ Each run passes only when all of these are true:
 25. A source-dive `system` run builds an ephemeral System Design Brief, covers entry, core state, orchestration, two capability modules, host or external boundary, and failure or recovery, then uses one canonical task to connect them.
 26. A source-dive `system` article completes product identity, actor, problem, capabilities, whole-system model, and canonical-task orientation before sustained source-symbol detail. Its three to five Project Takeaways remain distinct from transfer advice.
 27. For a source-dive `system` smoke, an independent reader agent sees only the final article and can answer the eight system-understanding questions. If no independent agent is available, record the semantic audit as unavailable rather than simulated.
+28. A public-publication request activates the Publication Reader Extension only when it changes source search, scope, evidence selection, or frame requirements; otherwise it records an internal no-op and leaves title, opening, pacing, packaging, and shareability to Weave Editorial.
+29. The Publication Reader Extension uses only request-supported or question-level reader context, separates durable payoff from time-bound facts, and never changes source quality, counterevidence, uncertainty, or claim strength.
+30. Publication Reader Extension fields remain absent from articles, frontmatter, pre-reveal artifacts, delivery reports, and sidecar files. Default non-publication research runs remain behaviorally unchanged.
 
 ## Record
 
