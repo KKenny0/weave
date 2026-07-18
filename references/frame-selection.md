@@ -85,7 +85,7 @@ The persisted pre-reveal artifact has a strict allowlist:
 - Candidate Frame Brief fields defined above;
 - provisional selection and comparative judgment.
 
-Persist nothing else. In particular, exclude the Context Envelope under any name, Capability Manifest, host identity, context source categories, memory facts, user baseline or preference, personal constraints, raw `q`, Source Briefs, Source Catalog, Synthesis Pack, and Impact Brief. When `Question answered` would repeat personal context, rewrite it as an impersonal research question such as “which subsystem should be built first”; keep the original `q` only in working context. Inspect the artifact against this allowlist before revealing the hold-out, and remove any prohibited field.
+Persist nothing else. In particular, exclude the Context Envelope under any name, Reader Contract, Dialogue Matrix, Comprehension Gate probes, Capability Manifest, host identity, context source categories, memory facts, user baseline or preference, personal constraints, raw `q`, Source Briefs, Source Catalog, Synthesis Pack, and Impact Brief. When `Question answered` would repeat personal context, rewrite it as an impersonal research question such as “which subsystem should be built first”; keep the original `q` only in working context. Inspect the artifact against this allowlist before revealing the hold-out, and remove any prohibited field.
 
 Use this content test on **every line**, including prose inside otherwise allowed fields:
 

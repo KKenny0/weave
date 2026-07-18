@@ -42,6 +42,9 @@
         "Article body exceeds 2000 Chinese characters (excluding frontmatter)",
         "Article directly answers the user's question about context engineering vs traditional RAG divergence",
         "Both sources are meaningfully represented — neither is ignored or treated as secondary",
+        "Each isolated Source Brief reconstructs Problem World, Reasoning Machine, and World After rather than flattening the source into claims and evidence fields",
+        "After isolated reading, a working-memory Dialogue Matrix identifies only evidence-backed shared ground, term mismatch, premise conflict, and unresolved questions",
+        "Every Dialogue Matrix relationship names evidence on each side and changes interpretation rather than recording topical overlap",
         "Points of agreement AND disagreement between sources are identified",
         "When sources disagree, the article presents both positions with evidence rather than picking a side",
         "Article is NOT structured as 'Source A says X... Source B says Y...' — structure reflects analytical logic, not source order",
@@ -50,7 +53,8 @@
         "No fabricated research claims — every research assertion traces to at least one source, while any context-bound implication traces to the Context Envelope",
         "Each sentence expresses one complete thought (一念一句)",
         "Retained candidate frames imply materially different evidence selection or chapter structures; paraphrases are merged",
-        "The selected frame wins on the user's RAG-vs-context-engineering question and explains the held-out Source Brief"
+        "The selected frame is generated from a real Dialogue Matrix relationship rather than stacked source conclusions and explains the held-out sections from both sources",
+        "The Dialogue Matrix remains in working memory and does not appear as an internal field dump in the article or delivery report"
       ]
     },
     {
@@ -108,6 +112,8 @@
         "Article has a chapter sequence with clear logical dependency rather than a file or symbol inventory",
         "The selected frame follows load-bearing behavior paths and changes how the skills, MCP, and marketplace focus areas are organized",
         "At least one boundary, failed assumption, or static-inference limit of the selected frame is explicit",
+        "A route-specific Reader Contract defines an observable behavior-path tracing, novel-input prediction, or boundary-testing capability before discovery",
+        "The source-dive Comprehension Gate reconstructs a load-bearing path, predicts a new input/configuration/failure, removes an enforcing component, repairs the initial question, and passes before Impact Pass",
         "Transferable patterns are rendered through Impact Pass rather than duplicated in a second migration chapter",
         "If no user engineering decision is supported by context, impact stays question-level and does not invent project constraints",
         "The delivery report names context source categories and impact count without exposing raw remembered material"
@@ -145,6 +151,8 @@
         "A persisted pre-reveal artifact records candidate frames, hold-out identifiers, and prediction; transcript/tool order supports chronology when available, otherwise chronology is reported unverified; the selected frame explains the hold-out without changing load-bearing components",
         "The article renders 对当前问题意味着什么 before 覆盖度声明, preserves the orient payoff, and does not invent personal or decision context",
         "Representative examples are not converted into field-wide action advice",
+        "A route-specific Reader Contract defines an observable orientation, choice, entry, or evaluation capability before search",
+        "The survey Comprehension Gate reconstructs the selected map distinction, conditionally places an unfamiliar method or claim, identifies an undecidable case, repairs the initial question, and passes before Impact Pass",
         "The final article contains no Capability Manifest, Context Envelope, Impact Brief, Map Use Contract, or Map Payoff"
       ]
     },
@@ -178,7 +186,7 @@
         "The Context Envelope records the explicit baseline, decision, and debugging constraint with current-request provenance",
         "The impact section uses 对我意味着什么 and changes or confirms a specific decision criterion rather than offering generic agent advice",
         "Every impact traces to the selected frame and source evidence and states a boundary",
-        "Impact Pass runs only after hold-out testing and does not retrofit the selected frame",
+        "Impact Pass runs only after hold-out testing and the Comprehension Gate and does not retrofit the selected frame or overwrite question repair",
         "The Context Envelope remains ephemeral and is not written into frame, smoke, source, or delivery artifacts",
         "Voice Pass uses only already-scoped style references and does not recursively scan home, temp, vault, project, or unrelated workspace trees",
         "The final article does not expose Context Envelope or Impact Brief fields"
@@ -207,6 +215,42 @@
         "Context acquisition and the evidence workflow may still run, but the final article omits 对我意味着什么 and 对当前问题意味着什么",
         "Opt-out does not skip frame selection, hold-out testing, or Voice Pass",
         "The delivery report records that the impact section was omitted by explicit request"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "initial-question-repair",
+      "prompt": "帮我深度阅读这篇文章：https://www.anthropic.com/research/building-effective-agents。我现在的判断是，文章已经证明自主 agent loop 普遍优于固定 workflow；请帮我验证这个判断，并写成研究文章。",
+      "expected_output": "将用户的起始判断记录为待检验模型而不是结论，根据文章证据修复错误的二选一问题，并在成文前通过理解检验。",
+      "files": [],
+      "expectations": [
+        "A working-memory Reader Contract records the initial agent-loop-superiority judgment as a hypothesis with current-request provenance",
+        "The Reader Contract defines an observable target capability and names evidence that would trigger question revision",
+        "Source collection and frame selection do not preferentially select evidence merely to confirm the user's starting model",
+        "Question repair classifies the initial question as answered, reframed, dissolved, or unresolved and gives an evidence-backed repaired question",
+        "If the source does not establish universal agent-loop superiority, the final article does not preserve that premise or present it as verified",
+        "The Comprehension Gate passes reconstruction, novel-case, counterexample, and question-repair probes before Impact Pass and Compose",
+        "The final article makes the repaired distinction visible while keeping source claims separate from weave synthesis",
+        "The Reader Contract and Comprehension Gate probes remain in working memory and do not appear in the article, pre-reveal artifact, or delivery report",
+        "The delivery report records only Comprehension Gate pass status or the failed probe and degradation"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "generative-comprehension",
+      "prompt": "帮我深度阅读这篇论文：https://arxiv.org/abs/2304.03442。我不只想知道 Generative Agents 的组件，还希望读完后能判断：如果把这套架构放进一个没有固定空间、以任务成功率而不是 believability 为主要评价的环境，哪些推论仍成立，哪些需要重新验证。写成研究文章。",
+      "expected_output": "以可迁移的判断能力为阅读目标，在成文前闭卷重建论文的承重机制，把取景框用于未参与构框的新环境，并用评价目标与环境结构变化制造真实反例和边界。",
+      "files": [],
+      "expectations": [
+        "The Reader Contract expresses the requested outcome as an observable prediction and boundary-testing capability rather than generic deep understanding",
+        "The reconstruction probe rebuilds the paper's problem, load-bearing mechanism, strongest evidence, and generalization boundary without copying Source Brief fields",
+        "The novel-case probe analyzes the no-fixed-space task environment through the selected mechanism and labels the result as source-supported extension or weave synthesis",
+        "The novel case is not a renamed example from the paper and does not exceed the evidence ceiling of the 25-agent sandbox and believability evaluation",
+        "The counterexample removes or changes a real premise such as spatial structure, social-memory use, or evaluation objective and states which inference narrows",
+        "Question repair states whether the original transfer question is answered, reframed, dissolved, or unresolved and names missing evidence",
+        "A fluent component summary alone does not pass the Comprehension Gate",
+        "The article preserves the difference between architectural plausibility, measured believability, and unverified task-performance transfer",
+        "The delivery report records Comprehension Gate: passed without exposing the Reader Contract or four probe contents"
       ]
     }
   ]

@@ -22,6 +22,7 @@ Capture:
 - `scope`: `broad` or `focused`; default `broad`
 - `q`: what the user wants the map to help them understand or decide
 - `C`: the Context Envelope from `context-acquisition.md`
+- `R`: the Reader Contract from `reader-model.md`, expressed as an observable orientation, choice, entry, or evaluation capability
 - named subtopics: preserve each as a coverage obligation
 
 Build a working-memory **Map Use Contract** before search:
@@ -31,7 +32,7 @@ Build a working-memory **Map Use Contract** before search:
 - **Payoff question**: what the reader should be able to distinguish, choose, enter, or evaluate after reading.
 - **Condition set**: the constraints or observations that would materially change the interpretation or choice.
 
-Infer the intent from `q` when it is clear. Ask only when two plausible primary intents require materially different evidence. The contract stays in working memory; do not persist it or render its fields in the final article.
+Infer the intent from `q` when it is clear. Ask only when two plausible primary intents require materially different evidence. The Map Use Contract refines the route expression in `R`; its payoff question must demonstrate the Reader Contract's target capability. Both contracts stay in working memory; do not persist them or render their fields in the final article.
 
 ### Step 2: Search from different angles
 
@@ -211,6 +212,8 @@ After the selected lens passes hold-out testing, build a working-memory **Map Pa
 
 The Map Payoff answers the research question without personalizing it. It is read-only during Compose, stays in working memory, and must not appear as a field dump or named internal section in the article or delivery report. If no supported payoff survives, return to candidate comparison, narrow `q`, or report the evidence limit; do not improvise advice after frame selection.
 
+Run the Comprehension Gate in `reader-model.md`: reconstruct the selected map distinction, place an unfamiliar method or claim under explicit conditions, identify a case the evidence ceiling cannot locate or decide, and repair the initial question when the field structure invalidates its categories. Return to source collection or lens selection when a probe fails.
+
 Then run `impact-pass.md`. Use `C` to distinguish a real positioning or entry decision from a generic reader recommendation. The Impact Pass may personalize or prioritize the Map Payoff, but it cannot create a survey recommendation that the payoff and evidence ceiling do not support. Representative examples may shape an entry path, but they cannot support field-wide action advice.
 
 ## Phase 3: Compose
@@ -275,6 +278,8 @@ Check:
 - Does the article close the primary intent recorded in the Map Use Contract?
 - Does at least one named condition change the interpretation, choice, entry sequence, or claim confidence?
 - Does every comparison or recommendation stay within the evidence ceiling recorded in the Map Payoff?
+- Did the Comprehension Gate place a novel method or claim conditionally and identify a real undecidable case?
+- Was the initial question repaired when the selected map exposed a better comparison object or missing condition?
 - Did an `orient` run avoid forced product or architecture advice, and did a `choose` run avoid unconditional recommendation?
 - Are coverage limits specific and honest?
 - Does every personal goal or constraint trace to `C`?
@@ -285,6 +290,6 @@ Check:
 
 Run `voice-pass.md`, then write the final file per `output-spec.md` as `{topic}-survey_{YYYY-MM-DD}.md`. YAML must include `topic` and `scope`.
 
-Delivery report: article path, word count, body structure, selected lens, close alternative if material, source count by evidence type, open-problem count, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, and coverage limitations.
+Delivery report: article path, word count, body structure, selected lens, close alternative if material, source count by evidence type, open-problem count, `Comprehension Gate: passed` or the failed probe and degradation, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, and coverage limitations. Do not reproduce the Reader Contract or gate probes.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.

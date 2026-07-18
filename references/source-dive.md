@@ -14,6 +14,7 @@ Capture:
 - official docs and papers when relevant
 - `q`: what the user wants to understand or decide
 - `C`: the Context Envelope from `context-acquisition.md`
+- `R`: the Reader Contract from `reader-model.md`, expressed as an observable tracing, prediction, or boundary-testing capability
 - every named focus area
 - available repository capabilities: local checkout, remote tree reader, file reader, background agents, shell, and safe test execution
 
@@ -188,7 +189,9 @@ Apply `frame-selection.md`. Select the lens that best answers `q`, has the stron
 
 Build a chapter map. Every chapter must serve one of: establish path, explain mechanism, contrast implementation, test invariant, expose boundary, or transfer pattern. Named focus areas must map to a chapter or an explicit coverage limitation.
 
-Run `impact-pass.md` after the selected lens passes hold-out testing. Candidate engineering transfers enter the Impact Brief only when their enforcing components, component-removal failure, applicable and inapplicable scenarios, and evidence are all present. If not, retain `迁移素材不足` rather than generating advice.
+Run the Comprehension Gate in `reader-model.md` after the selected lens passes hold-out testing. Reconstruct one load-bearing behavior path, predict how a new input, configuration, or failure travels through it, remove one enforcing component, and repair the initial question when the implementation reveals a different controlling boundary. Return to path tracing or frame selection when a probe fails.
+
+Then run `impact-pass.md`. Candidate engineering transfers enter the Impact Brief only when their enforcing components, component-removal failure, applicable and inapplicable scenarios, and evidence are all present. If not, retain `迁移素材不足` rather than generating advice.
 
 ## Phase 3: Compose
 
@@ -225,6 +228,8 @@ Check:
 - Are runtime claims distinguished from static inference?
 - Does the selected lens change the chapter structure?
 - Do transfer patterns survive component-removal and counterexample tests?
+- Did the Comprehension Gate reconstruct a behavior path and correctly predict a new case without overstating static inference?
+- Was the initial question answered, reframed, dissolved, or left unresolved from code and runtime evidence rather than silently preserved?
 - Does every personal engineering constraint trace to `C` rather than a project instruction or host-memory guess?
 - Did Impact Pass remain downstream of the verified behavior paths and selected lens?
 
@@ -232,7 +237,7 @@ Check:
 
 Run `voice-pass.md`, then write `{topic}-source-dive_{YYYY-MM-DD}.md` per `output-spec.md`.
 
-Delivery report: article path, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, transferable patterns, anti-patterns, and coverage gaps.
+Delivery report: article path, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, `Comprehension Gate: passed` or the failed probe and degradation, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, transferable patterns, anti-patterns, and coverage gaps. Do not reproduce the Reader Contract or gate probes.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
 

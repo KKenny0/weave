@@ -58,13 +58,14 @@ When a delivery report or `smoke-report.md` is requested, persist only:
 - output path and size or chapter metrics;
 - selected frame, why it won, material close alternative, and final boundary;
 - hold-out identifier, prediction summary, result, chronology status, and pre-reveal artifact path;
+- Comprehension Gate pass status, or the failed probe and material degradation, without the Reader Contract or probe contents;
 - detected host label, context source category names, and material degradation;
 - admitted impact count or `delta ~= 0` reason, without Impact Brief fields;
 - Voice Pass result and scoped style-reference status;
 - deep-read Article Integrity result and any material degradation, without Article Closure Contract fields;
 - runtime verification, static inference, source gaps, and coverage limits.
 
-Never use report sections named `Capability Manifest`, `Context Envelope`, `Source Brief`, `Source Catalog`, `Candidate Frame Brief`, `Synthesis Pack`, `Impact Brief`, or `Article Closure Contract`, and never reproduce their schemas or raw contents. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
+Never use report sections named `Capability Manifest`, `Context Envelope`, `Reader Contract`, `Source Brief`, `Source Catalog`, `Dialogue Matrix`, `Candidate Frame Brief`, `Synthesis Pack`, `Comprehension Gate`, `Impact Brief`, or `Article Closure Contract`, and never reproduce their schemas or raw contents. A one-line `Comprehension Gate: passed` status is allowed without a heading. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
 
 Apply the allowlist to content, not only headings. The report may say `Context categories: explicit current request` and `Admitted impacts: 3`. It must not quote or paraphrase what the user is deciding, prefers, wants, or is constrained by, and must not summarize Impact 1/2/3. Read the report back and remove those details before delivery. The final article is the only persisted output that may contain admitted personal application.
 
@@ -72,5 +73,5 @@ Apply the allowlist to content, not only headings. The report may say `Context c
 
 - Don't change the naming pattern
 - Don't omit YAML fields
-- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Source Brief tables, Synthesis Pack, Candidate Frame Brief, Impact Brief, Article Closure Contract, Evidence Weight grids, internal notes) in the output file — only the finished article
+- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Reader Contract, Source Brief tables, Dialogue Matrix, Synthesis Pack, Candidate Frame Brief, Comprehension Gate probes, Impact Brief, Article Closure Contract, Evidence Weight grids, internal notes) in the output file — only the finished article
 - Don't expose raw remembered material, private memory paths, or unrelated user context

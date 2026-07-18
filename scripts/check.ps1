@@ -79,6 +79,7 @@ try {
             'references/frame-selection.md',
             'references/impact-pass.md',
             'references/output-spec.md',
+            'references/reader-model.md',
             'references/reading-variants.md',
             'references/source-dive.md',
             'references/survey.md',
@@ -121,6 +122,11 @@ try {
         if (($names | Sort-Object -Unique).Count -ne $names.Count) {
             throw 'evals/evals.json contains duplicate names.'
         }
+        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension')) {
+            if ($requiredEvalName -notin $names) {
+                throw "evals/evals.json is missing reader-model regression: $requiredEvalName"
+            }
+        }
         foreach ($eval in $evals) {
             foreach ($field in @('id', 'name', 'prompt', 'expected_output', 'files', 'expectations')) {
                 if ($null -eq $eval.PSObject.Properties[$field]) {
@@ -131,7 +137,36 @@ try {
                 throw "Eval $($eval.id) has an empty prompt or expectations list."
             }
         }
+        $readerEvalExpectations = @($evals | Where-Object { $_.name -in @('initial-question-repair', 'generative-comprehension') } | ForEach-Object { $_.expectations }) -join "`n"
+        foreach ($requiredReaderProbe in @('Reader Contract', 'reconstruction', 'novel-case', 'counterexample', 'Question repair', 'Comprehension Gate')) {
+            if ($readerEvalExpectations -notmatch [regex]::Escape($requiredReaderProbe)) {
+                throw "Reader-model evals do not cover required probe: $requiredReaderProbe"
+            }
+        }
+        foreach ($routeEvalName in @('source-dive-real-repo', 'survey-real-domain')) {
+            $routeEval = $evals | Where-Object { $_.name -eq $routeEvalName } | Select-Object -First 1
+            $routeExpectations = @($routeEval.expectations) -join "`n"
+            if ($routeExpectations -notmatch 'Reader Contract' -or $routeExpectations -notmatch 'Comprehension Gate' -or $routeExpectations -notmatch 'before Impact Pass') {
+                throw "Route eval does not enforce the reader-model ordering: $routeEvalName"
+            }
+        }
         Write-Host "Validated $($evals.Count) eval cases."
+    }
+
+    Invoke-Check 'reader-model workflow wiring' {
+        $readerModelPath = Join-Path $repoRoot 'references/reader-model.md'
+        $readerModelText = Get-Content -LiteralPath $readerModelPath -Raw
+        foreach ($requiredSection in @('## Reader Contract', '## Comprehension Gate', '### 1. Reconstruction', '### 2. Novel case', '### 3. Counterexample', '### 4. Question repair')) {
+            if ($readerModelText -notmatch [regex]::Escape($requiredSection)) {
+                throw "Reader model is missing required section: $requiredSection"
+            }
+        }
+        foreach ($routeFile in @('deep-read.md', 'source-dive.md', 'survey.md')) {
+            $routeText = Get-Content -LiteralPath (Join-Path $repoRoot "references/$routeFile") -Raw
+            if ($routeText -notmatch 'reader-model\.md' -or $routeText -notmatch 'Comprehension Gate') {
+                throw "Workflow is not wired to the reader model: $routeFile"
+            }
+        }
     }
 
     Invoke-Check 'local document references' {
@@ -223,6 +258,7 @@ Comparative judgment: strongest evidence coverage
 Host: Codex
 Context source categories: explicit current request
 Admitted impacts: 1
+Comprehension Gate: passed
 Voice Pass: passed
 Article Integrity: passed
 Chronology: verified
@@ -250,6 +286,50 @@ Artifact: .weave-frame/pre-reveal.md
             $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $reportLeakRoot -ImpactMode personal 2>&1)
             if ($LASTEXITCODE -eq 0) {
                 throw 'Run verifier accepted an Article Closure Contract heading in the delivery report.'
+            }
+
+            $readerLeakRoot = Join-Path $fixtureRoot 'reader-leak'
+            New-Item -ItemType Directory -Path (Join-Path $readerLeakRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $readerLeakRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $readerLeakRoot 'test-deep-read_2026-07-14.md')
+            $reportWithReaderContract = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) + "`n#### Reader Contract: hidden fields`n"
+            $reportWithReaderContract | Set-Content -LiteralPath (Join-Path $readerLeakRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $readerLeakRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted a renamed Reader Contract heading in the delivery report.'
+            }
+
+            $readerFieldLeakRoot = Join-Path $fixtureRoot 'reader-field-leak'
+            New-Item -ItemType Directory -Path (Join-Path $readerFieldLeakRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $readerFieldLeakRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $readerFieldLeakRoot 'test-deep-read_2026-07-14.md')
+            $reportWithReaderField = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) + "`nStarting model: private baseline.`n"
+            $reportWithReaderField | Set-Content -LiteralPath (Join-Path $readerFieldLeakRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $readerFieldLeakRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted a Reader Contract field dump without a heading.'
+            }
+
+            $frameReaderLeakRoot = Join-Path $fixtureRoot 'frame-reader-leak'
+            New-Item -ItemType Directory -Path (Join-Path $frameReaderLeakRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $frameReaderLeakRoot '.weave-frame/pre-reveal.md')
+            Add-Content -LiteralPath (Join-Path $frameReaderLeakRoot '.weave-frame/pre-reveal.md') -Value "Target capability: predict a new case"
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $frameReaderLeakRoot 'test-deep-read_2026-07-14.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $frameReaderLeakRoot 'smoke-report.md')
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $frameReaderLeakRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted Reader Contract fields in pre-reveal.md.'
+            }
+
+            $hollowComprehensionRoot = Join-Path $fixtureRoot 'hollow-comprehension'
+            New-Item -ItemType Directory -Path (Join-Path $hollowComprehensionRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $hollowComprehensionRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $hollowComprehensionRoot 'test-deep-read_2026-07-14.md')
+            $hollowComprehensionReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Comprehension Gate: passed', 'Claimed Comprehension Gate: passed, but novel-case failed')
+            $hollowComprehensionReport | Set-Content -LiteralPath (Join-Path $hollowComprehensionRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $hollowComprehensionRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted a hollow Comprehension Gate pass claim.'
             }
 
             $inlineRouteRoot = Join-Path $fixtureRoot 'inline-route'
@@ -389,6 +469,19 @@ status: draft
 
 Internal fields leaked into the article.
 '@
+                'internal-reader-field.md' = @'
+---
+title: internal reader field
+date: 2026-07-17
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal reader field
+
+Starting model: private baseline leaked into the article.
+'@
             }
             foreach ($fixtureName in $negativeFixtures.Keys) {
                 $negativePath = Join-Path $articleFixtureRoot $fixtureName
@@ -516,6 +609,7 @@ Prediction: installed runtime resolves sibling scripts.
 Host: Codex
 Context source categories: explicit current request
 Admitted impacts: 1
+Comprehension Gate: passed
 Voice Pass: passed
 Article Integrity: passed
 Chronology: verified

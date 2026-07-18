@@ -72,15 +72,24 @@ try {
     $framePrivacy = "(?i)\buser(?:'s)?\b|user context|current request|personal (?:context|baseline|preference|decision|goal|constraint)|用户|当前请求|个人(?:背景|基线|偏好|决定|决策|目标|约束)|我正在|我目前|我偏向|我的(?:团队|项目|目标|约束)|团队现有"
     Assert-True ($frameText -notmatch $framePrivacy) 'Pre-reveal artifact contains personal or contextual rationale.'
 
+    $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Target capability|Revision trigger|Route expression|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|Reconstruction|Novel case|Counterexample|Question repair|初始问题|起始模型|未决判断|目标能力|修正触发条件|路线表达|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题|重建|新例|反例|问题修复)(?:\*\*)?\s*:'
+    Assert-True ($frameText -notmatch $readerArtifactFields) 'Pre-reveal artifact contains Reader Contract, Dialogue Matrix, or Comprehension Gate fields.'
+
     $frameFiles = @(Get-ChildItem -LiteralPath (Split-Path -Parent $framePath) -File)
     Assert-True ($frameFiles.Count -eq 1 -and $frameFiles[0].Name -eq 'pre-reveal.md') 'The .weave-frame directory may persist only pre-reveal.md.'
 
-    $forbiddenHeadings = '(?im)^#{1,3}\s+(Capability Manifest|Context Envelope|Source Brief|Source Catalog|Candidate Frame Brief|Synthesis Pack|Impact Brief|Article Closure Contract)\s*$'
+    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
     Assert-True ($reportText -notmatch $forbiddenHeadings) 'Delivery report contains a forbidden internal-artifact heading.'
 
     $reportPrivacy = "(?i)user's (?:decision|preference|goal|constraint|baseline)|the user (?:is deciding|prefers|wants|needs)|用户.{0,16}(?:正在|决定|决策|偏向|偏好|目标|约束|限制)|我正在|我目前|我偏向|我需要|我的(?:团队|项目|目标|约束)|调试成本必须|不能牺牲|隐私边界必须"
     Assert-True ($reportText -notmatch $reportPrivacy) 'Delivery report repeats personal context.'
+    Assert-True ($reportText -notmatch $readerArtifactFields) 'Delivery report contains Reader Contract, Dialogue Matrix, or Comprehension Gate field dumps.'
     Assert-True ($reportText -notmatch '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Impact\s*[1-3]|影响\s*[一二三123])\b') 'Delivery report lists individual admitted impacts.'
+    Assert-True ($reportText -notmatch '(?m)^\s*```') 'Delivery report must not contain fenced code blocks that can hide verification fields.'
+
+    $comprehensionPassCount = ([regex]::Matches($reportText, '(?im)^(?:Comprehension Gate:\s*passed|理解门:\s*通过|理解检验:\s*通过)\s*$')).Count
+    Assert-True ($comprehensionPassCount -eq 1) 'Delivery report requires exactly one anchored Comprehension Gate pass status.'
+    Assert-True ($reportText -notmatch '(?im)^(?:Comprehension Gate|理解门|理解检验):.*(?:fail|failed|unverified|失败|未验证)') 'Delivery report contains a failed or unverified Comprehension Gate status.'
 
     $requiredPatterns = @(
         '(?i)host|宿主',

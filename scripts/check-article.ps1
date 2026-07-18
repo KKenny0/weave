@@ -190,9 +190,13 @@ try {
         Add-Failure $failures "Repeated long fragment found: $repeated"
     }
 
-    $forbiddenHeadings = '(?im)^#{1,3}\s+(Capability Manifest|Context Envelope|Source Brief|Source Catalog|Candidate Frame Brief|Synthesis Pack|Impact Brief|Article Closure Contract)\s*$'
+    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
     if ($prose -match $forbiddenHeadings) {
         Add-Failure $failures 'Article contains a forbidden internal-artifact heading.'
+    }
+    $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Target capability|Revision trigger|Route expression|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|Reconstruction|Novel case|Counterexample|Question repair|初始问题|起始模型|未决判断|目标能力|修正触发条件|路线表达|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题|重建|新例|反例|问题修复)(?:\*\*)?\s*:'
+    if ($prose -match $readerArtifactFields) {
+        Add-Failure $failures 'Article contains Reader Contract, Dialogue Matrix, or Comprehension Gate field dumps.'
     }
 
     if ($failures.Count -gt 0) {

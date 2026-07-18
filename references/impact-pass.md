@@ -1,6 +1,6 @@
 # Impact Pass
 
-Run after Frame Selection and hold-out testing, before Compose. Convert the selected frame into an evidence-bounded answer to what the research changes for the current user or question. Impact is downstream of evidence: it cannot change the evidence model, retrofit the selected frame, or soften a failed hold-out.
+Run after Frame Selection, hold-out testing, and the Comprehension Gate, before Compose. Convert the selected frame and repaired question into an evidence-bounded answer to what the research changes for the current user or question. Impact is downstream of evidence: it cannot change the evidence model, retrofit the selected frame, soften a failed hold-out, or overwrite a failed comprehension probe.
 
 ## Inputs
 
@@ -9,6 +9,7 @@ Run after Frame Selection and hold-out testing, before Compose. Convert the sele
 - `E`: the route-specific evidence model;
 - `f*`: the selected frame after hold-out testing;
 - `P`: the survey-only Map Payoff, when the route is `survey`.
+- `G`: the passed Comprehension Gate result and the initial question's `answered`, `reframed`, `dissolved`, or `unresolved` status.
 
 ## Build the Impact Brief
 
@@ -19,6 +20,7 @@ For each candidate impact, record internally:
 - **Baseline**: the user's supported prior judgment, or the default problem statement when no prior is known;
 - **Evidence delta**: the evidence or boundary in `E` that forces a change;
 - **Cognitive delta**: the exact model, distinction, or judgment that changes;
+- **Question delta**: how the initial question survived or was repaired;
 - **Consequence**: the affected choice, design criterion, or next line of inquiry;
 - **Next probe**: a concrete check only when a real decision context exists;
 - **Boundary**: where the implication or transfer stops working;
@@ -42,6 +44,7 @@ Keep zero to three impacts. This is a cap, not a target. `delta ~= 0` is a valid
 ## Route renderers
 
 - **deep-read**: foreground a changed default judgment, opened blind spot, or revised question.
+- **Model revision first**: render the changed distinction, explanation, or prediction before any action advice. An action is optional downstream evidence of cognitive change, not the default shape of impact.
 - **source-dive**: foreground an affected engineering decision or validated transferable pattern. A transfer requires enforcing components, component-removal failure, applicable and inapplicable scenarios, and evidence; otherwise report `迁移素材不足`.
 - **survey**: personalize or prioritize the completed Map Payoff. For `orient`, preserve navigation and boundaries without forcing a choice; for `choose`, preserve its condition-dependent tradeoff; for `enter`, preserve the uncertainty-removing sequence; for `evaluate`, preserve the supported / conditional / unresolved distinction. Do not invent a recommendation absent from the Map Payoff or turn representative examples into field-wide action advice.
 
@@ -68,6 +71,6 @@ Before Voice Pass, check:
 - every survey impact traces to the Map Payoff and stays within its evidence ceiling;
 - every transfer or recommendation states its boundary;
 - the impact heading matches the context basis: explicit personal decision context uses `对我意味着什么`, and only genuinely question-only context uses `对当前问题意味着什么`;
-- the article and delivery report contain no Capability Manifest, Context Envelope, Impact Brief, Article Closure Contract, Map Use Contract, or Map Payoff fields.
+- the article and delivery report contain no Capability Manifest, Context Envelope, Reader Contract, Dialogue Matrix, Comprehension Gate probes, Impact Brief, Article Closure Contract, Map Use Contract, or Map Payoff fields.
 
 Delivery reporting adds: detected host, context source categories used, number of admitted impacts, `delta ~= 0` reason when relevant, and any context degradation. Do not expose raw remembered material.

@@ -25,6 +25,7 @@ Read the final file and check:
 - a central term in the title is not mentioned once and then abandoned;
 - every chapter still serves the selected frame after Voice Pass edits;
 - source findings, weave synthesis, and context-bound application remain distinguishable;
+- the article answers the repaired question and demonstrates the Reader Contract's target capability without exposing the contract or Comprehension Gate probes;
 - terminology explanations are integrated where the term first carries load rather than inserted as detached editorial notes;
 - the final boundary is visible and consistent with the body.
 

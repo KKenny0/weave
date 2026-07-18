@@ -53,13 +53,31 @@ A survey frame fails this check when it produces an elegant taxonomy but the rea
 Choose the hold-out before candidate assembly:
 
 - single source: reserve the last load-bearing section;
-- multiple sources: reserve the last Source Brief;
+- exactly two sources: reserve one load-bearing section from each while keeping both construction briefs available for dialogue;
+- three or more sources: reserve the last Source Brief;
 - source-dive: reserve one non-entry module connected to a core behavior path;
 - survey: reserve the newest frontier-source group.
 
 Reveal the hold-out after selecting `f*`. Pass when the frame explains the hold-out without changing its core components and reports a real miss honestly. Retrofitting the frame after reveal is a failure.
 
 For evals, persist the Candidate Frame Brief and prediction before revealing the hold-out. Use the environment clock, then identify the later hold-out fetch/read in the execution transcript when available. Artifact content proves what was predicted; transcript order proves when. A retrospective report or handwritten timestamp alone cannot prove chronology. If access logs are unavailable, grade prediction content normally but report chronology as unverified.
+
+## Deep-read dialogue protocol
+
+For two or more construction sources, verify that each Source Brief first reconstructs Problem World, Reasoning Machine, and World After in isolation. Then admit only Dialogue Matrix rows that identify evidence on both sides and change interpretation through shared ground, term mismatch, premise conflict, or an unresolved question.
+
+A matrix fails when it normalizes vocabulary before establishing what each author means, records topical overlap as agreement, labels different conclusions as conflict without locating the premise difference, or appears as a field dump in the final article. In multi-source deep-read, a candidate frame must explain at least one admitted relationship or justify why one source's mechanism legitimately organizes the others.
+
+## Comprehension protocol
+
+After hold-out testing and before Compose, evaluate the four probes in `references/reader-model.md`:
+
+1. **Reconstruction**: the problem, load-bearing explanation, strongest evidence, and boundary can be rebuilt without copying the evidence-model schema.
+2. **Novel case**: a genuinely new case receives a prediction or classification through the selected mechanism, with weave synthesis labeled.
+3. **Counterexample**: removing a premise or crossing a boundary either confirms the stated limit or narrows the frame.
+4. **Question repair**: the initial question is explicitly answered, reframed, dissolved, or left unresolved from evidence.
+
+The gate fails when fluent restatement substitutes for mechanism, a source example is renamed as a novel case, the counterexample strains no component, or question repair is manufactured without evidence. A surviving initial model may still pass; cognitive value does not require forced disagreement.
 
 ## Final-article trace
 
@@ -74,6 +92,7 @@ Delete a chapter that does not serve the selected frame. In the final audit, ver
 ## Failure patterns
 
 - Candidate labels differ but chapter maps are the same.
+- Multi-source synthesis stacks conclusions without reconstructing author worlds or explaining a Dialogue Matrix relationship.
 - A vivid metaphor replaces an evidence-backed mechanism.
 - The winner is generic enough to fit any topic in the field.
 - A fixed workflow template determines the answer before the evidence is read.
@@ -82,5 +101,8 @@ Delete a chapter that does not serve the selected frame. In the final audit, ver
 - Runner-up candidates are obvious strawmen.
 - Field-wide prevalence or momentum is inferred from representative examples rather than trend-capable evidence.
 - The selected lens is named in the report but the article keeps the old top-level template.
+- The hold-out passes, but the run cannot reconstruct the mechanism or use it on a novel case.
+- The initial question is preserved after the evidence invalidates its categories.
+- A decorative counterexample is listed without removing a premise, crossing a boundary, or narrowing the frame.
 - A survey lens reorganizes the domain but does not close its primary `orient`, `choose`, `enter`, or `evaluate` intent.
 - A survey article gives unconditional advice even though its evidence ceiling supports only description or comparison.
