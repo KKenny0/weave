@@ -49,7 +49,11 @@ try {
     $hasInlineDeepReadTag = $tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bdeep-read\b'
     $hasBlockDeepReadTag = $tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*deep-read\s*$'
     $isDeepRead = $articles[0].Name -match '-deep-read_' -or $hasInlineDeepReadTag -or $hasBlockDeepReadTag
-    if ($isDeepRead) {
+    $hasInlineSourceDiveTag = $tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsource-dive\b'
+    $hasBlockSourceDiveTag = $tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*source-dive\s*$'
+    $isSourceDive = $articles[0].Name -match '-source-dive_' -or $hasInlineSourceDiveTag -or $hasBlockSourceDiveTag
+    $requiresArticleIntegrity = $isDeepRead -or $isSourceDive
+    if ($requiresArticleIntegrity) {
         $pwsh = (Get-Command pwsh -ErrorAction Stop).Source
         $articleCheckOutput = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $articles[0].FullName 2>&1)
         Assert-True ($LASTEXITCODE -eq 0) "Article integrity checker failed: $($articleCheckOutput -join ' ')"
@@ -78,12 +82,17 @@ try {
     $frameFiles = @(Get-ChildItem -LiteralPath (Split-Path -Parent $framePath) -File)
     Assert-True ($frameFiles.Count -eq 1 -and $frameFiles[0].Name -eq 'pre-reveal.md') 'The .weave-frame directory may persist only pre-reveal.md.'
 
-    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
+    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|System Design Brief|Engineering Decision Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
     Assert-True ($reportText -notmatch $forbiddenHeadings) 'Delivery report contains a forbidden internal-artifact heading.'
 
     $reportPrivacy = "(?i)user's (?:decision|preference|goal|constraint|baseline)|the user (?:is deciding|prefers|wants|needs)|用户.{0,16}(?:正在|决定|决策|偏向|偏好|目标|约束|限制)|我正在|我目前|我偏向|我需要|我的(?:团队|项目|目标|约束)|调试成本必须|不能牺牲|隐私边界必须"
     Assert-True ($reportText -notmatch $reportPrivacy) 'Delivery report repeats personal context.'
     Assert-True ($reportText -notmatch $readerArtifactFields) 'Delivery report contains Reader Contract, Dialogue Matrix, or Comprehension Gate field dumps.'
+    $sourceDiveInternalFieldNames = 'Primary reading intent|Secondary reading intent|Reading intent|Primary reading scope|Secondary reading scope|Reading scope|Observed problem|Design forces|Executable mechanism|Evidence status|Core project problem|Decision chains|Attribution boundary|Version boundary|Product identity|Target user or actor|User capabilities|System boundary|Entry points|Core state|Major subsystems|Canonical task loop|Organizing principle|主要阅读意图|次要阅读意图|阅读意图|主要阅读范围|次要阅读范围|阅读范围|观察到的问题|设计力量|可执行机制|证据状态|核心项目问题|承重判断链|归属边界|版本边界|产品身份|目标用户或行动者|用户能力|系统边界|入口|核心状态|主要子系统|代表性任务循环|组织原则'
+    $sourceDiveArtifactFields = "(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*:"
+    $sourceDiveArtifactTableFields = "(?im)^\s*\|\s*(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*\|"
+    Assert-True ($frameText -notmatch $sourceDiveArtifactFields -and $frameText -notmatch $sourceDiveArtifactTableFields) 'Pre-reveal artifact contains source-dive internal fields.'
+    Assert-True ($reportText -notmatch $sourceDiveArtifactFields -and $reportText -notmatch $sourceDiveArtifactTableFields) 'Delivery report contains source-dive internal fields.'
     Assert-True ($reportText -notmatch '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Impact\s*[1-3]|影响\s*[一二三123])\b') 'Delivery report lists individual admitted impacts.'
     Assert-True ($reportText -notmatch '(?m)^\s*```') 'Delivery report must not contain fenced code blocks that can hide verification fields.'
 
@@ -99,8 +108,11 @@ try {
         '(?i)chronology|时间顺序',
         '(?i)\.weave-frame[/\\]pre-reveal\.md'
     )
-    if ($isDeepRead) {
+    if ($requiresArticleIntegrity) {
         $requiredPatterns += '(?i)article integrity|成稿完整性'
+        $articleIntegrityPassCount = ([regex]::Matches($reportText, '(?im)^(?:Article Integrity:\s*passed|成稿完整性:\s*通过)\s*$')).Count
+        Assert-True ($articleIntegrityPassCount -eq 1) 'Deep-read and source-dive delivery reports require exactly one anchored Article Integrity pass status.'
+        Assert-True ($reportText -notmatch '(?im)^(?:Article Integrity|成稿完整性):.*(?:fail|failed|manual|unverified|失败|手工|未验证)') 'Delivery report contains a failed, manual, or unverified Article Integrity status.'
     }
     foreach ($requiredPattern in $requiredPatterns) {
         Assert-True ($reportText -match $requiredPattern) "Delivery report is missing required summary pattern: $requiredPattern"

@@ -122,7 +122,7 @@ try {
         if (($names | Sort-Object -Unique).Count -ne $names.Count) {
             throw 'evals/evals.json contains duplicate names.'
         }
-        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension')) {
+        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding')) {
             if ($requiredEvalName -notin $names) {
                 throw "evals/evals.json is missing reader-model regression: $requiredEvalName"
             }
@@ -148,6 +148,12 @@ try {
             $routeExpectations = @($routeEval.expectations) -join "`n"
             if ($routeExpectations -notmatch 'Reader Contract' -or $routeExpectations -notmatch 'Comprehension Gate' -or $routeExpectations -notmatch 'before Impact Pass') {
                 throw "Route eval does not enforce the reader-model ordering: $routeEvalName"
+            }
+        }
+        $sourceDiveExpectations = @($evals | Where-Object { $_.name -in @('source-dive-real-repo', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding') } | ForEach-Object { $_.expectations }) -join "`n"
+        foreach ($requiredSourceDiveConcept in @('understand', 'learn', 'apply', 'system scope', 'System Design Brief', 'canonical task', 'takeaways', 'independent reader', 'Engineering Decision Brief', 'weave inference', 'Article Integrity')) {
+            if ($sourceDiveExpectations -notmatch [regex]::Escape($requiredSourceDiveConcept)) {
+                throw "Source-dive evals do not cover required concept: $requiredSourceDiveConcept"
             }
         }
         Write-Host "Validated $($evals.Count) eval cases."
@@ -343,6 +349,28 @@ Artifact: .weave-frame/pre-reveal.md
                 throw 'Run verifier skipped Article Integrity for an inline deep-read tag with a nonstandard filename.'
             }
 
+            $inlineSourceDiveRoot = Join-Path $fixtureRoot 'inline-source-dive-route'
+            New-Item -ItemType Directory -Path (Join-Path $inlineSourceDiveRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $inlineSourceDiveRoot 'smoke-report.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $inlineSourceDiveRoot '.weave-frame/pre-reveal.md')
+            $sourceDiveArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', 'tags: [source-dive]')
+            ($sourceDiveArticle + "`n正文结束。，") | Set-Content -LiteralPath (Join-Path $inlineSourceDiveRoot 'nonstandard-name.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $inlineSourceDiveRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier skipped Article Integrity for an inline source-dive tag with a nonstandard filename.'
+            }
+
+            $sourceDiveMissingStatusRoot = Join-Path $fixtureRoot 'source-dive-missing-integrity-status'
+            New-Item -ItemType Directory -Path (Join-Path $sourceDiveMissingStatusRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $sourceDiveMissingStatusRoot '.weave-frame/pre-reveal.md')
+            $sourceDiveArticle | Set-Content -LiteralPath (Join-Path $sourceDiveMissingStatusRoot 'test-source-dive_2026-07-14.md') -Encoding utf8NoBOM
+            $sourceDiveReportWithoutIntegrity = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) -replace '(?m)^Article Integrity: passed\r?\n', ''
+            $sourceDiveReportWithoutIntegrity | Set-Content -LiteralPath (Join-Path $sourceDiveMissingStatusRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $sourceDiveMissingStatusRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted a source-dive report without Article Integrity: passed.'
+            }
+
             $articleFixtureRoot = Join-Path $fixtureRoot 'article-fixtures'
             New-Item -ItemType Directory -Path $articleFixtureRoot | Out-Null
             $negativeFixtures = @{
@@ -481,6 +509,80 @@ status: draft
 # internal reader field
 
 Starting model: private baseline leaked into the article.
+'@
+                'internal-source-dive-field.md' = @'
+---
+title: internal source dive field
+date: 2026-07-17
+tags: [source-dive]
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal source dive field
+
+Observed problem: internal brief leaked into the article.
+'@
+                'internal-source-dive-frontmatter.md' = @'
+---
+title: internal source dive frontmatter
+date: 2026-07-17
+tags: [source-dive]
+sources:
+  - https://example.com/source
+status: draft
+reading_intent: understand
+---
+# internal source dive frontmatter
+
+正文保持完整。
+'@
+                'internal-source-dive-scope-frontmatter.md' = @'
+---
+title: internal source dive scope frontmatter
+date: 2026-07-18
+tags: [source-dive]
+sources:
+  - https://example.com/source
+status: draft
+reading_scope: system
+---
+# internal source dive scope frontmatter
+
+正文保持完整。
+'@
+                'internal-source-dive-table.md' = @'
+---
+title: internal source dive table
+date: 2026-07-17
+tags: [source-dive]
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal source dive table
+
+| Observed problem | Internal brief leaked into a table |
+| --- | --- |
+| Design forces | Hidden contract data |
+| Executable mechanism | Hidden implementation data |
+| Evidence status | Hidden provenance data |
+'@
+                'internal-system-design-table.md' = @'
+---
+title: internal system design table
+date: 2026-07-18
+tags: [source-dive]
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal system design table
+
+| Product identity | Hidden product model |
+| --- | --- |
+| Core state | Hidden state model |
+| Canonical task loop | Hidden task model |
 '@
             }
             foreach ($fixtureName in $negativeFixtures.Keys) {

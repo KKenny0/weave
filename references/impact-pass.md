@@ -11,6 +11,18 @@ Run after Frame Selection, hold-out testing, and the Comprehension Gate, before 
 - `P`: the survey-only Map Payoff, when the route is `survey`.
 - `G`: the passed Comprehension Gate result and the initial question's `answered`, `reframed`, `dissolved`, or `unresolved` status.
 
+## Source Dive Project Takeaways
+
+Before building personal or question-level impacts for source-dive, close the project understanding itself. Project Takeaways are article conclusions, not Impact Brief entries and not migration advice.
+
+- `system` or `learn`: retain three to five project-specific judgments;
+- `subsystem`: retain one to three judgments about the selected capability and its wider-system boundary;
+- `decision`: retain the smallest set needed to close the named choice, often one or two.
+
+Each takeaway must connect a constraint, decision, executable mechanism, capability, cost or boundary, and the judgment that should change. It must be understandable without remembering class or directory names. Discard generic advice that could be pasted onto an adjacent repository.
+
+Only `apply` may turn a takeaway into transfer or change guidance. Project Takeaways remain valid when no personal impact passes and `delta ~= 0`.
+
 ## Build the Impact Brief
 
 For each candidate impact, record internally:
@@ -45,7 +57,12 @@ Keep zero to three impacts. This is a cap, not a target. `delta ~= 0` is a valid
 
 - **deep-read**: foreground a changed default judgment, opened blind spot, or revised question.
 - **Model revision first**: render the changed distinction, explanation, or prediction before any action advice. An action is optional downstream evidence of cognitive change, not the default shape of impact.
-- **source-dive**: foreground an affected engineering decision or validated transferable pattern. A transfer requires enforcing components, component-removal failure, applicable and inapplicable scenarios, and evidence; otherwise report `迁移素材不足`.
+- **source-dive**: choose the result that matches the reading intent:
+  - **Engineering distinction**: the reader can now separate two mechanisms, layers, or concepts that were previously easy to conflate.
+  - **Design judgment**: under a named constraint, a decision implemented by concrete mechanisms creates a capability while paying a cost and stopping at a stated boundary.
+  - **Transfer or change**: only for `apply` intent; require enforcing components, component-removal failure, applicable and inapplicable scenarios, and verification evidence, otherwise report `迁移素材不足`.
+
+For `understand` and `learn`, the absence of migration material is not a failure. Do not turn curiosity into an action plan. A design judgment may enter the reader's engineering model without being recommended for immediate adoption.
 - **survey**: personalize or prioritize the completed Map Payoff. For `orient`, preserve navigation and boundaries without forcing a choice; for `choose`, preserve its condition-dependent tradeoff; for `enter`, preserve the uncertainty-removing sequence; for `evaluate`, preserve the supported / conditional / unresolved distinction. Do not invent a recommendation absent from the Map Payoff or turn representative examples into field-wide action advice.
 
 ## Final rendering

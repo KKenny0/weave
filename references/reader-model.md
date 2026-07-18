@@ -81,7 +81,8 @@ State the repaired question or the unresolved evidence. A changed question must 
 ## Route expressions
 
 - **deep-read**: reconstruct the author's problem and reasoning move; predict how the frame treats a new case; expose one non-transferable case.
-- **source-dive**: reconstruct a load-bearing behavior path; predict a new input, configuration, or failure; remove one enforcing component and trace the break.
+- **source-dive / system**: first reconstruct in two or three sentences what the tool is, who uses it, the problem and major capabilities; then explain the overall system shape, core state, and one representative task across entry, orchestration, two or more capabilities, output, and failure ownership. Predict a new input, integration, or fault through that system. Remove a load-bearing subsystem or change a host condition. Repair the initial product category when the source reveals a different system, for example “chat client” becoming “persistent local agent host”. Class names, directory relations, or one call chain do not pass.
+- **source-dive / subsystem or decision**: reconstruct `problem or force -> design judgment -> behavior path -> capability -> cost or failure boundary`; predict a new input, configuration, integration, or failure; remove one enforcing component or change one shaping force and trace the break. A module or call-chain recap does not pass.
 - **survey**: reconstruct the selected map distinction; place an unfamiliar method or claim conditionally; identify a case the current evidence ceiling cannot locate or decide.
 
 ## Pass and failure handling

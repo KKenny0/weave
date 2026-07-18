@@ -55,7 +55,7 @@ Choose the hold-out before candidate assembly:
 - single source: reserve the last load-bearing section;
 - exactly two sources: reserve one load-bearing section from each while keeping both construction briefs available for dialogue;
 - three or more sources: reserve the last Source Brief;
-- source-dive: reserve one non-entry module connected to a core behavior path;
+- source-dive: reserve one non-entry module connected to a core behavior path; for `system`, test whether it fits the whole-system model or exposes a missing state owner, capability, or boundary; for narrower scopes, test whether it supports the decision, exposes a missed cost, lowers confidence in attributed intent, or forces the decision-mechanism chain to narrow;
 - survey: reserve the newest frontier-source group.
 
 Reveal the hold-out after selecting `f*`. Pass when the frame explains the hold-out without changing its core components and reports a real miss honestly. Retrofitting the frame after reveal is a failure.
@@ -78,6 +78,12 @@ After hold-out testing and before Compose, evaluate the four probes in `referenc
 4. **Question repair**: the initial question is explicitly answered, reframed, dissolved, or left unresolved from evidence.
 
 The gate fails when fluent restatement substitutes for mechanism, a source example is renamed as a novel case, the counterexample strains no component, or question repair is manufactured without evidence. A surviving initial model may still pass; cognitive value does not require forced disagreement.
+
+For source-dive, reconstruction must connect a problem or design force to a load-bearing decision, its executable behavior path, capability, cost, and failure boundary. A candidate frame must connect at least two layers of `problem/force <-> decision <-> mechanism <-> consequence/boundary`; relabeling a call chain, plugin system, state lifecycle, or module relation does not qualify. The counterexample removes an enforcing component or changes a shaping force. Author intent requires attributable evidence; structure-only explanations remain weave inference.
+
+For source-dive `system`, candidate admission additionally requires one frame to explain the product problem, overall shape, canonical task, at least two load-bearing judgments, user capabilities, and system boundary together. Reconstruction must identify the tool and actor in product language, the core state, the system structure, and one representative task before naming implementation symbols. The finished article fails when local mechanisms are correct but the reader cannot recover the whole system or three project-specific takeaways.
+
+In a source-dive `system` eval, smoke, or audit, an independent reader agent sees only the final article and answers the eight system-understanding questions in `source-dive.md`. Grade the answers for product identity, problem, capabilities, system composition, task flow, design judgments, costs, and three takeaways. This rubric is semantic; no regex or required heading substitutes for it.
 
 ## Final-article trace
 

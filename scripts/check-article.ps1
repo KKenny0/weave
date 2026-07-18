@@ -120,6 +120,7 @@ try {
 
     $text = Get-Content -LiteralPath $resolvedPath -Raw -Encoding utf8
     $failures = [System.Collections.Generic.List[string]]::new()
+    $isSourceDive = [System.IO.Path]::GetFileName($resolvedPath) -match '-source-dive_'
     $frontmatter = [regex]::Match($text, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $bodyText = if ($frontmatter.Success) { $text.Substring($frontmatter.Length) } else { $text }
     $proseResult = Get-ProseText $bodyText
@@ -128,10 +129,17 @@ try {
     }
     else {
         $frontmatterText = $frontmatter.Groups['body'].Value
+        $tagsSection = [regex]::Match($frontmatterText, '(?ms)^tags:\s*(?<inline>\[[^\]\r\n]*\]|[^\r\n]*)\r?\n(?<items>(?:[ \t]+-\s+[^\r\n]+\r?\n?)*)')
+        $isSourceDive = $isSourceDive -or
+            ($tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsource-dive\b') -or
+            ($tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*source-dive\s*$')
         foreach ($field in @('title', 'date', 'tags', 'sources', 'status')) {
             if ($frontmatterText -notmatch "(?m)^${field}:") {
                 Add-Failure $failures "Frontmatter is missing ${field}."
             }
+        }
+        if ($isSourceDive -and $frontmatterText -match '(?im)^(?:reading_intent|primary_intent|secondary_intent|reading_scope|primary_scope|secondary_scope|system_design_brief|engineering_decision_brief|article_closure_contract):') {
+            Add-Failure $failures 'Source-dive frontmatter contains a forbidden internal-artifact field.'
         }
 
         $titleMatch = [regex]::Match($frontmatterText, '(?m)^title:\s*(?<title>.+?)\s*$')
@@ -190,13 +198,19 @@ try {
         Add-Failure $failures "Repeated long fragment found: $repeated"
     }
 
-    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
+    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|System Design Brief|Engineering Decision Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
     if ($prose -match $forbiddenHeadings) {
         Add-Failure $failures 'Article contains a forbidden internal-artifact heading.'
     }
     $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Target capability|Revision trigger|Route expression|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|Reconstruction|Novel case|Counterexample|Question repair|初始问题|起始模型|未决判断|目标能力|修正触发条件|路线表达|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题|重建|新例|反例|问题修复)(?:\*\*)?\s*:'
     if ($prose -match $readerArtifactFields) {
         Add-Failure $failures 'Article contains Reader Contract, Dialogue Matrix, or Comprehension Gate field dumps.'
+    }
+    $sourceDiveInternalFieldNames = 'Primary reading intent|Secondary reading intent|Reading intent|Primary reading scope|Secondary reading scope|Reading scope|Observed problem|Design forces|Executable mechanism|Evidence status|Core project problem|Decision chains|Attribution boundary|Version boundary|Product identity|Target user or actor|User capabilities|System boundary|Entry points|Core state|Major subsystems|Canonical task loop|Organizing principle|主要阅读意图|次要阅读意图|阅读意图|主要阅读范围|次要阅读范围|阅读范围|观察到的问题|设计力量|可执行机制|证据状态|核心项目问题|承重判断链|归属边界|版本边界|产品身份|目标用户或行动者|用户能力|系统边界|入口|核心状态|主要子系统|代表性任务循环|组织原则'
+    $sourceDiveArtifactFields = "(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*:"
+    $sourceDiveArtifactTableFields = "(?im)^\s*\|\s*(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*\|"
+    if ($isSourceDive -and ($prose -match $sourceDiveArtifactFields -or $prose -match $sourceDiveArtifactTableFields)) {
+        Add-Failure $failures 'Article contains source-dive intent, scope, design-brief, decision-brief, or closure-contract field dumps.'
     }
 
     if ($failures.Count -gt 0) {

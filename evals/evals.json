@@ -111,12 +111,16 @@
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
         "Article has a chapter sequence with clear logical dependency rather than a file or symbol inventory",
         "The selected frame follows load-bearing behavior paths and changes how the skills, MCP, and marketplace focus areas are organized",
+        "The interest-only request defaults to understand with learn secondary rather than silently activating apply",
+        "One to three internal Engineering Decision Briefs connect observed problems or design forces to decisions, executable mechanisms, consequences, costs, and failure boundaries",
+        "Author intent is attributed only when official design or historical evidence exists; structure-only explanations are labeled weave inference",
         "At least one boundary, failed assumption, or static-inference limit of the selected frame is explicit",
         "A route-specific Reader Contract defines an observable behavior-path tracing, novel-input prediction, or boundary-testing capability before discovery",
-        "The source-dive Comprehension Gate reconstructs a load-bearing path, predicts a new input/configuration/failure, removes an enforcing component, repairs the initial question, and passes before Impact Pass",
-        "Transferable patterns are rendered through Impact Pass rather than duplicated in a second migration chapter",
+        "The source-dive Comprehension Gate reconstructs problem or force, decision, behavior path, capability, cost, and failure boundary; predicts a new case; changes a force or component; repairs the initial question; and passes before Impact Pass",
+        "The article produces an engineering distinction or conditional design judgment without forcing transferable patterns",
         "If no user engineering decision is supported by context, impact stays question-level and does not invent project constraints",
-        "The delivery report names context source categories and impact count without exposing raw remembered material"
+        "The serialized article passes Article Integrity and the delivery report records Article Integrity: passed",
+        "Reading intent, Engineering Decision Brief, and Article Closure Contract fields do not appear in the article, pre-reveal artifact, or delivery report"
       ]
     },
     {
@@ -251,6 +255,47 @@
         "A fluent component summary alone does not pass the Comprehension Gate",
         "The article preserves the difference between architectural plausibility, measured believability, and unverified task-performance transfer",
         "The delivery report records Comprehension Gate: passed without exposing the Reader Contract or four probe contents"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "source-dive-curiosity-engineering-work",
+      "prompt": "帮我 source dive 这个项目：https://github.com/ThinkInAIXYZ/deepchat。我对它为什么要同时支持多模型、MCP 和本地桌面宿主很感兴趣。我暂时不准备迁移或修改它，只想理解这些机制为什么会同时存在，以及这种设计付出了什么代价。写成技术深度文章。",
+      "expected_output": "把纯兴趣请求识别为 understand + learn，在行为路径之上重建 deepchat 的问题、约束、承重判断、执行机制、能力、代价与边界，不强迫生成迁移建议。",
+      "files": [],
+      "expectations": [
+        "The request is classified internally as primary understand and secondary learn, with no apply requirement",
+        "The focused coexistence question is classified as decision scope rather than automatically expanded into a full repository survey",
+        "Two or more behavior paths retain trigger, entry, routing, state change, boundary, and output or failure evidence",
+        "At least two evidenced chains connect a project problem or design force to a decision, executable mechanisms, consequence, cost, and failure boundary",
+        "Claims about why the authors chose a design use attributable docs or history; unsupported motive remains weave inference",
+        "The selected frame connects at least two layers of problem/force, decision, mechanism, and consequence/boundary rather than renaming modules",
+        "The Comprehension Gate reconstructs a design chain, predicts a novel case, changes a force or removes a component, and repairs the question before Impact Pass",
+        "Impact is an engineering distinction, design judgment, or honest delta ~= 0; the article contains no forced migration or adoption section",
+        "The source-dive Article Closure Contract is built internally and the serialized Markdown passes Article Integrity",
+        "The final article and report contain no reading-intent, Engineering Decision Brief, or Article Closure Contract field dump"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "source-dive-system-understanding",
+      "prompt": "帮我 source dive 这个项目：https://github.com/ThinkInAIXYZ/deepchat。我想理解 DeepChat 整个工具是怎么设计的：它解决什么问题，给用户什么能力，主要系统如何协作，有哪些值得带走的工程判断？我暂时不准备修改或迁移它。写成技术深度文章。",
+      "expected_output": "把请求识别为 understand + learn、system scope，在局部机制之前建立完整系统模型，用一条代表性任务串联入口、Session、Agent runtime、Provider、Tool/MCP、持久化与宿主边界，并形成可复述而非迁移导向的项目判断。",
+      "files": [],
+      "expectations": [
+        "The request is classified internally as system scope without leaking scope fields into persisted artifacts",
+        "Within the opening 800-1200 Chinese characters, the article defines DeepChat in product language, identifies its actor or usage context, explains the core problem, and names the major user capabilities",
+        "The article reframes DeepChat beyond a multi-model chat client when supported by evidence and labels any structure-derived explanation as weave inference",
+        "A compact system diagram expresses ownership and task or data flow across entry, durable Session state, Agent runtime, Provider, Tool or MCP, persistence, and the Electron host boundary",
+        "One canonical user task connects entry, state ownership, backend selection, model output, tool routing, persisted result, delivery, and failure or shutdown ownership",
+        "At least two Engineering Decision Briefs explain the system shape through evidenced constraint-decision-mechanism-capability-cost-boundary chains",
+        "Every major mechanism chapter starts from a user capability or the failure without it and reconnects to the canonical task or system boundary",
+        "Three to five project-specific takeaways can be restated without class or directory names and remain separate from migration guidance",
+        "The article contains no migration or adoption section because apply intent is absent",
+        "An independent reader agent given only the final article can answer product identity, problem, capabilities, system composition, representative task, design judgments, costs, and three takeaways",
+        "The known failure pattern fails: a locally correct Session, Provider, and MCP article without capability map, whole-system model, canonical task, or three takeaways is not accepted",
+        "System Design Brief, reading intent, reading scope, Engineering Decision Brief, and Article Closure Contract fields do not appear in the article, pre-reveal artifact, or delivery report",
+        "The serialized article passes Article Integrity and the delivery report records Article Integrity: passed"
       ]
     }
   ]
