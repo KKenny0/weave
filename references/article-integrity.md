@@ -2,14 +2,16 @@
 
 Run after Voice Pass and after the final Markdown file has been written. This pass verifies the artifact the user will actually receive. It does not replace source reading, frame selection, research review, or Voice Pass.
 
-Deep-read and source-dive runs must pass all three layers below before delivery. Keep the working fields internal; render only finished prose in the article and a one-line pass/fail result in the delivery report.
+Every deep-read, source-dive, and survey run must pass all three layers below before delivery. Keep the working fields internal; render only finished prose in the article and a one-line pass/fail result in the delivery report.
 
 ## Article Closure Contract
 
 Before Compose, record in working memory:
 
 - **Title promise**: the question, distinction, or central term the title promises to explain.
+- **Reader outcome**: the primary Deep Read or Source Dive `explain`, `map`, `evaluate`, `decide`, or `enter` capability, or the confirmed Survey mode and exact article promise.
 - **Closure locations**: the thesis plus at least two body locations that jointly fulfill that promise.
+- **Learning closure**: where the central model, selected Survey spine, worked reasoning, transfer or payoff, and boundary become recoverable from the article.
 - **Attribution boundary**: which load-bearing statements come directly from sources and which are weave synthesis.
 - **Time boundary**: which volatile facts belong to source time, retrieval time, or a later current-state check.
 - **Editorial-note policy**: whether each blockquote is a source quotation or an intentional author note; glossary explanations belong in prose.
@@ -37,10 +39,42 @@ Read the final file and check:
 - the title promise is answered by the thesis and developed in the named closure locations;
 - a central term in the title is not mentioned once and then abandoned;
 - every chapter still serves the selected frame after Voice Pass edits;
+- every chapter adds the capability promised by the Learning Spine or selected Survey spine instead of repeating background at a new level of detail;
 - source findings, weave synthesis, and context-bound application remain distinguishable;
-- the article answers the repaired question and demonstrates the Reader Contract's target capability without exposing the contract or Comprehension Gate probes;
+- the article answers the repaired question and renders the distinctions needed for the Reader Contract's target capability without claiming that the article has demonstrated actual-reader understanding, retention, retelling, reuse, or return;
 - terminology explanations are integrated where the term first carries load rather than inserted as detached editorial notes;
 - the final boundary is visible and consistent with the body.
+
+For Deep Read or Source Dive `explain` also check:
+
+- the motivating problem and central model appear before sustained specialist vocabulary;
+- concepts arrive in dependency order, with no missing bridge that forces outside reading;
+- at least one mechanism is worked through rather than merely named or analogized;
+- examples carry the mechanism and include a materially different transfer case when evidence permits;
+- admitted misconceptions are repaired without replacing the article with a glossary or FAQ;
+- the final transfer follows from the model and stops at the stated evidence boundary;
+- the result is not a field inventory rewritten in friendly language.
+
+For Deep Read or Source Dive `map` also check:
+
+- every sibling category answers the same classification question at the same abstraction level;
+- cross-cutting dimensions are rendered as axes, overlays, or matrices;
+- a hybrid method can be placed without contradictory sibling membership;
+- the map states what evidence is required to place an unfamiliar item and what it cannot decide.
+
+For survey also check:
+
+- the Survey Visual Pass completed after Refine and before agent preflight;
+- the file fulfills the confirmed Survey mode and exact article promise rather than defaulting to a domain-map template;
+- the article follows the user-selected, evidence-admitted spine; there is no second lens structure competing with it;
+- every load-bearing section serves the spine and maps to admitted Digest evidence;
+- a throughline tracks one concrete object through consistent `📍` state changes, while a dialectical or issue-centered spine preserves its conflict or evidence chain;
+- a `Canonical Article` is self-contained inside its declared scope, works examples rather than naming them, includes supported common mistakes, and closes with three to five useful Further Reading items;
+- every admitted visual adds a relationship that the nearby prose does not already make equally recoverable, appears after plain-language grounding, has a bold one-line caption, and stays inside the evidence boundary;
+- no visual contains unsupported nodes, arrows, comparisons, or broken asset references;
+- field-wide momentum, prevalence, consensus, or decline claims have trend-capable evidence or are scoped to the current source set;
+- the final coverage boundary matches the admitted corpus and claim-strength ceiling;
+- Digest Note, Spine Contract, visual evidence ledger, retired Domain Use Contract, retired Domain Payoff, and Learning Spine fields do not leak into prose.
 
 For source-dive also check:
 
@@ -90,7 +124,7 @@ Resolve `<weave-skill-root>` from the installed skill location; do not assume th
 
 The executable gate rejects files larger than 512 KiB before reading the full Markdown. This is a safety bound for the serialized-article scanner, not a target article size.
 
-The checker covers only unambiguous properties: required frontmatter, title/H1 agreement, duplicate sources, known malformed source shapes, fence balance, malformed punctuation, damaged blockquotes, repeated long fragments, and leaked internal-artifact headings. It ignores fenced code when scanning prose.
+The checker covers only unambiguous properties: required frontmatter, title/H1 agreement, duplicate sources, known malformed source shapes, fence balance, malformed punctuation, damaged blockquotes, repeated long fragments, and leaked internal-artifact headings. It ignores fenced code when scanning prose and excludes a final Further Reading or reference appendix from repeated-fragment detection, because a source title may legitimately recur there.
 
 Then read the file once more. Mechanical success cannot prove title closure, correct attribution, temporal honesty, or good prose.
 
@@ -101,4 +135,4 @@ Then read the file once more. Mechanical success cannot prove title closure, cor
 - **Serialized-file miss**: fix the final Markdown and rerun Voice Pass when wording changed, followed by the executable checker.
 - **Unavailable checker**: perform the same serialized-file checks manually and report `Article Integrity: manual; executable checker unavailable`. Audit-sensitive runs still require the executable gate.
 
-The delivery report may say `Article Integrity: passed` and name material degradation. It must not reproduce the internal contract. This status is required for both deep-read and source-dive audited runs.
+The delivery report may say `Article Integrity: passed` and name material degradation. It must not reproduce the internal contract. This status is required for every route.

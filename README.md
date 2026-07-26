@@ -4,43 +4,53 @@
 
 <h1 align="center">weave</h1>
 
-<p align="center"><strong>证据先行，取景框决定文章。</strong></p>
+<p align="center"><strong>证据决定能说什么，承重方向决定文章怎么走。</strong></p>
 
 <p align="center">简体中文 · <a href="README.en.md">English</a></p>
 
 weave 是一个面向深度研究的 Agent Skill。给它一组文章、一篇论文、一个技术项目，或者一个领域名称，它会产出一篇有证据、有判断、可以独立阅读的中文长文。
 
-它不会直接把素材压成摘要。运行开始时，它会检查当前 Agent 实际能访问哪些任务背景，并把“想深入理解”改写成一个可验证的阅读能力；接着建立证据模型，从素材里找出几种真正成立的看法，测试它们的边界，最后选一副框来组织全文。成文以前，它还必须脱离结构化笔记重建解释，把框架用于新案例，找出一个真实反例，并判断最初的问题是被回答、改写、消解还是仍未解决。
+它不会直接把素材压成摘要。Deep Read 和 Source Dive 会根据素材与问题建立证据模型、比较取景框并测试边界；Survey 则直接采用 Learn 的 Collect、Digest、Outline、Fill、Refine、Self-review 主干，在正式写作前增加一次用户可见的 Spine Direction Gate，在精炼后增加一次稀疏的 Visual Pass。三条路线最后都要通过预留证据、理解检验、Voice Pass 和实际成稿检查。
 
 ```text
 宿主能力 → Context Envelope C
                     ↓
-素材 x + 用户问题 q → Reader Contract R
+素材 x + 用户问题 q → 证据路线
+                    ↓
+              Reader Contract
                     ↓（仅显式公开发布意图）
               Publication Reader Extension
-        ↓
-收集来源，建立证据 E
-        ↓
-生成路线特定的候选框
-        ↓
-证据、专属性、选择力、边界、差异性检查
-        ↓
-用预留证据测试选中框
-        ↓
-Comprehension Gate：重建 / 新例 / 反例 / 问题修复
-        ↓
-Impact Pass：C + E + 选中框
-        ↓
-章节映射 → 成文 → Voice Pass
+         ├─ Deep Read / Source Dive
+         │    证据模型 → 候选框 → 选框
+         └─ Survey
+              Mode Gate → Collect → Digest → Outline
+              → 2–3 个证据准入的 Spine → 用户选择
+                         ↓
+              hold-out → Comprehension Gate
+                         ↓
+                     Impact Pass
+                         ↓
+         Deep/Source：Learning Spine → 成文
+         Survey：Fill → Refine → Visual Pass
+                         ↓
+              Voice Pass → Article Integrity
+                         ↓（需要时）
+                  Article Recoverability
+                         ↓（Survey）
+                  Human Self-review
 ```
 
-## 三条研究路线
+## 先选证据路线，再走各自方法
 
 | 输入 | Workflow | 主要产物 |
 |---|---|---|
 | 论文、文章、访谈、报告、书章 | `deep-read` | 对素材的证据化深读 |
 | GitHub 仓库、框架、技术项目 | `source-dive` | 从行为路径还原工程判断的源码分析 |
-| 领域名称、研究方向 | `survey` | 围绕实际用途收束判断的领域地图 |
+| 领域名称、研究方向 | `survey` | Learn-based 领域研究与成文 |
+
+Deep Read 和 Source Dive 还会从请求中选择 `explain / map / evaluate / decide / enter` 读者结果。Survey 不再使用这条轴，也不再保留原来的 Survey lens 库、Domain Use Contract 或 Domain Payoff。
+
+Survey 先确认 `Canonical Article / Deep Research / Quick Reference / Write to Learn` 模式。正文方向不是系统自动套出的 map 或 primer，而是在资料消化和大纲完成后，从 2–3 个证据成立、会生成不同文章的脊柱候选中由用户选择。用户也可以提前明确“按推荐项继续”，让完整流程一次跑完。
 
 ### Deep Read
 
@@ -58,25 +68,29 @@ Source Dive 不按目录或文件大小写源码清单。它保留触发、入�
 
 ### Survey
 
-Survey 会先判断这张地图要解决什么：建立方向感、做选择、安排进入顺序，还是评估一个主张。内部的 Map Use Contract 会据此明确比较对象、收益问题和可能改变结论的条件，再决定搜索角度与证据门槛。
+Survey 的唯一主干来自 Learn：Collect 先建立一手证据为主的来源集；Digest 完整阅读并用三条 claim test 决定保留、背景或删除；Outline 要求每一节先映射来源；Fill 按节写作，卡住就回到 Digest；Refine 只做结构与表达修正；最后把 agent preflight 和用户逐行 Self-review 分开。
 
-它不预设每个领域都有研究纲领或范式革命，而是在方法族、瓶颈与价值流、争议轴、研究纲领、时间演化之间选择主体结构。候选框不能只重新排列标题，还要在明确条件下改变一个区分、选择、进入顺序或判断置信度。选中框通过预留证据测试以后，Map Payoff 才会收束出条件、代价、失败方式和下一项验证证据。建立领域地图的请求不会被强行改写成产品选型；需要做选择时，也不会得到脱离条件的通用答案。
+两项定制插在 Learn 主干的固定位置。Outline 之后、Fill 之前运行 Spine Direction Gate：候选可以是贯穿线型、扬弃型论证或议题/警示重心，但必须由证据准入并真正改变章节顺序、材料分组、解释因果或最终边界。贯穿线必须选择“奖励信号”“上下文窗口”这类可追踪的具体对象，并用 `📍` 标记每一站的状态变化。系统不会先自动选一个 frame，再让用户选择另一个装饰性 spine。
+
+Refine 之后、Self-review 之前运行 Visual Pass。它先判断文字不擅长表达的是结构、因果、循环、曲线、权衡、矩阵、对齐案例还是最小公式，再做删除测试：去掉图没有损失，就删掉。保留的图必须放在白话解释和例子之后，每个节点、箭头或曲线都能回到证据或明确标为 Weave 综合；一篇长文只有少量图，甚至没有图，都是合格结果。
 
 ## 候选框怎么过关
 
-一副候选框需要同时满足五个条件：承重部件能回溯到证据；不能原样套到相邻主题；会改变材料取舍或章节结构；清楚说明失效条件；与其他候选产生真实的解释差异。
+一副候选框需要同时满足六个条件：承重部件能回溯到证据；不能原样套到相邻主题；会改变材料取舍或章节结构；清楚说明失效条件；与其他候选产生真实的解释差异；能完成请求里的可观察能力，而不只是覆盖同一个主题。
 
-候选数量没有硬指标。只有一副通过就用一副，一副都没通过就回到证据阶段。weave 不会为了制造选择而保留同义改写或陪跑框。
+Deep Read 和 Source Dive 不追求候选数量，只有一副通过也可以。Survey 会尝试生成 2–3 个真正不同的脊柱候选；证据修复后仍只剩一个时，它会请用户决定是接受单一方向还是收窄问题，不会编造陪跑项。
 
 选中以后，weave 会用一部分预先留出的材料测试它。测试可以是通过、部分通过或失败。如果宿主没有访问日志，weave 会保留预测内容，同时把读取顺序标成未验证，不会把一个自写时间戳当成审计证明。
 
-## 怎么证明真的读懂
+## 怎么证明研究模型成立
 
 Reader Contract 不把“深入理解”当作完成条件。它会先定义读完以后应该能够做什么，比如重建作者为什么需要某个区分、预测框架如何处理一个新案例，或者指出结论在哪个条件下失效。用户没有提供既有判断时，起始模型保持未知，不会凭主题猜测个人基线。
 
-取景框通过预留测试以后，Comprehension Gate 会做四次检查：不用 Source Brief 的措辞重建承重解释；处理一个没有用于构框的新案例；制造一个会移除前提或越过边界的反例；最后判断原始问题是被回答、改写、消解还是仍缺证据。这里测试的是理解能否被使用，hold-out 测试的则是取景框能否覆盖未见证据，两者不能互相替代。
+取景框通过预留测试以后，Comprehension Gate 会做四次检查：不用 Source Brief 的措辞重建承重解释；处理一个没有用于构框的新案例；制造一个会移除前提或越过边界的反例；最后判断原始问题是被回答、改写、消解还是仍缺证据。这里测试的是当前生成上下文中的研究模型能否被重建和使用，hold-out 测试的则是取景框能否覆盖未见证据，两者不能互相替代。
 
-Reader Contract 和四个理解探针只存在于本次运行的工作记忆。最终文章与交付报告不会暴露这些内部结构，报告只记录 `Comprehension Gate: passed` 或具体失败项。
+这个结果只到 L0：研究模型成立。它不证明真实读者看懂、记住、复述、应用或回来重读；“文章蛮不错”、阅读完成、点赞和分享也不是这类证据。Deep Read 或 Source Dive 的 `explain`、Survey 的 `Canonical Article` 以及任何承诺自包含解释的成稿，会交给一个只看到最终文件的独立新上下文，检查能否恢复承重模型、处理新例、指出边界和发现前提缺口；这只到 L1 Article Recoverability。真人即时无提示复述属于 L2，延迟记忆、复用或实际回访属于 L3。
+
+Deep Read 和 Source Dive 在 Comprehension Gate 后用 Learning Spine 控制成文；Survey 在 Outline 后用用户选中的 Spine Contract 控制 Fill。Reader Contract、Learning Spine、Digest Notes、Spine Contract、四个理解探针、视觉证据台账和 L1 审计答案都只存在于本次运行的工作记忆；报告只记录状态，不暴露内部结构。
 
 ## 公开发布意图
 
@@ -166,11 +180,18 @@ git clone https://github.com/KKenny0/weave.git ~/.codex/skills/weave
 我想知道一次请求怎么流过核心模块，状态在哪里改变，失败怎么恢复。
 ```
 
-测绘领域：
+研究领域并选择脊柱：
 
 ```text
-帮我做 survey：agent memory systems。
-我想看主要方法、真正的争论、现在的瓶颈和适合的入门路径。
+用 Survey 的 Deep Research 模式研究 agent memory systems。
+完成 Digest 和 Outline 后，给我 2–3 个真正不同的脊柱方向再继续。
+```
+
+一次完成一篇 canonical article：
+
+```text
+用 Survey 的 Canonical Article 模式研究强化学习，让非专业背景的人也能读懂。
+脊柱按证据最强的推荐项继续；图只在文字不擅长表达关系时使用。
 ```
 
 当“研究 X”既可能指一篇素材，也可能指技术实现或整个领域时，weave 会请求选择路线，不会静默猜测。
@@ -183,7 +204,7 @@ git clone https://github.com/KKenny0/weave.git ~/.codex/skills/weave
 {topic}-{workflow}_{YYYY-MM-DD}.md
 ```
 
-文件头包含 `title`、`date`、`tags`、`sources` 和 `status`。最终文章只保留成文，不混入 Capability Manifest、Context Envelope、Reader Contract、Source Brief、Source Catalog、Dialogue Matrix、Candidate Frame Brief、Comprehension Gate 探针、Impact Brief、System Design Brief、Engineering Decision Brief、Article Closure Contract、阅读意图或范围字段和内部评分表。交付报告会说明选中框、胜出理由、有实质差异的备选框、预留测试结果、Comprehension Gate 状态、检测到的宿主、实际使用的背景来源类别，以及 Impact Pass 的结果；deep-read 和 source-dive 还会记录最终文件的 Article Integrity 结果。
+文件头包含 `title`、`date`、`tags`、`sources` 和 `status`。最终文章只保留成文，不混入 Capability Manifest、Context Envelope、Reader Contract、Learning Spine、Digest Notes、Spine Contract、视觉证据台账、Source Brief、Source Catalog、旧 Domain Use Contract、旧 Domain Payoff、Dialogue Matrix、Candidate Frame Brief、Comprehension Gate 探针、Article Recoverability 答案、Impact Brief、System Design Brief、Engineering Decision Brief、Article Closure Contract、阅读意图或范围字段和内部评分表。Deep Read 和 Source Dive 的交付报告记录 reader outcome；Survey 改为记录 mode、选中 spine、Visual Pass 数量和 Human Self-review 状态。
 
 输出路径的优先级：用户指定目录；`.loom/config.yaml` 配置的知识库长文目录；当前工作目录。
 
@@ -211,6 +232,7 @@ weave/
 │   ├── context-acquisition.md
 │   ├── deep-read.md
 │   ├── impact-pass.md
+│   ├── learning-design.md
 │   ├── reader-model.md
 │   ├── reading-variants.md
 │   ├── source-dive.md
@@ -224,8 +246,8 @@ weave/
     └── smoke.md
 ```
 
-`evals/evals.json` 包含 18 个回归场景，除原有的素材、项目、领域和 Impact 路径外，还覆盖错误初始问题的修复、闭卷重建、新例预测、反例收缩、不强迫迁移的工程作品阅读、DeepChat 全系统理解，以及公开读者准入、时效边界、Editorial no-op 和反传播诱导。`evals/frame-quality.md` 定义候选框准入、预留测试、理解检验与成文追溯的评估方法。
-`evals/smoke.md` 提供安装后逐路线、Survey orient/choose 双路径、跨宿主能力发现和背景冲突处理的人工回归协议。
+`evals/evals.json` 包含 24 个回归场景，除原有的素材、项目、领域和 Impact 路径外，还覆盖错误初始问题的修复、闭卷重建、新例预测、反例收缩、不强迫迁移的工程作品阅读、DeepChat 全系统理解、研究模型与真实读者证据的分层、Survey Learn 主干、Spine Direction Gate、Visual Pass、分类完整性，以及公开读者准入、时效边界、Editorial no-op 和反传播诱导。`evals/frame-quality.md` 定义候选框和 Survey spine 的准入、预留测试、成稿恢复性与成文追溯。
+`evals/smoke.md` 提供安装后逐路线、Survey 两轮选择与一次性委托、跨宿主能力发现和背景冲突处理的人工回归协议。
 
 维护者可以使用 PowerShell 7 从仓库根目录运行统一验证入口：
 
@@ -241,7 +263,7 @@ pwsh -File scripts/check.ps1
 pwsh -File scripts/check-run.ps1 -RunDirectory <output-dir> -ImpactMode personal
 ```
 
-`ImpactMode` 可取 `personal`、`question` 或 `none`。它会机械检查文章 frontmatter、字面意义层标题、pre-reveal 文件及其隐私边界、交付报告中的 Comprehension Gate 状态和 hold-out 时间顺序状态；对于 deep-read 和 source-dive，还会对实际写入的 Markdown 执行 Article Integrity 检查，并拒绝内部阅读意图、阅读范围、System Design Brief、Engineering Decision Brief 或 closure contract 字段泄露。非零退出码表示本次运行不能声明通过。
+`ImpactMode` 可取 `personal`、`question` 或 `none`。它会机械检查文章 frontmatter、字面意义层标题、pre-reveal 文件及其隐私边界、Comprehension Gate、Article Integrity、Article Recoverability 和 hold-out 时间顺序状态。Deep Read 与 Source Dive 报告 reader outcome；Survey 必须报告 mode、可核对的 Visual Pass 数量和 Human Self-review 状态。三条路线都会对实际写入的 Markdown 执行 Article Integrity，并拒绝 Reader Contract、Learning Spine、Digest Note、Spine Contract、内部阅读意图、System Design Brief、Engineering Decision Brief 或 closure contract 字段泄露。
 
 ## 边界
 
@@ -250,4 +272,4 @@ pwsh -File scripts/check-run.ps1 -RunDirectory <output-dir> -ImpactMode personal
 - 候选框的生成仍然受模型能力和证据质量影响，因此预留测试和失败边界是流程的一部分。
 - 不同宿主暴露的背景能力可能不同；显式请求始终优先，缺少背景时只回答“对当前问题意味着什么”。
 - weave 不持久化或同步用户画像，Context Envelope 和 Impact Brief 只存在于单次运行的内部工作区。
-- weave 在交付文章后停止。它不会自动提交、发布或分发成品。
+- Survey 交付时区分 agent preflight 与 Human Self-review；用户确认内容就绪也不等于授权提交、发布或分发。

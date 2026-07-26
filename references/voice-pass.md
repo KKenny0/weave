@@ -1,6 +1,6 @@
 # Voice Pass
 
-Runs after Compose phase, before final file write. Mandatory, not optional — AI patterns are invisible to the writer-agent.
+Runs after Compose and before final file write. Mandatory, not optional — AI patterns are invisible to the writer-agent. Survey runs the prose scan during Refine, performs its Visual Pass, then reruns the scan on changed prose and captions before writing the final file.
 
 ## Step 1: De-AI scan (universal)
 
@@ -65,7 +65,7 @@ Reference is reference, not template. Topic differs → structure may differ, bu
 
 ## Step 3: Write final file
 
-After Voice Pass, write the `.md` file. Naming / path / YAML frontmatter rules: see `output-spec.md`.
+After Voice Pass and any route-specific content pass, write the `.md` file. For Survey, this means after the Visual Pass and the final caption/prose recheck. Naming / path / YAML frontmatter rules: see `output-spec.md`.
 
 After write, use Read tool to verify the file saved correctly.
 

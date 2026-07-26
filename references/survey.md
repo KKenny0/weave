@@ -1,295 +1,311 @@
 # Survey Workflow
 
-Triggered when the user provides a domain name or research direction such as "RAG", "agent memory systems", or "knowledge graph reasoning". Output is a Chinese domain map whose organizing lens is selected from evidence rather than imposed in advance.
+Use Survey when the input is an open domain or research direction such as reinforcement learning, agent memory systems, or knowledge graph reasoning. Survey uses Waza Learn's research-to-writing sequence as its base and wraps that sequence with Weave's evidence, hold-out, comprehension, impact, and final-artifact gates.
 
-This workflow maps a domain. If the user supplied concrete sources and wants those sources read closely, route to `deep-read.md`.
+This file replaces the former Survey implementation. Do not run the retired lens library, `Domain Use Contract`, `Domain Payoff`, or the `explain / map / evaluate / decide / enter` routing axis inside Survey. The user's exact question still controls scope and article promise, but the writing process below is the only Survey process.
 
-## Table of Contents
+If the user supplied concrete sources and wants those sources read closely, route to `deep-read.md`. A source bundle may seed Survey only when the research object remains the wider domain.
 
-- Phase 1: Scout — define the map's use and build an evidence-typed Source Catalog
-- Phase 2: Map — generate, select, and close domain-map lenses against that use
-- Phase 3: Compose — write the map through the selected lens
+## Table of contents
 
-## Phase 1: Scout
+- Mode Gate
+- Phase 1: Collect
+- Phase 2: Digest
+- Phase 3: Outline
+- Spine Direction Gate
+- Weave evidence gates
+- Phase 4: Fill
+- Phase 5: Refine
+- Phase 5.5: Visual Pass
+- Phase 6: Self-review
+- Delivery contract
+- Hard rules
 
-Build a Source Catalog that reveals the domain's structure. The catalog is an internal working-memory artifact, not a separate user-facing file unless requested.
+## Mode Gate
 
-### Step 1: Parse input and define the map use
+Before research, ask the user to confirm one mode unless the request already names it. Put the recommended mode first and explain the difference in one line each.
 
-Capture:
-
-- `topic`: domain or research direction; narrow labels that are too broad to map honestly
-- `scope`: `broad` or `focused`; default `broad`
-- `q`: what the user wants the map to help them understand or decide
-- `C`: the Context Envelope from `context-acquisition.md`
-- `R`: the Reader Contract from `reader-model.md`, expressed as an observable orientation, choice, entry, or evaluation capability
-- named subtopics: preserve each as a coverage obligation
-
-Build a working-memory **Map Use Contract** before search:
-
-- **Primary intent**: choose one of `orient`, `choose`, `enter`, or `evaluate`. Keep at most one secondary intent when it does not change the evidence plan.
-- **Comparison object**: the methods, architectures, research programs, value-chain stages, claims, or other units the map must place in relation.
-- **Payoff question**: what the reader should be able to distinguish, choose, enter, or evaluate after reading.
-- **Condition set**: the constraints or observations that would materially change the interpretation or choice.
-
-Infer the intent from `q` when it is clear. Ask only when two plausible primary intents require materially different evidence. The Map Use Contract refines the route expression in `R`; its payoff question must demonstrate the Reader Contract's target capability. Both contracts stay in working memory; do not persist them or render their fields in the final article.
-
-### Step 2: Search from different angles
-
-Run 3-5 search rounds. Use short unquoted keywords when boolean or quoted syntax fails.
-
-Useful angles:
-
-1. definitions and systematic reviews
-2. foundational work and origin stories
-3. competing methods or architectures
-4. empirical comparisons and benchmarks
-5. open problems, failures, and recent shifts
-6. production or institutional evidence when relevant to `q`
-
-Search syntax is not methodology. If a backend rejects a complex query, simplify it rather than retrying the same expression.
-
-### Step 3: Type the evidence
-
-Quick-read title, abstract or executive summary, introduction, and conclusion. Record what kind of claim each source can support:
-
-| Evidence type | Can support | Cannot support alone |
+| Mode | Run | Result |
 |---|---|---|
-| Primary paper / official dataset | method, result, measured limitation | whole-field consensus |
-| Systematic review / strong survey | taxonomy, coverage, historical synthesis | current product behavior without verification |
-| Official docs / engineering post | implementation, defaults, adoption claim by its owner | independent comparative superiority |
-| Independent technical analysis | cross-source interpretation, implementation contrast | unverified proprietary facts |
-| Community discussion | practice signal, vocabulary, candidate problem | prevalence, consensus, or scientific result |
+| **Canonical Article** | Phase 1 through the agent preflight before Phase 6 | One self-contained article intended to be the only article a new reader needs |
+| **Deep Research** | Phase 1 through the agent preflight before Phase 6 | A publishable research draft with a narrower completeness promise |
+| **Quick Reference** | Phase 1 and Phase 2 only | Concise, evidence-typed reference notes, not a longform article |
+| **Write to Learn** | Phase 3 through the agent preflight before Phase 6 | Turn an already collected domain corpus into an article without pretending collection was rerun |
 
-Tag each source with: evidence type, domain label, availability, date, and one structural contribution. Treat product pages and SEO summaries as discovery leads, not final evidence.
+Recommend `Canonical Article` for requests such as “让非专业背景的人也能读懂”, “从零讲懂”, or “一篇就够”. Recommend `Deep Research` for a bounded research question. Recommend `Quick Reference` for a fast orientation. Recommend `Write to Learn` only when a usable corpus is already in scope.
 
-Before assigning a Source Catalog ID, verify source identity on the canonical landing page or full text:
+Do not silently choose a mode. The user may explicitly delegate with wording such as “按推荐模式继续”; that counts as confirmation. In a non-interactive run, require the mode in the prompt or report that the Mode Gate is waiting.
 
-- title matches the page;
-- URL and stable identifier such as DOI, arXiv ID, repository, or dataset ID refer to that same title;
-- authoring institution or authors are consistent when shown;
-- the page was actually opened, not inferred from a search-result snippet.
+For `Canonical Article`, require:
 
-If any identity field is missing or mismatched, keep the item as a discovery lead and do not cite it, place it in frontmatter, or use it in the evidence model. Never borrow an identifier from a neighboring paper. A title followed by `?`, “possibly”, “replaced by”, or another provisional marker is not a valid catalog entry.
+- one section for every major subtopic inside the declared scope;
+- worked examples that carry the reasoning;
+- common mistakes or tempting shortcuts where evidence supports them;
+- a three-to-five-item Further Reading section;
+- a final check that a reader can reconstruct the promised model without opening another article.
 
-Field-wide prevalence, momentum, consensus, decline, or frontier-shift claims require a systematic sample, bibliometric trend, repeated benchmark series, or a strong survey that explicitly makes that claim. Representative examples establish existence, not "most" or "the field is moving". Without trend-capable evidence, scope the sentence to `the current source set` and name the sampling limit.
+## Phase 1: Collect
 
-### Step 4: Search until structural saturation
+Run `context-acquisition.md`, build the working-memory Reader Contract in `reader-model.md`, and then collect sources with `collect.md`.
 
-After the initial rounds, search specifically for:
+The load-bearing corpus is primary-source first:
 
-- a thin side of an important dispute;
-- an unexplained bottleneck;
-- a missing method family;
-- a time gap in a claimed transition;
-- the user's named focus area.
+- original papers, datasets, standards, official specifications, repositories, or first-party technical reports;
+- strong systematic reviews, textbooks, and official documentation may orient coverage or historical synthesis, but must not replace primary evidence for a method, result, or limitation;
+- generic explainers, product pages, SEO summaries, and community posts are discovery leads or practice signals, not load-bearing evidence.
 
-Stop when two consecutive targeted rounds add no new method family, dispute axis, bottleneck, or evidence type. Source counts are a coverage heuristic, not a quality gate. Fewer than 10 strong sources requires a low-confidence warning; do not pad the catalog with weak pages.
+For `Deep Research`, target 5–10 strong sources when the question is narrow. For a broad `Canonical Article`, target 15–20. Counts are coverage heuristics, not permission to pad the corpus. Stop only after targeted searches no longer add a major mechanism, disagreement, evidence type, or named subtopic.
 
-### Step 5: Build Source Catalog
+For every admitted source:
 
-```markdown
-# Source Catalog — {topic}
+1. Open the canonical page or full text.
+2. Verify title, URL, author or institution, date, and stable identifier when one exists.
+3. Record evidence type, availability, structural contribution, and which claims it can and cannot support.
+4. Keep fetched Markdown in a session temporary directory when a local copy is needed. Do not leave source dumps or sidecars in the repository or article directory unless the user asks.
 
-| ID | Title | URL | Evidence type | Structural role | Domain label | Availability | Key contribution |
-|----|-------|-----|---------------|-----------------|--------------|--------------|------------------|
-| S1 | ... | ... | Primary paper | Defines method X | Route A | Full text | ... |
-```
+Field-wide prevalence, momentum, consensus, decline, or frontier-shift claims require trend-capable evidence. Representative examples prove existence, not prevalence.
 
-Completion check:
+## Phase 2: Digest
 
-- every admitted source passed title-URL-identifier verification on its canonical page;
-- named focus areas covered or explicitly marked thin;
-- important claims have an evidence type capable of supporting them;
-- opposing sides of a dispute are represented;
-- saturation rule reached or the search limitation is recorded;
-- the Map Use Contract has an **evidence ceiling** of `descriptive`, `comparative`, or `conditional guidance`, based on the admitted evidence rather than the certainty the user wants.
+Read every admitted source fully enough to reconstruct its argument or mechanism. Digesting is not summarizing. The purpose is to decide what can carry the article.
 
-## Phase 2: Map
+For each candidate claim, apply three tests:
 
-Generate candidate ways to organize the domain. These are lenses, not mandatory sections. Keep 1-4 candidates that genuinely change what becomes foreground, how sources group, or what the map predicts. Do not manufacture alternatives to satisfy a count.
+1. Does it recur in at least two materially different contexts inside the source?
+2. Does it explain, predict, or change how a new problem is handled?
+3. Is it specific to this source or evidence set rather than generic background?
 
-### Lens A: Research programs
+Score by the number of tests passed:
 
-Use only when multiple sources reveal stable, shared commitments that organize follow-on work.
+- **2–3**: keep for the outline;
+- **1**: keep as background or a boundary;
+- **0**: cut.
 
-For each program:
+Build a working-memory Digest Note for each source:
 
-- **Core commitment**: premise followers repeatedly preserve
-- **Adjustable assumptions**: what changes when counterevidence arrives
-- **Representative work**: products of that commitment
-- **Momentum evidence**: measured growth, new predictions, benchmark gains, or clear decline
+- verified identity and evidence type;
+- the problem or question it addresses;
+- load-bearing mechanism, finding, or reasoning move;
+- exact evidence that supports it;
+- result of the three claim tests;
+- contradiction, uncertainty, or non-transferable condition;
+- article role: `outline`, `background`, `boundary`, or `cut`.
 
-Do not label a program progressive or degenerating from two representative papers. If trend evidence is insufficient, describe the observable activity without a status verdict.
+Keep contradictions visible. When two sources use the same term for different objects, preserve the mismatch instead of normalizing it. When a load-bearing subtopic remains thin, return to Phase 1 rather than filling it from general knowledge.
 
-### Lens B: Method or architecture families
+`Quick Reference` stops here. Return concise notes that distinguish strong claims, background, contradictions, and source limits. Do not fabricate an outline, spine, or article.
 
-Use when the domain is organized by competing mechanisms, representations, or system designs. Group sources by how they solve the same task. Compare inputs, mechanism, resource assumptions, strengths, failure modes, and compatibility.
+## Phase 3: Outline
 
-### Lens C: Bottleneck or value flow
+Create an outline before drafting prose.
 
-Use when outcomes are constrained by a chain such as data → model → evaluation → deployment, or when power and value accumulate at different points. Identify where flow narrows, what controls the bottleneck, and which work tries to move it.
+For every planned section, record:
 
-### Lens D: Dispute or decision axes
+- the question the section answers;
+- the claim or mechanism it advances;
+- the admitted sources that support it;
+- the worked example, comparison, or boundary it needs;
+- what becomes newly understandable after the section.
 
-Use when several positions answer the same load-bearing question differently. Phrase the issue so every side must answer it. Represent each side in its own terms, cite its evidence, and state which observation would change the dispute.
+Cut a section with no source mapping or return to Phase 1 or Phase 2 for that subtopic. Do not preserve generic background merely because surveys usually contain it. Named subtopics are coverage obligations unless the evidence boundary makes one impossible.
 
-### Lens E: Temporal evolution
+For `Canonical Article`, verify that the outline covers the declared domain scope, includes worked examples and common mistakes, and ends with Further Reading. Do not draft the opening yet.
 
-Use only when the evidence supports real changes in questions, methods, institutions, or evaluation standards. A chronology is not automatically a paradigm transition.
+## Spine Direction Gate
 
-For each proposed transition, require:
+Run this gate after the outline and before any Phase 4 prose. The admitted spine becomes the article's load-bearing direction, not a decorative theme added after drafting.
 
-- a before-state;
-- an observed anomaly or pressure;
-- a changed practice or vocabulary;
-- an after-state;
-- sources from both sides of the transition.
+### Generate genuinely different candidates
 
-Do not use crisis or revolution language without evidence of displaced questions or standards. If history is gradual, describe it as gradual.
+Derive two or three candidates from the digested evidence and current outline. Use these emphases when they fit:
 
-### Cross-cutting modules
+| Spine emphasis | Best fit | Required difference |
+|---|---|---|
+| **Throughline** | full survey, novice primer, historical evolution | one concrete object changes state across the whole article |
+| **Dialectical argument** | a counterintuitive thesis with real opposing evidence | sections build and resolve a contradiction rather than tour subtopics |
+| **Issue or warning center** | evidence converges on a consequential failure, risk, or claim | sections accumulate toward the issue and its boundary |
 
-These modules are required evidence services, but they do not have to control the article's main frame.
+The candidates must produce materially different articles. Each candidate must change at least two of: chapter order, evidence grouping, comparison set, causal explanation, included material, excluded material, or final boundary. Paraphrased titles over the same outline count as one candidate.
 
-#### Open problems
+Run the admission gates in `frame-selection.md` before showing candidates. Do not show an evidence-incompatible choice merely to reach a count. If fewer than two candidates survive after one evidence-repair loop, tell the user and ask whether to proceed with the single valid direction or narrow the question.
 
-For each problem, record: one-sentence problem, who is working on it, approach, bottleneck, and sources. Replace "nobody studies this" with "under-covered in the current corpus" unless a systematic search supports the stronger claim.
+Present the surviving candidates as a single-choice decision, recommended first. For each, show only:
 
-#### Entry recommendations
+- spine type and one-sentence thesis;
+- through-object when applicable;
+- how the article would be structurally different;
+- what it would cut or background;
+- its main evidence boundary.
 
-Choose 3-5 sources that let a new reader enter the selected map. State what the reader can understand after each source, where it sits in the map, and what to read next.
+Do not expose internal scoring or Candidate Frame Brief fields.
 
-#### Coverage statement
+### Require an explicit choice
 
-State which directions are well covered, which rely on weaker evidence types, which named subtopics remain thin, and which conclusions need verification.
+Stop before Phase 4 until the user selects a candidate or explicitly delegates the recommended choice. Never infer confirmation from silence. A prompt such as “脊柱按推荐项继续” is explicit delegation.
 
-### Select the map lens
+After selection, record a compact working-memory Spine Contract:
 
-For each surviving candidate, write internally:
+- type;
+- thesis;
+- concrete through-object when applicable;
+- section order;
+- section-source map;
+- cuts and backgrounded material;
+- final boundary.
 
-- the user's question it answers;
-- the Map Use Contract intent it closes;
-- what it foregrounds and backgrounds;
-- how it groups the same evidence differently;
-- which interpretation, choice, entry sequence, or claim confidence changes under a named condition;
-- whether that payoff stays within the evidence ceiling;
-- one boundary or counterexample;
-- what it predicts about the held-out frontier-source group.
+The Spine Contract is not a persisted artifact and must not appear as a field dump in the article or delivery report.
 
-Use the Candidate Frame Brief and admission gates in `frame-selection.md`. Select the lens with the strongest question fit and evidence. Prefer narrower claims when two are close. The research-program lens has no default priority.
+### Throughline requirements
 
-In addition to the shared frame gates, discard a survey candidate when it only reorganizes headings. A retained candidate must change at least one result tied to the primary intent:
+A through-object must be a concrete noun or inspectable mechanism. Prefer “奖励信号”, “上下文窗口”, or “缓存条目” over abstractions such as “学习”, “智能”, or “效率”.
 
-- `orient`: a distinction, mechanism, or failure boundary becomes visible;
-- `choose`: named conditions lead to materially different choices or tradeoffs;
-- `enter`: the learning or research sequence changes because an earlier step removes a later uncertainty;
-- `evaluate`: the support for a claim becomes stronger, weaker, conditional, or unresolved.
+Each load-bearing body section begins with one short `📍` statement that answers:
 
-Every retained candidate must state the condition that changes the result and must remain within the evidence ceiling. A beautiful taxonomy with no such payoff is not an admissible map lens.
+- where the object comes from at this point;
+- what state it is in;
+- what changed since the previous section;
+- which new problem that change creates.
 
-The selected lens must control the top-level body. Its load-bearing components become the main headings; method families, disputes, and chronology move inside those headings when they are supporting views. Reusing the old program / dispute / evolution skeleton is a failure unless those are themselves the selected frame's components. Confirm that the lens changes at least two of chapter order, evidence grouping, comparison set, causal explanation, or predicted boundary.
+The marker is a rhythm and state-tracking device. It cannot substitute for explanation or evidence.
 
-Completion check:
+## Weave evidence gates
 
-- selected lens changes the body structure;
-- at least one real alternative was considered when evidence permits;
-- field-status claims use trend-capable evidence;
-- prevalence and frontier-shift claims are either trend-supported or explicitly scoped to the current source set;
-- held-out frontier sources do not force a retrofit;
-- open problems, entry points, and coverage limits remain available.
+Survey does not run a second frame-selection process. Its admitted spine candidates are its Candidate Frames.
 
-### Close the map payoff
+After the user selects a spine and before Phase 4:
 
-After the selected lens passes hold-out testing, build a working-memory **Map Payoff**:
+1. In audit-sensitive runs, persist the allowlisted pre-reveal artifact from `frame-selection.md` without user rationale or private context.
+2. Reveal the pre-designated hold-out and test the selected spine without changing its core parts after the fact.
+3. Run the four-probe Comprehension Gate in `reader-model.md`.
+4. Repair the user's initial question when the evidence requires it.
+5. Run `impact-pass.md` against the evidence model and selected spine. Survey has no Domain Payoff.
 
-- primary intent served;
-- the distinctions or choices the selected lens changes;
-- the conditions under which each interpretation, path, or choice holds;
-- the cost, failure mode, or evidence that should be checked next;
-- unresolved conditions that prevent a stronger conclusion;
-- the evidence ceiling and trace to the selected lens and Source Catalog.
+If a hold-out miss or comprehension repair changes the thesis, through-object, section order, or final boundary materially, invalidate the choice and present the repaired candidates again. Do not keep the user's prior selection as theater after its evidence basis has changed.
 
-The Map Payoff answers the research question without personalizing it. It is read-only during Compose, stays in working memory, and must not appear as a field dump or named internal section in the article or delivery report. If no supported payoff survives, return to candidate comparison, narrow `q`, or report the evidence limit; do not improvise advice after frame selection.
+## Phase 4: Fill
 
-Run the Comprehension Gate in `reader-model.md`: reconstruct the selected map distinction, place an unfamiliar method or claim under explicit conditions, identify a case the evidence ceiling cannot locate or decide, and repair the initial question when the field structure invalidates its categories. Return to source collection or lens selection when a probe fails.
+Draft one section at a time through the selected Spine Contract.
 
-Then run `impact-pass.md`. Use `C` to distinguish a real positioning or entry decision from a generic reader recommendation. The Impact Pass may personalize or prioritize the Map Payoff, but it cannot create a survey recommendation that the payoff and evidence ceiling do not support. Representative examples may shape an entry path, but they cannot support field-wide action advice.
+Before writing a section, check:
 
-## Phase 3: Compose
+- it serves the selected thesis;
+- its load-bearing claims map to admitted sources;
+- its prerequisites have already been supplied;
+- its example performs reasoning rather than decoration;
+- its boundary or uncertainty remains visible.
 
-Write the selected map as a Chinese longform article.
+If the section stalls, becomes generic, or needs unsupported connective tissue, stop and return to Phase 2 for that subtopic. Do not keep drafting around the gap.
 
-Close the primary intent in the article without forcing a standard heading or table:
+After each section:
 
-- `orient`: explain the load-bearing differences, mechanisms, and failure boundaries that let a reader navigate the field;
-- `choose`: express `condition -> choice -> cost -> verification evidence`; do not give an unconditional recommendation;
-- `enter`: give a learning or research sequence and state which uncertainty each step removes;
-- `evaluate`: separate supported, contradicted, conditional, and unresolved parts of the target claim.
+- cut or merge material that does not serve the spine;
+- verify that it adds something the previous section could not;
+- for a throughline, verify that the `📍` state change is concrete and consistent;
+- preserve disagreement and source attribution;
+- keep the opening unwritten until the body is stable.
 
-These are reasoning outcomes, not a fixed article template. Let the selected lens decide whether prose, a compact comparison, or another form communicates them best.
+For `Canonical Article`, include the promised worked examples, common mistakes, and self-contained explanations. Recommended sources extend the article; they do not carry prerequisites the article promised to supply.
 
-### Required outer structure
+## Phase 5: Refine
 
-```markdown
-# {topic} Domain Map
+Refine the complete draft without introducing new unsupported claims.
 
-## 总案
-{core question, selected lens, and most important current tension}
+1. Map all headings, tables, lists, formulas, and existing figures.
+2. Remove cross-section repetition, prose that merely rereads a table, and whole paragraphs that no longer serve the spine.
+3. Check transitions, prerequisite order, terminology, and the continuity of the through-object.
+4. Write the opening last so it promises the article that now exists.
+5. Run `voice-pass.md`. Voice edits may change expression and rhythm, not evidence weight or spine direction.
 
-## {sections generated by the selected lens}
-...
+If refinement exposes a research gap, return to the affected Digest or Fill step. Do not patch it with fluent general knowledge.
 
-## 未竟
-...
+## Phase 5.5: Visual Pass
 
-## 入门
-...
+Scan the refined article for relationships that prose represents poorly. A figure is admitted only when removing it would make a supported relationship harder to recover.
 
-## {对我意味着什么 | 对当前问题意味着什么}
-{unless the user explicitly opted out, render one applicable heading and the admitted impacts or delta ~= 0 result from Impact Pass}
+### Match idea shape to representation
 
-## 覆盖度声明
-...
-```
+| Idea shape | Preferred representation |
+|---|---|
+| model architecture, data flow, module relation | structural or flow diagram |
+| causal chain, training stages, state change | causal diagram or timeline |
+| feedback, iteration, self-play | loop |
+| distribution, scale effect, marginal change | ASCII curve |
+| accuracy/cost, speed/quality, control/freedom | tradeoff curve |
+| old/new method or metric comparison | small table or matrix |
+| a case changing step by step | aligned example trace |
+| an irreducible relationship | minimal formula plus plain-language translation |
+| two or three sentences explain it fully | text only |
 
-If the research-program lens wins, a 学案体 body is appropriate. If another lens wins, let section names and order follow that lens. Do not preserve program, dispute, or revolution sections merely because the old template had them.
+### Admission and placement
 
-### Writing rules
+For every candidate figure:
 
-- Write `总案` last, after the map is stable.
-- Keep competing positions visible; do not manufacture consensus.
-- Cite claims with Source Catalog IDs and links where useful.
-- Mark unsupported synthesis `[待验证]` and weak sides `[证据偏少]`.
-- A product or community source may illustrate practice but cannot establish field-wide prevalence.
-- Make open problems specific: failure under condition Z, not "more research is needed".
-- Avoid theory names as authority; explain the observed structure directly.
+1. State the relationship the figure adds.
+2. Trace each node, arrow, curve, or comparison to admitted evidence or label it as Weave synthesis.
+3. Delete it when it only rearranges nearby prose into boxes.
+4. Place it only after the concept has been grounded in plain language and a concrete example.
+5. Add one bold sentence as its caption.
 
-### Quality audit
+Sparse is the default. A long article may legitimately contain only a few figures or none. Never create one figure per section.
 
-Check:
+Use Mermaid for structural relationships, compact Markdown tables for small comparisons, aligned text for example traces, and ASCII only when alignment is reliable. Keep ASCII within 80 columns. Avoid CJK labels inside ASCII diagrams when character width can break alignment; use short Latin labels plus a legend, Mermaid, or a table instead.
 
-- Does every source in frontmatter, prose, and any final source list match a verified Source Catalog title, URL, and stable identifier? Re-open canonical pages for the final citation set and remove every mismatch or provisional entry.
-- Does the body follow the selected lens rather than a seven-section template?
-- Would another candidate produce materially different grouping or ordering?
-- Does any phase or momentum claim outrun its evidence type?
-- Do the table and prose contradict each other?
-- Did the held-out frontier group fit without changing the frame?
-- Does the article close the primary intent recorded in the Map Use Contract?
-- Does at least one named condition change the interpretation, choice, entry sequence, or claim confidence?
-- Does every comparison or recommendation stay within the evidence ceiling recorded in the Map Payoff?
-- Did the Comprehension Gate place a novel method or claim conditionally and identify a real undecidable case?
-- Was the initial question repaired when the selected map exposed a better comparison object or missing condition?
-- Did an `orient` run avoid forced product or architecture advice, and did a `choose` run avoid unconditional recommendation?
-- Are coverage limits specific and honest?
-- Does every personal goal or constraint trace to `C`?
-- Did the impact section avoid turning representative examples into prevalence or momentum claims?
-- Are Map Use Contract and Map Payoff fields absent from the final article?
+Do not generate a polished PNG by default. If a relationship genuinely needs a refined image, route that one figure to an image workflow and keep its claim boundary identical. Never leave a broken asset reference in the article.
 
-### Voice Pass and output
+## Phase 6: Self-review
 
-Run `voice-pass.md`, then write the final file per `output-spec.md` as `{topic}-survey_{YYYY-MM-DD}.md`. YAML must include `topic` and `scope`.
+Separate agent preflight from human review.
 
-Delivery report: article path, word count, body structure, selected lens, close alternative if material, source count by evidence type, open-problem count, `Comprehension Gate: passed` or the failed probe and degradation, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, and coverage limitations. Do not reproduce the Reader Contract or gate probes.
+### Agent preflight
 
-Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
+Before delivery:
+
+1. Write the final Markdown with `status: draft`.
+2. Run `article-integrity.md` and the executable article checker.
+3. Read the serialized file back.
+4. For `Canonical Article`, or any promise of a self-contained explanation, run the fresh-context Article Recoverability audit described in `learning-design.md`.
+5. Repair failures, then repeat Refine, Visual Pass when affected, Voice Pass, Article Integrity, and recoverability.
+
+Passing agent checks does not complete human Self-review.
+
+### Human review
+
+Deliver the draft and ask the user to read it linearly at least twice:
+
+- **Pass 1**: thesis, evidence, missing bridge, contradiction, and scope;
+- **Pass 2**: confusing terms, redundant passages, examples, visual usefulness, and final boundary.
+
+Apply the user's review and rerun the affected gates. Change `status` from `draft` only after the user confirms readiness. Publication confirmation means the content is ready; it does not authorize posting, pushing, distributing, committing, or creating a release.
+
+## Delivery contract
+
+For a longform Survey run, write `{topic}-survey_{YYYY-MM-DD}.md` with the Survey fields in `output-spec.md`.
+
+The delivery report states:
+
+- Survey mode;
+- article path, word count, and chapter count;
+- selected spine type and through-object when applicable;
+- source count by evidence type and material coverage limits;
+- hold-out and Comprehension Gate status;
+- Impact Pass result;
+- Voice Pass result;
+- Visual Pass candidate, admitted, and deleted counts;
+- Article Integrity and Article Recoverability status;
+- `Human Self-review: pending` or `confirmed`.
+
+Do not reproduce the Reader Contract, Digest Notes, Spine Contract, Comprehension probes, visual evidence ledger, or recoverability answers.
+
+## Hard rules
+
+- **Learn is the base.** Do not restore the retired Survey lens library or dual-outcome composition system.
+- **No phase skipping.** Fill never begins before the outline, spine admission, explicit user choice, hold-out, and Comprehension Gate are solid.
+- **No silent mode or spine choice.** Continue only after explicit selection or delegation.
+- **No unsupported spine.** User choice operates only among evidence-admitted candidates.
+- **No post-hoc spine.** Do not draft first and label the result later.
+- **No abstract through-object.** A throughline must track a concrete object or mechanism whose state can be named.
+- **Every section serves the spine.** Cut or merge sections that do not.
+- **Contradictions remain visible.** Do not smooth disagreements into a universal story.
+- **Visuals are admitted, not decorated.** Delete prose reflow, unsupported arrows, premature diagrams, and overclaiming summaries.
+- **No fake human evidence.** Agent checks establish artifact quality, not that a person understood, retained, or reused the article.
+- **Stop at readiness confirmation.** Do not publish or commit unless the user separately asks.

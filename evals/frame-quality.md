@@ -6,6 +6,8 @@ Use this rubric in addition to the workflow-specific expectations in `evals.json
 
 - `x`: supplied or collected material
 - `q`: the user's actual question or decision
+- `o`: the primary Deep Read or Source Dive reader outcome
+- `m`: the confirmed Survey mode and exact article promise
 - `E`: the evidence model produced by the workflow
 - `f`: one candidate frame
 - `f*`: the selected frame
@@ -15,27 +17,28 @@ A frame sets the object boundary, foreground and background, load-bearing distin
 
 ## Candidate admission gates
 
-Every retained candidate must pass all five gates. A candidate that fails is discarded before comparison.
+Every retained candidate must pass all six gates. A candidate that fails is discarded before comparison.
 
 1. **Evidence fidelity**: every load-bearing part traces to `E`; no unsupported bridge is required to make the frame work.
 2. **Specificity**: the frame cannot be moved unchanged to an adjacent source, repository, or domain. It uses distinctions specific to this material.
 3. **Selection effect**: choosing the frame changes at least two of: included evidence, excluded evidence, chapter order, causal explanation, comparison set, or predicted boundary.
 4. **Boundary honesty**: the frame names at least one condition, counterexample, or evidence gap that limits it.
 5. **Distinctness**: it is not a paraphrase of another retained candidate. Two candidates must imply materially different selection or interpretation.
+6. **Outcome fit**: it supports `o` or `m`, not merely the topic. An `explain` frame generates a mechanism, prerequisite path, and transfer; a `map` frame generates coherent placement axes and an evidence boundary. A Survey spine fulfills the confirmed mode and exact article promise.
 
-If only one candidate passes, use one. If none pass, return to collection or analysis. Never lower the gates to satisfy a candidate-count target.
+For Deep Read and Source Dive, use one candidate when only one passes. Survey attempts to admit two or three genuinely different spine candidates. If fewer than two survive after one evidence-repair loop, ask whether to use the single valid direction or narrow the question. Never lower the gates to satisfy a candidate-count target.
 
 ## Ranking criteria
 
 Rank admitted candidates without artificial numeric weights:
 
-- **Question fit**: directly answers `q` and respects the user's named focus.
+- **Question and outcome fit**: directly answers `q`, supports `o` or `m`, and respects the user's named focus.
 - **Compression**: a small number of load-bearing parts explains many observations without erasing contradictions.
 - **Generative reach**: explains or predicts evidence not used to construct the frame.
 - **Cognitive delta**: produces a concrete correction, inversion, new axis, or sharper boundary relative to the default reading.
 - **Economy**: uses no decorative component; removing a load-bearing component should reduce explanatory power.
 
-Prefer the candidate with stronger evidence and narrower claims when two candidates remain close. Record the runner-up only when it would produce a materially different article.
+Prefer the candidate with stronger evidence and narrower claims when two candidates remain close. Deep Read and Source Dive select it. Survey places it first as the recommendation, then waits for the user to choose among the admitted candidates or explicitly delegate that recommendation. Record the runner-up only when it would produce a materially different article.
 
 ## Publication reader check
 
@@ -51,16 +54,22 @@ Apply this section only when the user explicitly requests public publication, a 
 
 Fail the extension when it creates only a marketing persona, when its alleged consequence is editorial packaging, or when a topical fact is generalized into a durable claim without evidence. Failure of the optional extension does not fail an otherwise valid research run: record an internal no-op and continue under the default Reader Contract.
 
-## Survey payoff check
+## Survey Learn and Spine check
 
-For a survey candidate, structural change is necessary but not sufficient. Check it against the route's Map Use Contract:
+Evaluate Survey as one Learn-based sequence, not as the retired lens and outcome system:
 
-- **Intent closure**: it changes a distinction, choice, entry sequence, or claim confidence tied to the primary intent.
-- **Conditional delta**: at least one named condition changes that result; a static list of strengths and weaknesses does not pass.
-- **Evidence ceiling**: descriptive evidence does not become comparative superiority, and representative examples do not become field-wide guidance.
-- **No forced action**: an `orient` or `evaluate` request is not rewritten as a product-selection problem.
+- **Mode Gate**: the user confirmed `Canonical Article`, `Deep Research`, `Quick Reference`, or `Write to Learn`, or explicitly delegated the recommendation.
+- **Collect**: load-bearing evidence is primary-source first, canonical identities are verified, and broad coverage is not padded with weak sources.
+- **Digest**: every source is read before outlining; the three claim tests determine `outline`, `background`, `boundary`, or `cut`; contradictions remain visible.
+- **Outline**: every section maps to admitted sources before prose begins.
+- **Candidate consequence**: each spine changes at least two of chapter order, evidence grouping, comparison set, causal explanation, inclusion, exclusion, or boundary.
+- **Explicit choice**: Fill does not begin until the user selects an admitted spine or delegates the recommendation.
+- **Concrete throughline**: a through-object is an inspectable noun or mechanism, and each load-bearing section states a real `📍` change.
+- **No double control**: there is no separately auto-selected Survey frame underneath the chosen spine.
+- **Claim ceiling**: descriptive evidence does not become comparative superiority, and representative examples do not become field-wide guidance.
+- **Classification integrity**: when classification is needed, sibling categories answer one question at one abstraction level; cross-cutting dimensions become axes or overlays, and a hybrid item can be placed without contradiction.
 
-A survey frame fails this check when it produces an elegant taxonomy but the reader would make the same interpretation or decision under every condition. After hold-out testing, the Map Payoff must preserve the passing result without adding new evidence or changing the selected frame.
+A Survey run fails when it drafts before explicit spine selection, generates candidates before Digest and Outline, presents paraphrases as choices, keeps sections that do not serve the selected spine, or leaks Digest Notes and Spine Contract fields into the article.
 
 ## Hold-out protocol
 
@@ -99,15 +108,54 @@ For source-dive `system`, candidate admission additionally requires one frame to
 
 In a source-dive `system` eval, smoke, or audit, an independent reader agent sees only the final article and answers the eight system-understanding questions in `source-dive.md`. Grade the answers for product identity, problem, capabilities, system composition, task flow, design judgments, costs, and three takeaways. This rubric is semantic; no regex or required heading substitutes for it.
 
+For Survey, reconstruction follows the selected spine. A throughline must recover the concrete object across at least two state changes; a dialectical spine must recover the conflict and resolution; an issue-centered spine must recover the evidence chain and limiting condition. A renamed source example does not count as transfer.
+
+## Deep Read and Source Dive learning-design protocol
+
+After the Comprehension Gate, evaluate the Learning Spine against `o`:
+
+- **Central model**: one load-bearing mechanism, distinction, path, or set of axes controls the article.
+- **Dependency order**: no term is required before the article has supplied the concept it depends on.
+- **Worked reasoning**: at least one example exposes the mechanism or classification operation rather than decorating it.
+- **Misconception repair**: tempting shortcuts contradicted by the evidence are corrected where they become likely.
+- **Chapter delta**: each chapter adds a named reconstruction, distinction, prediction, evaluation, or decision ability.
+- **Transfer and boundary**: a materially different case follows from the model, and a real condition stops it.
+
+For `explain`, fail an approachable inventory, detached glossary, analogy-only explanation, or reading list that carries prerequisites the article promised to supply. For `map`, fail mixed abstraction levels or mutually exclusive families that collapse when a hybrid item is tested.
+
+## Survey Fill and Visual protocol
+
+After the Spine Direction Gate passes:
+
+- every Fill section serves the selected spine and its source map;
+- a stalled section returns to Digest instead of receiving fluent unsupported connective tissue;
+- Refine removes cross-section repetition and writes the opening last;
+- Visual Pass matches relationship shape to representation;
+- a retained figure adds a relationship not equally recoverable from adjacent prose;
+- every node, arrow, curve, or comparison traces to evidence or is labeled Weave synthesis;
+- figures appear after plain-language grounding and a concrete example, with a bold one-line caption;
+- sparse output, including zero figures, passes;
+- ASCII remains within 80 columns and avoids fragile CJK alignment;
+- the delivery report's candidate, admitted, and deleted counts reconcile.
+
+Fail a figure that merely turns prose into boxes, appears before the concept is explained, overclaims the evidence, or leaves a broken asset.
+
+## Final-article recoverability
+
+For Deep Read or Source Dive `explain`, Survey `Canonical Article`, any self-contained explanation promise, and explicit semantic audits, give only the serialized final article to a fresh independent context. Grade whether it can recover the central model or Survey spine, use it on a new case, state a real boundary, and identify prerequisite gaps. Quoting headings or `📍` markers without operating the model fails.
+
+This result is L1 article recoverability only. It cannot establish actual-reader understanding, retention, retelling, reuse, or return. Unavailable independence must be reported and cannot pass an audit-sensitive run; audit answers remain ephemeral.
+
 ## Final-article trace
 
 Before Compose, map every planned chapter to:
 
-- one component of `f*`;
+- one component of `f*`, which is the user-selected spine for Survey;
 - the evidence it uses;
 - its role: establish, explain, contrast, test, bound, or apply.
+- the reader capability it adds.
 
-Delete a chapter that does not serve the selected frame. In the final audit, verify that the article's ordering still follows this map and that the strongest counterevidence remains visible.
+Delete a chapter that does not serve the selected frame or Survey spine. In the final audit, verify that the article's ordering still follows this map and that the strongest counterevidence remains visible.
 
 ## Failure patterns
 
@@ -124,5 +172,14 @@ Delete a chapter that does not serve the selected frame. In the final audit, ver
 - The hold-out passes, but the run cannot reconstruct the mechanism or use it on a novel case.
 - The initial question is preserved after the evidence invalidates its categories.
 - A decorative counterexample is listed without removing a premise, crossing a boundary, or narrowing the frame.
-- A survey lens reorganizes the domain but does not close its primary `orient`, `choose`, `enter`, or `evaluate` intent.
-- A survey article gives unconditional advice even though its evidence ceiling supports only description or comparison.
+- Survey restores the retired `explain / map / evaluate / decide / enter` router or lens library.
+- Survey begins Fill before the user chooses or delegates a spine.
+- Survey generates spine candidates before Digest and Outline.
+- Survey candidates use different labels but produce the same article.
+- A throughline tracks an abstraction such as “learning” whose state cannot be named.
+- The selected spine appears in the report but most chapters remain an inventory.
+- A survey taxonomy puts mechanism, data regime, feedback source, and application context into one false sibling list.
+- A Survey article uses accessible language but never works a mechanism or transfers it to a new case.
+- A Survey article gives unconditional advice even though its evidence supports only description or comparison.
+- Every Survey section receives a diagram, or retained diagrams only reflow nearby prose.
+- Agent preflight is reported as completed human Self-review.

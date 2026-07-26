@@ -126,38 +126,40 @@
     {
       "id": 6,
       "name": "survey-real-domain",
-      "prompt": "帮我做 survey：agent memory systems 这个方向。我想看这个领域的主要研究纲领、核心争论、演化脉络、和开放问题。scope 选 broad。我现在只想建立领域地图，不做产品或架构选型。",
-      "expected_output": "完整 survey 三阶段输出（Scout / Map / Compose），将任务识别为 orient，从证据中选择最合适的领域地图镜头，最终产出一个不强行给出产品选型的中文领域地图 .md 文件。",
+      "prompt": "用 Survey 的 Deep Research 模式研究 agent memory systems。我想看主要机制、核心争论、演化脉络和开放问题，scope 选 broad，不做产品或架构选型。脊柱按证据最强的推荐项继续。",
+      "expected_output": "完整运行 Learn-based Survey 的 Collect、Digest、Outline、Spine Direction Gate、Fill、Refine、Visual Pass 和 agent preflight，最终产出一篇不强迫产品选型的中文领域研究文章。",
       "files": [],
       "expectations": [
         "Output is a single .md file with YAML frontmatter containing topic: agent memory systems, scope: broad, date, tags, status",
         "File name follows the pattern agent-memory-systems-survey_{date}.md",
-        "Article body exceeds 2500 Chinese characters (excluding frontmatter) — survey needs more breadth than deep-read",
-        "Source Catalog is built first, reaches structural saturation, and tags each source by evidence type, structural contribution, domain label, and availability",
+        "Article body exceeds 2500 Chinese characters (excluding frontmatter) because the declared scope is broad",
+        "Collect reaches structural saturation, is primary-source first, and types every source by what claims it can and cannot support",
         "Every admitted source title, URL, and stable identifier is verified against an opened canonical page; search snippets, mismatched IDs, and provisional citations never enter frontmatter or the final article",
-        "Final structure contains 总案 / 未竟 / 入门 / 覆盖度声明; the selected lens changes at least two of chapter order, evidence grouping, comparison set, causal explanation, or predicted boundary",
-        "At least two materially different map lenses are considered when evidence permits; the research-program lens has no default priority",
-        "A working-memory Map Use Contract identifies orient as the primary intent, names the comparison object and payoff question, and is not rendered in the final article",
-        "The selected lens passes the survey payoff check: it changes a concrete distinction, mechanism, or failure boundary under a named condition rather than only reorganizing headings",
-        "A working-memory Map Payoff records the supported distinctions, condition-dependent changes, unresolved conditions, and a descriptive or comparative evidence ceiling without becoming a final-article field dump",
-        "Research-program commitments use cross-source evidence, while every field-wide prevalence, momentum, consensus, or frontier-shift claim uses trend-capable evidence or is explicitly scoped to the current source set",
+        "Digest applies the three keep-or-cut claim tests before the outline and preserves contradictions and source-specific limits",
+        "Every planned section maps to admitted evidence before Fill",
+        "Two or three genuinely different spine candidates are evidence-admitted; explicit delegation selects the recommendation without restoring an automatic Survey lens",
+        "The selected spine controls the body; open problems, entry points, and coverage limits remain visible without forcing a fixed 总案 / 研究纲领 / 论争 / 演化 / 未竟 / 入门 skeleton",
+        "Sibling categories answer one classification question at the same abstraction level; cross-cutting dimensions are rendered as axes or overlays and a hybrid method can be placed without contradiction",
+        "Research-program language uses cross-source evidence, while every field-wide prevalence, momentum, consensus, or frontier-shift claim uses trend-capable evidence or is explicitly scoped to the admitted corpus",
         "Every claimed historical transition identifies a before-state, pressure, changed practice, after-state, and sources on both sides",
         "The coverage statement is consistent with the confidence and scope of field-level claims in the body",
         "The article does not force normal science / crisis / revolution labels when the evidence shows gradual or uncertain change",
         "3-5 open problems plus 1-2 directions described as under-covered in the current corpus rather than proven to have no researchers",
         "3-5 entry recommendations with concrete 'what reader gains after reading'",
-        "Because the request is orient-only, the entry path removes named uncertainties and the article does not force a product or architecture recommendation",
+        "The article does not force a product or architecture recommendation",
         "覆盖度声明 honest about coverage limits (which directions well-covered, which thin)",
         "Contains at most 1 occurrence total of any hedge phrase from the banned list",
-        "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) NOT used in output — methodology steps preserved without theorist-name scaffolding",
-        "The domain-map lens is selected from evidence rather than forcing every field into research programs and paradigm revolution",
+        "Theory names (Lakatos / Kuhn / Popper / 黄宗羲) are not used as scaffolding or authority",
         "Any field-status or phase-transition claim is supported by trend evidence and does not contradict the coverage statement",
-        "A persisted pre-reveal artifact records candidate frames, hold-out identifiers, and prediction; transcript/tool order supports chronology when available, otherwise chronology is reported unverified; the selected frame explains the hold-out without changing load-bearing components",
-        "The article renders 对当前问题意味着什么 before 覆盖度声明, preserves the orient payoff, and does not invent personal or decision context",
+        "A persisted pre-reveal artifact records admitted spine candidates, hold-out identifiers, and prediction without user rationale; the selected spine explains the hold-out without changing load-bearing components",
+        "The article renders 对当前问题意味着什么 before the final coverage boundary and does not invent personal or decision context",
         "Representative examples are not converted into field-wide action advice",
-        "A route-specific Reader Contract defines an observable orientation, choice, entry, or evaluation capability before search",
-        "The survey Comprehension Gate reconstructs the selected map distinction, conditionally places an unfamiliar method or claim, identifies an undecidable case, repairs the initial question, and passes before Impact Pass",
-        "The final article contains no Capability Manifest, Context Envelope, Impact Brief, Map Use Contract, or Map Payoff"
+        "A route-specific Reader Contract records Deep Research mode and an observable target capability before search",
+        "The Survey Comprehension Gate reconstructs and transfers the selected spine, identifies an evidence boundary, repairs the initial question, and passes before Impact Pass",
+        "Visual Pass is sparse, relationship-based, and deletes prose reflow",
+        "The serialized survey article passes Article Integrity; Article Recoverability is reported as not required unless a semantic audit was requested",
+        "The delivery report records Human Self-review: pending",
+        "The final article contains no Capability Manifest, Context Envelope, Reader Contract, Learning Spine, Digest Note, Spine Contract, Impact Brief, Domain Use Contract, or Domain Payoff"
       ]
     },
     {
@@ -354,6 +356,109 @@
         "The title and frame do not claim a universal result unless the source establishes it",
         "A marketable conclusion is not preselected before evidence or retrofitted after hold-out",
         "The extension may narrow the public promise or record a no-op rather than comply with amplification"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "reader-evidence-truth-boundary",
+      "prompt": "这篇公众号成稿看起来蛮不错，Comprehension Gate 也通过了。请确认读者已经看懂、记住，并且以后会回来重读。",
+      "expected_output": "拒绝把文章观感或生成侧理解检验升级为真实读者效果；明确 L0 到 L3 的证据边界，并区分 Weave 可做的独立成稿恢复性审计与必须由真人提供的理解、记忆和复用证据。",
+      "files": [],
+      "expectations": [
+        "Comprehension Gate is identified as L0 generation-side research-model evidence rather than observed reader understanding",
+        "The response does not infer understanding, retention, retelling, reuse, or return from praise such as 蛮不错, fluency, completion, likes, shares, or publication metrics",
+        "L1 article recoverability requires an independent fresh context that sees only the serialized final article; Weave runs it for explain outputs and Weave Editorial may rerun it after edits",
+        "L2 requires an actual reader's immediate no-peek response and L3 requires delayed observed retention, reuse, or return behavior",
+        "No evidence level impersonates the next"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "reader-effect-editorial-routing",
+      "prompt": "研究稿已经完成。请在 Weave 里再加一个探针，追问读者能不能复述、会不会回来，然后再交付文章。",
+      "expected_output": "保持 Weave 四探针不变；需要时另做只读取最终成稿的 L1 Article Recoverability，真人即时或延迟追踪保持显式、可选且在研究交付下游。",
+      "files": [],
+      "expectations": [
+        "Weave does not add a fifth Comprehension Gate probe",
+        "The existing gate remains an L0 research-model capability proxy",
+        "Blind final-article recoverability is a separate L1 audit over the serialized file rather than another Comprehension Gate probe",
+        "Actual-reader immediate or delayed follow-up is optional, explicit, and downstream of article delivery",
+        "No reader answers or hidden audit artifacts are persisted by Weave"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "survey-learn-canonical-article",
+      "prompt": "使用 Weave Survey 的 Canonical Article 模式研究 reinforce learning 强化学习，让非专业背景的人也能读懂。脊柱方向按证据最强的推荐项继续，不需要停下来等我二次确认。",
+      "expected_output": "Survey 直接运行 Learn 的 Collect、Digest、Outline、Fill、Refine、Self-review 主干，在 Outline 与 Fill 之间完成证据准入后的 Spine Direction Gate，并在 Refine 后完成稀疏 Visual Pass，交付一篇自包含的强化学习长文草稿。",
+      "files": [],
+      "expectations": [
+        "The workflow is Survey and the confirmed mode is Canonical Article; it does not route through the retired explain or map outcome axis",
+        "The Reader Contract records a non-professional prerequisite floor without inventing a persona or prior belief",
+        "Collect is primary-source first, verifies canonical source identity and evidence type, and targets broad canonical coverage without padding weak sources",
+        "Digest reads sources before outlining and applies the three keep-or-cut claim tests; contradictions and evidence limits remain visible",
+        "Every outlined section maps to admitted sources before Fill begins",
+        "The Spine Direction Gate admits two or three genuinely different candidates from evidence, and the user's explicit delegation permits the recommended candidate to continue without another pause",
+        "The selected spine changes at least two structural consequences and controls every load-bearing section",
+        "A throughline uses a concrete through-object and consistent 📍 state changes; another spine type preserves its own dialectical or issue-centered structure",
+        "Canonical Article includes worked examples, supported common mistakes, a real boundary, and three to five Further Reading items without outsourcing prerequisites",
+        "Visual Pass is sparse, deletes prose reflow, traces visual relationships to evidence or Weave synthesis, and uses no broken assets",
+        "The serialized article passes Article Integrity and fresh-context Article Recoverability",
+        "The delivery report records Survey mode, selected spine, Visual Pass counts, and Human Self-review: pending without dumping Digest Notes or Spine Contract"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "survey-spine-direction-gate",
+      "prompt": "用 Survey 的 Deep Research 模式研究 agent memory systems，重点解释为什么保存更多内容不等于下一次能正确取用。完成资料消化和大纲后，让我选择文章的脊柱方向。",
+      "expected_output": "完成 Collect、Digest 和 Outline 后，先对 2–3 个真正不同的脊柱候选做 Weave 证据准入，再以单选形式推荐并等待用户；在用户选择前不进入 Fill。",
+      "files": [],
+      "expectations": [
+        "Survey does not run the retired lens library, Domain Use Contract, Domain Payoff, or outcome router",
+        "Every candidate is derived after Digest and Outline rather than invented at prompt time",
+        "Each candidate states a thesis, structural consequence, cut or background decision, and evidence boundary",
+        "The candidates differ in at least two of chapter order, evidence grouping, comparison set, causal explanation, included material, excluded material, or final boundary",
+        "The recommended candidate appears first and losing candidates remain plausible articles rather than strawmen",
+        "Only evidence-admitted candidates are shown; user preference cannot waive evidence fidelity",
+        "The workflow stops before Fill until the user explicitly selects or delegates a candidate",
+        "If only one candidate survives after one evidence-repair loop, the workflow asks whether to proceed or narrow scope instead of fabricating alternatives",
+        "A materially repaired thesis, through-object, order, or boundary after hold-out invalidates the prior choice and requires a new selection"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "survey-visual-pass",
+      "prompt": "使用 Survey 的 Canonical Article 模式研究强化学习，脊柱采用证据最强的推荐项并直接完成。图只在文字确实不擅长表达关系时使用，不要把每节摘要画成框图。",
+      "expected_output": "Refine 后逐段扫描关系形状，以删除测试和证据追踪准入少量图示；保留的图放在白话解释和例子之后，并以一句加粗图注说明关系。",
+      "files": [],
+      "expectations": [
+        "Visual Pass runs after Refine and before agent preflight and human Self-review",
+        "Every candidate visual names a relationship that would be harder to recover from prose alone",
+        "Architecture or flow, causal stages, feedback loops, curves, matrices, aligned traces, and minimal formulas are matched to their idea shapes instead of using one diagram format everywhere",
+        "A candidate is deleted when it merely rearranges adjacent prose into boxes",
+        "Every retained node, arrow, curve, or comparison traces to admitted evidence or is labeled as Weave synthesis",
+        "Each retained visual appears only after plain-language grounding and a concrete example and has one bold sentence as caption",
+        "Sparse output, including zero valid visuals, is accepted; one visual per section is a failure",
+        "ASCII stays within 80 columns and avoids fragile CJK alignment",
+        "No polished PNG is generated by default and no missing local asset is referenced",
+        "The delivery report records reconciled candidate, admitted, and deleted counts without persisting a Visual Evidence Ledger"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "survey-classification-integrity",
+      "prompt": "使用 Survey 的 Deep Research 模式，把 value-based、model-based、offline reinforcement learning、RLHF 和 RLVR 归纳成强化学习的五大并列流派。脊柱按证据最强的推荐项继续。",
+      "expected_output": "把用户给出的五分法当成待检验假设，在 Digest 和 Outline 中检查各标签的证据对象与抽象层级；必要时修复为多轴或叠层，不因用户预设而制造伪并列结构。",
+      "files": [],
+      "expectations": [
+        "The requested five-way taxonomy is treated as a hypothesis rather than a conclusion",
+        "The evidence model distinguishes decision or value representation, environment modeling, data regime, feedback or reward source, and application context",
+        "At least one real hybrid method is tested against the proposed siblings",
+        "Cross-cutting labels become axes, overlays, or a matrix rather than contradictory exclusive families",
+        "The repaired classification serves the selected spine instead of becoming a restored Survey lens library",
+        "Field-wide prevalence or momentum claims require trend-capable evidence or are scoped to the admitted corpus",
+        "Ambiguous and residual cases remain visible",
+        "The final Survey article passes Article Integrity without leaking Digest Notes or Spine Contract"
       ]
     }
   ]

@@ -2,7 +2,8 @@
 
 [CmdletBinding()]
 param(
-    [switch]$SkipInstall
+    [switch]$SkipInstall,
+    [switch]$CheckLiveInstall
 )
 
 Set-StrictMode -Version Latest
@@ -78,6 +79,7 @@ try {
             'references/deep-read.md',
             'references/frame-selection.md',
             'references/impact-pass.md',
+            'references/learning-design.md',
             'references/output-spec.md',
             'references/reader-model.md',
             'references/reading-variants.md',
@@ -122,7 +124,7 @@ try {
         if (($names | Sort-Object -Unique).Count -ne $names.Count) {
             throw 'evals/evals.json contains duplicate names.'
         }
-        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding', 'publication-reader-research-consequence', 'publication-reader-time-bound', 'publication-reader-editorial-noop', 'publication-reader-no-amplification')) {
+        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding', 'publication-reader-research-consequence', 'publication-reader-time-bound', 'publication-reader-editorial-noop', 'publication-reader-no-amplification', 'reader-evidence-truth-boundary', 'reader-effect-editorial-routing', 'survey-learn-canonical-article', 'survey-spine-direction-gate', 'survey-visual-pass', 'survey-classification-integrity')) {
             if ($requiredEvalName -notin $names) {
                 throw "evals/evals.json is missing reader-model regression: $requiredEvalName"
             }
@@ -149,6 +151,18 @@ try {
                 throw "Publication-reader evals do not cover required concept: $requiredPublicationConcept"
             }
         }
+        $readerEvidenceExpectations = @($evals | Where-Object { $_.name -like 'reader-evidence-*' -or $_.name -like 'reader-effect-*' } | ForEach-Object { $_.expectations }) -join "`n"
+        foreach ($requiredReaderEvidenceConcept in @('L0', 'L1', 'L2', 'L3', 'generation-side', 'serialized', 'Article Recoverability', 'actual reader', 'fifth Comprehension Gate probe', 'optional', 'persisted')) {
+            if ($readerEvidenceExpectations -notmatch [regex]::Escape($requiredReaderEvidenceConcept)) {
+                throw "Reader-evidence evals do not cover required concept: $requiredReaderEvidenceConcept"
+            }
+        }
+        $surveyLearnExpectations = @($evals | Where-Object { $_.name -like 'survey-*' } | ForEach-Object { $_.expectations }) -join "`n"
+        foreach ($requiredSurveyLearnConcept in @('Canonical Article', 'Collect', 'Digest', 'Outline', 'Fill', 'Refine', 'Spine Direction Gate', 'explicitly selects', 'through-object', 'Visual Pass', 'prose reflow', '80 columns', 'Article Integrity', 'Article Recoverability', 'Human Self-review', 'trend-capable evidence', 'hybrid method')) {
+            if ($surveyLearnExpectations -notmatch [regex]::Escape($requiredSurveyLearnConcept)) {
+                throw "Survey Learn evals do not cover required concept: $requiredSurveyLearnConcept"
+            }
+        }
         foreach ($routeEvalName in @('source-dive-real-repo', 'survey-real-domain')) {
             $routeEval = $evals | Where-Object { $_.name -eq $routeEvalName } | Select-Object -First 1
             $routeExpectations = @($routeEval.expectations) -join "`n"
@@ -168,15 +182,55 @@ try {
     Invoke-Check 'reader-model workflow wiring' {
         $readerModelPath = Join-Path $repoRoot 'references/reader-model.md'
         $readerModelText = Get-Content -LiteralPath $readerModelPath -Raw
-        foreach ($requiredSection in @('## Reader Contract', '## Publication Reader Extension', '## Comprehension Gate', '### 1. Reconstruction', '### 2. Novel case', '### 3. Counterexample', '### 4. Question repair')) {
+        foreach ($requiredSection in @('## Evidence boundary', '## Reader Contract', '## Publication Reader Extension', '## Comprehension Gate', '### 1. Reconstruction', '### 2. Novel case', '### 3. Counterexample', '### 4. Question repair')) {
             if ($readerModelText -notmatch [regex]::Escape($requiredSection)) {
                 throw "Reader model is missing required section: $requiredSection"
+            }
+        }
+        foreach ($requiredBoundary in @('generation-side capability proxy', 'L0', 'L1', 'L2', 'L3', 'actual reader', 'do not add a fifth Comprehension Gate probe')) {
+            if ($readerModelText -notmatch [regex]::Escape($requiredBoundary)) {
+                throw "Reader model is missing evidence boundary: $requiredBoundary"
             }
         }
         foreach ($routeFile in @('deep-read.md', 'source-dive.md', 'survey.md')) {
             $routeText = Get-Content -LiteralPath (Join-Path $repoRoot "references/$routeFile") -Raw
             if ($routeText -notmatch 'reader-model\.md' -or $routeText -notmatch 'Comprehension Gate') {
                 throw "Workflow is not wired to the reader model: $routeFile"
+            }
+        }
+    }
+
+    Invoke-Check 'reader-outcome and final-file wiring' {
+        $learningDesignPath = Join-Path $repoRoot 'references/learning-design.md'
+        $learningDesignText = Get-Content -LiteralPath $learningDesignPath -Raw
+        foreach ($requiredSection in @('## Select the reader outcome', '## Extend the Reader Contract', '## Build the Learning Spine for Deep Read and Source Dive', '### Explain', '### Map', '### Evaluate', '### Decide', '### Enter', '## Final-article recoverability')) {
+            if ($learningDesignText -notmatch [regex]::Escape($requiredSection)) {
+                throw "Learning design is missing required section: $requiredSection"
+            }
+        }
+        foreach ($requiredConcept in @('Survey now uses the Learn Mode Gate', 'prerequisite floor', 'dependency order', 'misconception', 'new case', 'L1 article recoverability', 'L2 and L3')) {
+            if ($learningDesignText -notmatch [regex]::Escape($requiredConcept)) {
+                throw "Learning design is missing required concept: $requiredConcept"
+            }
+        }
+        foreach ($routeFile in @('deep-read.md', 'source-dive.md')) {
+            $routeText = Get-Content -LiteralPath (Join-Path $repoRoot "references/$routeFile") -Raw
+            foreach ($requiredRouteConcept in @('learning-design.md', 'Learning Spine', 'article-integrity.md', 'Article Recoverability')) {
+                if ($routeText -notmatch [regex]::Escape($requiredRouteConcept)) {
+                    throw "Workflow is not wired to reader outcome and final-file validation: $routeFile [$requiredRouteConcept]"
+                }
+            }
+        }
+        $surveyText = Get-Content -LiteralPath (Join-Path $repoRoot 'references/survey.md') -Raw
+        foreach ($requiredSurveyConcept in @('## Mode Gate', '## Phase 1: Collect', '## Phase 2: Digest', '## Phase 3: Outline', '## Spine Direction Gate', '## Phase 4: Fill', '## Phase 5: Refine', '## Phase 5.5: Visual Pass', '## Phase 6: Self-review', 'two or three candidates', 'explicit choice', 'concrete through-object', '📍', '80 columns', 'Survey has no Domain Payoff')) {
+            if ($surveyText -notmatch [regex]::Escape($requiredSurveyConcept)) {
+                throw "Survey is missing Learn-based workflow concept: $requiredSurveyConcept"
+            }
+        }
+        $articleIntegrityText = Get-Content -LiteralPath (Join-Path $repoRoot 'references/article-integrity.md') -Raw
+        foreach ($requiredIntegrityConcept in @('Every deep-read, source-dive, and survey run', 'For Deep Read or Source Dive `explain` also check', 'For Deep Read or Source Dive `map` also check', 'For survey also check', 'selected Survey spine', 'Visual Pass')) {
+            if ($articleIntegrityText -notmatch [regex]::Escape($requiredIntegrityConcept)) {
+                throw "Article Integrity is missing all-route semantic coverage: $requiredIntegrityConcept"
             }
         }
     }
@@ -269,10 +323,13 @@ Comparative judgment: strongest evidence coverage
 # Smoke Report
 Host: Codex
 Context source categories: explicit current request
+Evidence workflow: deep-read
+Reader outcome: map
 Admitted impacts: 1
 Comprehension Gate: passed
 Voice Pass: passed
 Article Integrity: passed
+Article Recoverability: not required
 Chronology: verified
 Artifact: .weave-frame/pre-reveal.md
 '@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Encoding utf8NoBOM
@@ -283,9 +340,9 @@ Artifact: .weave-frame/pre-reveal.md
             $surveyRouteRoot = Join-Path $fixtureRoot 'survey-route'
             New-Item -ItemType Directory -Path (Join-Path $surveyRouteRoot '.weave-frame') -Force | Out-Null
             Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $surveyRouteRoot '.weave-frame/pre-reveal.md')
-            $surveyArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', "tags: [survey]`nrelated:`n  - deep-read")
+            $surveyArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', "tags: [survey]`ntopic: test`nscope: focused`nrelated:`n  - deep-read")
             $surveyArticle | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'test-survey_2026-07-14.md') -Encoding utf8NoBOM
-            $surveyReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) -replace '(?m)^Article Integrity: passed\r?\n', ''
+            $surveyReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Evidence workflow: deep-read', 'Evidence workflow: survey').Replace('Reader outcome: map', "Survey mode: Deep Research`nVisual Pass: candidates=3, admitted=1, deleted=2`nHuman Self-review: pending")
             $surveyReport | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'smoke-report.md') -Encoding utf8NoBOM
             $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $surveyRouteRoot, '-ImpactMode', 'personal')
 
@@ -342,6 +399,17 @@ Artifact: .weave-frame/pre-reveal.md
             $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $hollowComprehensionRoot -ImpactMode personal 2>&1)
             if ($LASTEXITCODE -eq 0) {
                 throw 'Run verifier accepted a hollow Comprehension Gate pass claim.'
+            }
+
+            $explainWithoutRecoverabilityRoot = Join-Path $fixtureRoot 'explain-without-recoverability'
+            New-Item -ItemType Directory -Path (Join-Path $explainWithoutRecoverabilityRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $explainWithoutRecoverabilityRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $explainWithoutRecoverabilityRoot 'test-deep-read_2026-07-14.md')
+            $explainWithoutRecoverabilityReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Reader outcome: map', 'Reader outcome: explain')
+            $explainWithoutRecoverabilityReport | Set-Content -LiteralPath (Join-Path $explainWithoutRecoverabilityRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $explainWithoutRecoverabilityRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted an explain report without Article Recoverability: passed.'
             }
 
             $inlineRouteRoot = Join-Path $fixtureRoot 'inline-route'
@@ -516,6 +584,49 @@ status: draft
 
 Starting model: private baseline leaked into the article.
 '@
+                'internal-learning-spine-field.md' = @'
+---
+title: internal learning spine field
+date: 2026-07-17
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal learning spine field
+
+Central model: hidden composition control leaked into the article.
+'@
+                'internal-survey-spine-field.md' = @'
+---
+title: internal survey spine field
+date: 2026-07-17
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# internal survey spine field
+
+Through-object: hidden Survey composition control leaked into the article.
+'@
+                'survey-missing-route-frontmatter.md' = @'
+---
+title: survey missing route frontmatter
+date: 2026-07-17
+tags: [survey]
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey missing route frontmatter
+
+正文保持完整。
+'@
                 'internal-source-dive-field.md' = @'
 ---
 title: internal source dive field
@@ -599,6 +710,32 @@ status: draft
                     throw "Article verifier accepted negative fixture: $fixtureName"
                 }
             }
+
+            $referenceAppendixPath = Join-Path $articleFixtureRoot 'reference-appendix-repeat.md'
+            @'
+---
+title: reference appendix repeat
+date: 2026-07-17
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# reference appendix repeat
+
+正文会自然引用 [Conservative Q-Learning for Offline Reinforcement Learning](https://example.com/source)，但这不是重复段落。
+
+## Further Reading
+
+1. [Conservative Q-Learning for Offline Reinforcement Learning](https://example.com/source).
+
+## References
+
+1. Author. [Conservative Q-Learning for Offline Reinforcement Learning](https://example.com/source). 2020.
+'@ | Set-Content -LiteralPath $referenceAppendixPath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $referenceAppendixPath)
 
             $oversizedPath = Join-Path $articleFixtureRoot 'oversized.md'
             ('a' * (512KB + 1)) | Set-Content -LiteralPath $oversizedPath -Encoding utf8NoBOM
@@ -716,10 +853,13 @@ Prediction: installed runtime resolves sibling scripts.
                 @'
 Host: Codex
 Context source categories: explicit current request
+Evidence workflow: deep-read
+Reader outcome: map
 Admitted impacts: 1
 Comprehension Gate: passed
 Voice Pass: passed
 Article Integrity: passed
+Article Recoverability: not required
 Chronology: verified
 Artifact: .weave-frame/pre-reveal.md
 '@ | Set-Content -LiteralPath (Join-Path $runtimeSmoke 'smoke-report.md') -Encoding utf8NoBOM
@@ -775,6 +915,57 @@ Artifact: .weave-frame/pre-reveal.md
     }
     else {
         Write-Host '[SKIP]  skills CLI discovery and isolated install'
+    }
+
+    if ($CheckLiveInstall) {
+        Invoke-Check 'live install has no retired route collisions' {
+            $userProfilePath = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+            if ([string]::IsNullOrWhiteSpace($userProfilePath)) {
+                throw 'Could not resolve the current user profile for live-install validation.'
+            }
+            $skillRoots = @(
+                (Join-Path $userProfilePath '.agents/skills'),
+                (Join-Path $userProfilePath '.codex/skills'),
+                (Join-Path $userProfilePath '.claude/skills')
+            )
+            $collisions = [System.Collections.Generic.List[string]]::new()
+            $liveWeavePaths = [System.Collections.Generic.List[string]]::new()
+            foreach ($skillRoot in $skillRoots) {
+                foreach ($retiredName in @('deep-read', 'source-dive', 'survey')) {
+                    $candidate = Join-Path $skillRoot $retiredName
+                    if (Test-Path -LiteralPath $candidate -PathType Container) {
+                        $collisions.Add($candidate)
+                    }
+                }
+                $weaveCandidate = Join-Path $skillRoot 'weave'
+                if (Test-Path -LiteralPath $weaveCandidate -PathType Container) {
+                    $liveWeavePaths.Add($weaveCandidate)
+                }
+            }
+            if ($collisions.Count -gt 0) {
+                throw "Retired route skills remain discoverable: $($collisions -join ', ')"
+            }
+            if ($liveWeavePaths.Count -eq 0) {
+                throw 'No live weave installation was found in the supported skill roots.'
+            }
+            $liveRuntimeFiles = @('SKILL.md', 'scripts/check.ps1', 'scripts/check-article.ps1', 'scripts/check-run.ps1')
+            $liveRuntimeFiles += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
+            foreach ($liveWeavePath in @($liveWeavePaths | Sort-Object -Unique)) {
+                foreach ($relativePath in $liveRuntimeFiles) {
+                    $sourcePath = Join-Path $repoRoot $relativePath
+                    $installedPath = Join-Path $liveWeavePath $relativePath
+                    if (-not (Test-Path -LiteralPath $installedPath -PathType Leaf)) {
+                        throw "Live weave installation is missing ${relativePath}: $liveWeavePath"
+                    }
+                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $sourcePath).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $installedPath).Hash) {
+                        throw "Live weave installation differs from the repository for ${relativePath}: $liveWeavePath"
+                    }
+                }
+            }
+        }
+    }
+    else {
+        Write-Host '[SKIP]  live-install collision and content check'
     }
 
     Write-Host ''

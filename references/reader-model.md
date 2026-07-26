@@ -1,6 +1,19 @@
 # Reader Model
 
-Use this protocol across all three workflows. It defines the cognitive change the run should produce before research begins and tests that change before composition. The final article remains the public output; the Reader Contract and Comprehension Gate stay in working memory.
+Use this protocol across all three workflows. It defines the cognitive capability the research model should support before research begins and tests that model inside the current generation context before composition. The final article remains the public output; the Reader Contract and Comprehension Gate stay in working memory.
+
+## Evidence boundary
+
+The Reader Contract is a design target, not an observation of a reader. The Comprehension Gate is a generation-side capability proxy: it shows that the completed evidence model can support reconstruction, transfer, counterexample, and question repair before the article is written. Because the same run has access to the research process, it cannot establish that an independent human reader understood, remembered, retold, reused, or returned to the final article.
+
+Use these evidence levels without allowing one to impersonate the next:
+
+- **L0 — research model established**: Weave's evidence model, hold-out, and Comprehension Gate pass within the research run;
+- **L1 — article recoverable**: an independent fresh context can recover and use the final article; Weave runs this final-file audit for Deep Read or Source Dive `explain` outputs, Survey `Canonical Article`, and any article that promises a self-contained explanation. Weave Editorial may rerun it after editorial changes;
+- **L2 — observed immediate understanding**: an actual reader answers no-peek questions after reading;
+- **L3 — delayed retention or reuse**: an actual reader later recalls, reuses, or demonstrably returns to the article.
+
+Reader praise such as “不错”, apparent fluency, completion, sharing, likes, or other publication metrics are not substitutes for L1–L3. Use `learning-design.md` for final-article recoverability. Survey's human Self-review in `survey.md` is a real user review step, but it does not prove retention or later reuse. Do not add a fifth Comprehension Gate probe or delay the research article to simulate human evidence.
 
 ## Reader Contract
 
@@ -11,7 +24,11 @@ Record:
 - **Initial question**: the exact question or decision the user brought;
 - **Starting model**: the supported distinction, explanation, prediction, or uncertainty the user currently holds; use `unknown` when no baseline is available;
 - **Unsettled judgment**: the part of the starting model most likely to change;
+- **Reader outcome**: for Deep Read and Source Dive, the primary `explain`, `map`, `evaluate`, `decide`, or `enter` result selected with `learning-design.md`; for Survey, the confirmed Learn mode and exact article promise from `survey.md`, without assigning the retired Survey outcome labels;
+- **Prerequisite floor**: only the knowledge supplied or safely implied by the request;
 - **Target capability**: what the reader should be able to reconstruct, distinguish, predict, transfer, or evaluate after reading;
+- **Transfer case**: the kind of unfamiliar case that should be handled after reading;
+- **Explanation boundary**: what may remain unresolved without breaking the article's promise;
 - **Revision trigger**: the evidence or contradiction that would require the initial question or model to be reframed;
 - **Route expression**: how that capability appears in the selected workflow.
 
@@ -20,6 +37,7 @@ Use only context already admitted by `context-acquisition.md`. Do not infer a pe
 The target capability must be observable. Reject goals such as “understand deeply” or “gain insight” unless they are rewritten as an ability, for example:
 
 - explain why the source needs a distinction and where it fails;
+- reconstruct a domain's smallest causal model from a non-specialist prerequisite floor and use it on a new case;
 - trace an unfamiliar input through a system and predict its state changes;
 - place a new method on the domain map and name the evidence still needed;
 - revise an initial either-or question when the evidence reveals a different controlling variable.
@@ -69,7 +87,7 @@ Do not rewrite the question immediately to make the run look insightful. Preserv
 
 ## Comprehension Gate
 
-Run after frame selection and hold-out testing, before Impact Pass and Compose. This gate tests understanding rather than article quality. It is separate from the hold-out: the hold-out tests whether the selected frame reaches unseen evidence; the Comprehension Gate tests whether the completed model can be reconstructed and used.
+Run after frame or Survey spine selection and hold-out testing, before Impact Pass and Compose. This gate tests whether the research model supports generative reconstruction and use, rather than article quality or actual-reader outcomes. It is separate from the hold-out: the hold-out tests whether the selected direction reaches unseen evidence; the Comprehension Gate tests whether the completed model can be reconstructed and used inside the current generation context.
 
 Temporarily set aside the structured evidence fields. Without copying their wording, produce four short internal probes, then reopen the evidence model and verify each one.
 
@@ -112,11 +130,11 @@ State the repaired question or the unresolved evidence. A changed question must 
 - **deep-read**: reconstruct the author's problem and reasoning move; predict how the frame treats a new case; expose one non-transferable case.
 - **source-dive / system**: first reconstruct in two or three sentences what the tool is, who uses it, the problem and major capabilities; then explain the overall system shape, core state, and one representative task across entry, orchestration, two or more capabilities, output, and failure ownership. Predict a new input, integration, or fault through that system. Remove a load-bearing subsystem or change a host condition. Repair the initial product category when the source reveals a different system, for example “chat client” becoming “persistent local agent host”. Class names, directory relations, or one call chain do not pass.
 - **source-dive / subsystem or decision**: reconstruct `problem or force -> design judgment -> behavior path -> capability -> cost or failure boundary`; predict a new input, configuration, integration, or failure; remove one enforcing component or change one shaping force and trace the break. A module or call-chain recap does not pass.
-- **survey**: reconstruct the selected map distinction; place an unfamiliar method or claim conditionally; identify a case the current evidence ceiling cannot locate or decide.
+- **survey**: reconstruct the selected spine's thesis and load-bearing path without copying the outline. For a throughline, track the concrete object across at least two state changes; for a dialectical spine, reconstruct the conflict and resolution; for an issue-centered spine, reconstruct the evidence chain and limiting condition. Apply the same spine to one materially different case and identify where the admitted evidence stops supporting the transfer.
 
 ## Pass and failure handling
 
-Pass only when all four probes trace back to the completed evidence model and the Reader Contract's target capability is demonstrated or honestly bounded. Record `Comprehension Gate: passed` in the delivery report without dumping the probes or Reader Contract.
+Pass only when all four probes trace back to the completed evidence model and the Reader Contract's target capability is demonstrated or honestly bounded at L0. Record `Comprehension Gate: passed` in the delivery report without dumping the probes or Reader Contract. Never translate that status into a claim that an actual reader understood, remembered, retold, reused, or returned to the article.
 
 On failure, return only to the affected stage:
 

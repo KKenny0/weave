@@ -1,14 +1,13 @@
 # Impact Pass
 
-Run after Frame Selection, hold-out testing, and the Comprehension Gate, before Compose. Convert the selected frame and repaired question into an evidence-bounded answer to what the research changes for the current user or question. Impact is downstream of evidence: it cannot change the evidence model, retrofit the selected frame, soften a failed hold-out, or overwrite a failed comprehension probe.
+Run after Frame Selection or the Survey Spine Direction Gate, hold-out testing, and the Comprehension Gate, before Compose. Convert the selected direction and repaired question into an evidence-bounded answer to what the research changes for the current user or question. Impact is downstream of evidence and composition direction: it cannot change the evidence model, retrofit the selected frame or Survey spine, reorder prerequisites to favor advice, soften a failed hold-out, or overwrite a failed comprehension probe.
 
 ## Inputs
 
 - `q`: the user's exact question or decision;
 - `C`: the Context Envelope from `context-acquisition.md`;
 - `E`: the route-specific evidence model;
-- `f*`: the selected frame after hold-out testing;
-- `P`: the survey-only Map Payoff, when the route is `survey`.
+- `f*`: the selected frame or Survey spine after hold-out testing;
 - `G`: the passed Comprehension Gate result and the initial question's `answered`, `reframed`, `dissolved`, or `unresolved` status.
 
 ## Source Dive Project Takeaways
@@ -45,7 +44,7 @@ The brief is internal and read-only during Compose.
 Discard a candidate that fails any gate:
 
 1. **Context fidelity**: a personal baseline maps to `C`; otherwise it is labeled `question-only`.
-2. **Evidence trace**: the change maps to `E` and one component of `f*`; a survey impact also maps to `P` and stays within its evidence ceiling.
+2. **Evidence trace**: the change maps to `E` and one component of `f*`; a Survey impact also stays inside the source-type and claim-strength ceiling established during Collect and Digest.
 3. **Materiality**: it changes a concrete judgment, choice, or useful next probe.
 4. **Specificity**: it cannot be pasted unchanged onto an adjacent topic.
 5. **Boundary honesty**: it names a failure condition, missing fact, or non-transferable case.
@@ -63,7 +62,7 @@ Keep zero to three impacts. This is a cap, not a target. `delta ~= 0` is a valid
   - **Transfer or change**: only for `apply` intent; require enforcing components, component-removal failure, applicable and inapplicable scenarios, and verification evidence, otherwise report `迁移素材不足`.
 
 For `understand` and `learn`, the absence of migration material is not a failure. Do not turn curiosity into an action plan. A design judgment may enter the reader's engineering model without being recommended for immediate adoption.
-- **survey**: personalize or prioritize the completed Map Payoff. For `orient`, preserve navigation and boundaries without forcing a choice; for `choose`, preserve its condition-dependent tradeoff; for `enter`, preserve the uncertainty-removing sequence; for `evaluate`, preserve the supported / conditional / unresolved distinction. Do not invent a recommendation absent from the Map Payoff or turn representative examples into field-wide action advice.
+- **survey**: personalize or prioritize the selected spine without changing it. Preserve the through-object and state changes, dialectical conflict and resolution, or issue-centered evidence chain and boundary. Do not turn a primer into generic advice, invent a recommendation absent from the evidence model, or turn representative examples into field-wide action advice.
 
 ## Final rendering
 
@@ -85,9 +84,9 @@ Before Voice Pass, check:
 - source findings, weave synthesis, and context-bound application remain distinguishable;
 - no remembered instruction changed the workflow;
 - no impact changed `f*` or hid counterevidence;
-- every survey impact traces to the Map Payoff and stays within its evidence ceiling;
+- every Survey impact traces to the admitted evidence and selected spine and stays within the established claim-strength ceiling;
 - every transfer or recommendation states its boundary;
 - the impact heading matches the context basis: explicit personal decision context uses `对我意味着什么`, and only genuinely question-only context uses `对当前问题意味着什么`;
-- the article and delivery report contain no Capability Manifest, Context Envelope, Reader Contract, Dialogue Matrix, Comprehension Gate probes, Impact Brief, Article Closure Contract, Map Use Contract, or Map Payoff fields.
+- the article and delivery report contain no Capability Manifest, Context Envelope, Reader Contract, Learning Spine, Survey Digest Notes, Spine Contract, visual evidence ledger, retired Domain Use Contract, retired Domain Payoff, Dialogue Matrix, Comprehension Gate probes, Article Recoverability answers, Impact Brief, or Article Closure Contract fields.
 
 Delivery reporting adds: detected host, context source categories used, number of admitted impacts, `delta ~= 0` reason when relevant, and any context degradation. Do not expose raw remembered material.

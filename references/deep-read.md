@@ -10,7 +10,7 @@ Record:
 
 - `q`: the user's exact question or desired cognitive result
 - `C`: the Context Envelope from `context-acquisition.md`
-- `R`: the Reader Contract from `reader-model.md`, including an observable target capability and revision trigger
+- `R`: the Reader Contract from `reader-model.md`, including the reader outcome selected with `learning-design.md`, prerequisite floor, observable target capability, transfer case, explanation boundary, and revision trigger
 - source type and reasoning shape
 - length and access status
 - original key terms
@@ -202,7 +202,13 @@ Apply `reader-model.md` after hold-out testing. Reconstruct the author's problem
 
 When the gate exposes a missing mechanism, invalid transfer, decorative counterexample, or unsupported question repair, return to the affected reading or frame step. If the repair changes the selected frame or its boundary, invalidate the old hold-out result and follow `reader-model.md` with fresh unopened evidence. Do not use fluent prose as evidence that comprehension passed.
 
-### Step 9: Run Impact Pass
+### Step 9: Build the Learning Spine
+
+Apply `learning-design.md` to the passed research model. Select one central explanatory object, order only the prerequisites needed by `R`, choose worked examples that carry reasoning weight, and map each planned chapter to a cognitive delta. For `explain`, the spine must support a step-by-step mechanism, a materially different transfer case when evidence permits, and a real boundary; an approachable source inventory does not pass.
+
+Keep the Learning Spine internal and read-only during Compose. If it exposes a missing mechanism or prerequisite bridge, return to the affected Source Brief or frame step instead of filling the gap with analogy.
+
+### Step 10: Run Impact Pass
 
 Apply `impact-pass.md` with `q`, `C`, the completed Source Brief / Synthesis evidence, the selected frame, and the passed Comprehension Gate result. A Source Brief's possible connection to the user's question is only an impact candidate; it cannot become a personal claim until it passes Context Envelope provenance and the Impact Pass admission gates.
 
@@ -210,7 +216,7 @@ Keep the resulting Impact Brief internal and read-only during Compose. Do not le
 
 ## Phase 4: Compose
 
-Write the research article through the selected frame.
+Write the research article through the selected frame and the outcome-specific Learning Spine in `learning-design.md`.
 
 ### Step 1: Choose narrative anchor after frame selection
 
@@ -223,6 +229,7 @@ For every planned chapter record internally:
 - selected-frame component served
 - evidence used
 - role: establish, explain, contrast, test, bound, or apply
+- reader capability added after this chapter
 
 Delete a chapter that does not serve the frame, or return to Phase 2 for missing evidence. Chapter count and short titles are writing heuristics, not quality gates.
 
@@ -247,7 +254,7 @@ Audit without role-playing an advisor:
 - **Inference chain**: where does evidence become interpretation?
 - **Generalization**: what population, scale, or time range is justified?
 - **Novelty**: did the article produce a material cognitive shift or only reorganize summaries?
-- **Reader capability**: did the Comprehension Gate demonstrate the Reader Contract's target capability, including a valid novel case and counterexample?
+- **Research-model capability**: did the Comprehension Gate demonstrate at L0 that the completed model supports the Reader Contract's target capability, including a valid novel case and counterexample, without claiming an actual-reader outcome?
 - **Question repair**: does the article answer the repaired question, or preserve the unresolved evidence, rather than silently returning to the initial framing?
 - **Context fidelity**: does every personal baseline trace to `C`, with question-only language when it does not?
 - **Impact separation**: are source findings, weave synthesis, and context-bound application still distinguishable?
@@ -256,10 +263,12 @@ Audit without role-playing an advisor:
 
 Revise concrete failures, then re-run the audit.
 
-### Step 5: Voice Pass, write, and Article Integrity
+### Step 5: Voice Pass, write, Article Integrity, and Recoverability
 
 Run `voice-pass.md`, then write `{topic}-deep-read_{YYYY-MM-DD}.md` per `output-spec.md`. Apply `article-integrity.md` to the serialized file, including its semantic, evidence/time, and mechanical layers. If wording changes, rerun Voice Pass before the final integrity check.
 
-Delivery report: article path, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, `Comprehension Gate: passed` or the failed probe and degradation, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, Voice Pass corrections, style reference, and `Article Integrity: passed` or an explicit degradation. Do not reproduce the internal Reader Contract, Dialogue Matrix, Comprehension Gate probes, or Article Closure Contract.
+For `explain`, run the fresh-context Article Recoverability Audit in `learning-design.md` against only the serialized article. Repair the affected chapter and repeat Voice Pass, Article Integrity, and recoverability after a failure. If no independent fresh context exists, report `Article Recoverability: unavailable`; do not simulate a pass.
+
+Delivery report: article path, evidence workflow, reader outcome, word count, chapter structure, selected frame, why it won, close alternative if material, hold-out result, `Comprehension Gate: passed` or the failed probe and degradation, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, Voice Pass corrections, style reference, `Article Integrity: passed` or an explicit degradation, and `Article Recoverability: passed`, `not required`, or `unavailable`. Do not reproduce the internal Reader Contract, Learning Spine, Dialogue Matrix, Comprehension Gate probes, recoverability answers, or Article Closure Contract.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.

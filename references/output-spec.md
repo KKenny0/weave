@@ -56,16 +56,20 @@ The section is finished article content, not a dump of internal fields.
 When a delivery report or `smoke-report.md` is requested, persist only:
 
 - output path and size or chapter metrics;
-- selected frame, why it won, material close alternative, and final boundary;
+- evidence workflow and, for Deep Read or Source Dive, reader outcome; for Survey, confirmed mode and exact article promise; for installed-behavior verification, the resolved weave skill path and version or source commit when available;
+- selected frame, or selected Survey spine and through-object when applicable, why it was admitted, material close alternative, and final boundary;
 - hold-out identifier, prediction summary, result, chronology status, and pre-reveal artifact path;
 - Comprehension Gate pass status, or the failed probe and material degradation, without the Reader Contract or probe contents;
 - detected host label, context source category names, and material degradation;
 - admitted impact count or `delta ~= 0` reason, without Impact Brief fields;
 - Voice Pass result and scoped style-reference status;
-- deep-read or source-dive Article Integrity result and any material degradation, without Article Closure Contract fields;
+- Survey Visual Pass candidate, admitted, and deleted counts;
+- Article Integrity result and any material degradation, without Article Closure Contract fields;
+- Article Recoverability status as `passed`, `not required`, or `unavailable`, without audit answers;
+- Survey human Self-review status as `pending` or `confirmed`;
 - runtime verification, static inference, source gaps, and coverage limits.
 
-Never use report sections named `Capability Manifest`, `Context Envelope`, `Reader Contract`, `Source Brief`, `Source Catalog`, `Dialogue Matrix`, `Candidate Frame Brief`, `Synthesis Pack`, `Comprehension Gate`, `Impact Brief`, `System Design Brief`, `Engineering Decision Brief`, or `Article Closure Contract`, and never reproduce their schemas or raw contents. Do not persist source-dive reading intent or scope. A one-line `Comprehension Gate: passed` status is allowed without a heading. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
+Never use report sections named `Capability Manifest`, `Context Envelope`, `Reader Contract`, `Learning Spine`, `Digest Note`, `Spine Contract`, `Visual Evidence Ledger`, `Source Brief`, `Source Catalog`, `Domain Use Contract`, `Domain Payoff`, `Dialogue Matrix`, `Candidate Frame Brief`, `Synthesis Pack`, `Comprehension Gate`, `Article Recoverability Audit`, `Impact Brief`, `System Design Brief`, `Engineering Decision Brief`, or `Article Closure Contract`, and never reproduce their schemas or raw contents. Do not persist source-dive reading intent or scope. One-line status records such as `Comprehension Gate: passed`, `Article Integrity: passed`, and `Article Recoverability: not required` are allowed without headings. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
 
 Apply the allowlist to content, not only headings. The report may say `Context categories: explicit current request` and `Admitted impacts: 3`. It must not quote or paraphrase what the user is deciding, prefers, wants, or is constrained by, and must not summarize Impact 1/2/3. Read the report back and remove those details before delivery. The final article is the only persisted output that may contain admitted personal application.
 
@@ -73,5 +77,5 @@ Apply the allowlist to content, not only headings. The report may say `Context c
 
 - Don't change the naming pattern
 - Don't omit YAML fields
-- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Reader Contract, Source Brief tables, Dialogue Matrix, Synthesis Pack, Candidate Frame Brief, Comprehension Gate probes, Impact Brief, System Design Brief, Engineering Decision Brief, Article Closure Contract, reading-intent or reading-scope fields, Evidence Weight grids, internal notes) in the output file — only the finished article
+- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Reader Contract, Learning Spine, Digest Notes, Spine Contract, Visual Evidence Ledger, Source Brief tables, Source Catalog tables, retired Domain Use Contract, retired Domain Payoff, Dialogue Matrix, Synthesis Pack, Candidate Frame Brief, Comprehension Gate probes, Article Recoverability Audit answers, Impact Brief, System Design Brief, Engineering Decision Brief, Article Closure Contract, reading-intent or reading-scope fields, Evidence Weight grids, internal notes) in the output file — only the finished article
 - Don't expose raw remembered material, private memory paths, or unrelated user context

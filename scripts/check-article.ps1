@@ -121,6 +121,7 @@ try {
     $text = Get-Content -LiteralPath $resolvedPath -Raw -Encoding utf8
     $failures = [System.Collections.Generic.List[string]]::new()
     $isSourceDive = [System.IO.Path]::GetFileName($resolvedPath) -match '-source-dive_'
+    $isSurvey = [System.IO.Path]::GetFileName($resolvedPath) -match '-survey_'
     $frontmatter = [regex]::Match($text, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $bodyText = if ($frontmatter.Success) { $text.Substring($frontmatter.Length) } else { $text }
     $proseResult = Get-ProseText $bodyText
@@ -133,10 +134,23 @@ try {
         $isSourceDive = $isSourceDive -or
             ($tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsource-dive\b') -or
             ($tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*source-dive\s*$')
+        $isSurvey = $isSurvey -or
+            ($tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsurvey\b') -or
+            ($tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*survey\s*$')
         foreach ($field in @('title', 'date', 'tags', 'sources', 'status')) {
             if ($frontmatterText -notmatch "(?m)^${field}:") {
                 Add-Failure $failures "Frontmatter is missing ${field}."
             }
+        }
+        if ($isSurvey) {
+            foreach ($field in @('topic', 'scope')) {
+                if ($frontmatterText -notmatch "(?m)^${field}:") {
+                    Add-Failure $failures "Survey frontmatter is missing ${field}."
+                }
+            }
+        }
+        if ($frontmatterText -match '(?im)^(?:reader_outcome|prerequisite_floor|transfer_case|explanation_boundary|learning_spine|digest_note|spine_contract|visual_evidence_ledger|domain_use_contract|domain_payoff|article_recoverability_audit):') {
+            Add-Failure $failures 'Frontmatter contains a forbidden reader, Survey spine, or learning-design artifact field.'
         }
         if ($isSourceDive -and $frontmatterText -match '(?im)^(?:reading_intent|primary_intent|secondary_intent|reading_scope|primary_scope|secondary_scope|system_design_brief|engineering_decision_brief|article_closure_contract):') {
             Add-Failure $failures 'Source-dive frontmatter contains a forbidden internal-artifact field.'
@@ -193,18 +207,24 @@ try {
         Add-Failure $failures 'Line ends with a dangling blockquote marker.'
     }
 
-    $repeated = Find-RepeatedFragment $prose
+    $repetitionScanText = [regex]::Replace(
+        $prose,
+        '(?ims)^#{1,6}\s+(?:进一步阅读|延伸阅读|参考(?:来源|文献)|Further Reading|References?|Bibliography)\s*$.*\z',
+        ''
+    )
+    $repeated = Find-RepeatedFragment $repetitionScanText
     if ($null -ne $repeated) {
         Add-Failure $failures "Repeated long fragment found: $repeated"
     }
 
-    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Source Brief|Source Catalog|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Impact Brief|System Design Brief|Engineering Decision Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
+    $forbiddenHeadings = '(?im)^#{1,6}\s+(Capability Manifest|Context Envelope|Reader Contract|Learning Spine|Digest Note|Spine Contract|Visual Evidence Ledger|Source Brief|Source Catalog|Domain Use Contract|Domain Payoff|Dialogue Matrix|Candidate Frame Brief|Synthesis Pack|Comprehension Gate|Article Recoverability Audit|Impact Brief|System Design Brief|Engineering Decision Brief|Article Closure Contract)(?:\s*:.*)?\s*$'
     if ($prose -match $forbiddenHeadings) {
         Add-Failure $failures 'Article contains a forbidden internal-artifact heading.'
     }
-    $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Target capability|Revision trigger|Route expression|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|Reconstruction|Novel case|Counterexample|Question repair|初始问题|起始模型|未决判断|目标能力|修正触发条件|路线表达|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题|重建|新例|反例|问题修复)(?:\*\*)?\s*:'
-    if ($prose -match $readerArtifactFields) {
-        Add-Failure $failures 'Article contains Reader Contract, Dialogue Matrix, or Comprehension Gate field dumps.'
+    $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Reader outcome|Prerequisite floor|Target capability|Transfer case|Explanation boundary|Revision trigger|Route expression|Central model|Dependency order|Worked examples|Misconception repairs|Chapter deltas|Final transfer|Digest Note|Spine Contract|Through-object|Section-source map|Visual Evidence Ledger|Domain Use Contract|Domain Payoff|Primary reader outcome|Reasoning object|Payoff question|Condition set|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|Reconstruction|Novel case|Counterexample|Question repair|初始问题|起始模型|未决判断|读者结果|前提下限|目标能力|迁移案例|解释边界|修正触发条件|路线表达|中央模型|依赖顺序|承重示例|误解修复|章节增量|最终迁移|消化笔记|脊柱契约|贯穿对象|章节来源映射|视觉证据台账|领域用途契约|领域收益|主要读者结果|推理对象|收益问题|条件集合|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题|重建|新例|反例|问题修复)(?:\*\*)?\s*:'
+    $readerArtifactTableFields = '(?im)^\s*\|\s*(?:\*\*)?(?:Reader outcome|Prerequisite floor|Target capability|Transfer case|Explanation boundary|Central model|Dependency order|Worked examples|Misconception repairs|Chapter deltas|Final transfer|Digest Note|Spine Contract|Through-object|Section-source map|Visual Evidence Ledger|Primary reader outcome|Reasoning object|Payoff question|Condition set|读者结果|前提下限|目标能力|迁移案例|解释边界|中央模型|依赖顺序|承重示例|误解修复|章节增量|最终迁移|消化笔记|脊柱契约|贯穿对象|章节来源映射|视觉证据台账|主要读者结果|推理对象|收益问题|条件集合)(?:\*\*)?\s*\|'
+    if ($prose -match $readerArtifactFields -or $prose -match $readerArtifactTableFields) {
+        Add-Failure $failures 'Article contains Reader Contract, Learning Spine, Survey spine, Domain Use, Dialogue Matrix, or Comprehension Gate field dumps.'
     }
     $sourceDiveInternalFieldNames = 'Primary reading intent|Secondary reading intent|Reading intent|Primary reading scope|Secondary reading scope|Reading scope|Observed problem|Design forces|Executable mechanism|Evidence status|Core project problem|Decision chains|Attribution boundary|Version boundary|Product identity|Target user or actor|User capabilities|System boundary|Entry points|Core state|Major subsystems|Canonical task loop|Organizing principle|主要阅读意图|次要阅读意图|阅读意图|主要阅读范围|次要阅读范围|阅读范围|观察到的问题|设计力量|可执行机制|证据状态|核心项目问题|承重判断链|归属边界|版本边界|产品身份|目标用户或行动者|用户能力|系统边界|入口|核心状态|主要子系统|代表性任务循环|组织原则'
     $sourceDiveArtifactFields = "(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*:"

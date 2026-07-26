@@ -14,7 +14,7 @@ Capture:
 - official docs and papers when relevant;
 - `q`: what the user wants to understand or decide;
 - `C`: the Context Envelope from `context-acquisition.md`;
-- `R`: the Reader Contract from `reader-model.md`, expressed as an observable tracing, prediction, or boundary-testing capability;
+- `R`: the Reader Contract from `reader-model.md`, including the reader outcome selected with `learning-design.md`, prerequisite floor, observable tracing, prediction, or boundary-testing capability, transfer case, and explanation boundary;
 - primary reading intent and at most one secondary intent:
   - `understand`: explain why the project works this way;
   - `evaluate`: judge claims, quality, or applicability;
@@ -32,7 +32,7 @@ Capture:
 
 Each focus area becomes a coverage obligation and later maps to a behavior path or a clearly labeled limitation. When the user only says they are interested or want to see how a project is implemented, default to `understand` with `learn` as secondary. “How is this project designed?”, “what problem does this tool solve?”, and explicit whole-repository requests default to `system`. A named module or capability defaults to `subsystem`; a named tradeoff or historical choice defaults to `decision`. Mentioning Provider, MCP, or Plugin inside a whole-system question does not silently narrow the scope. Do not infer `apply` from technical sophistication or repository access.
 
-Intent and scope remain in working memory and control evidence selection, comprehension, and article closure. Do not render either as a final-article, pre-reveal, or delivery-report field.
+Reading intent, reading scope, and reader outcome are independent controls: intent says why the project is being inspected, scope says how much of the system is evidence-bearing, and outcome says what the finished article must let the reader do. Keep all three in working memory. Do not render intent or scope as final-article, pre-reveal, or delivery-report fields.
 
 ### Step 2: Confirm the canonical source
 
@@ -208,11 +208,13 @@ For the source-dive hold-out, reserve a non-entry module connected to a core beh
 
 Run the scope-specific Comprehension Gate in `reader-model.md` after hold-out testing. For `system`, reconstruct in plain product language what the tool is, who it serves, its capabilities, system shape, core state, and one complete task before testing a new case or counterexample. For `subsystem` and `decision`, reconstruct the relevant problem or constraint, design judgment, enforcing behavior path, capability, cost, and failure condition. Repair the initial question when implementation reveals that the apparent product category is wrong or when missing historical/runtime evidence prevents an answer.
 
+Then build the outcome-specific Learning Spine in `learning-design.md`. Use one system model or decision chain as the central object, order concepts from user-visible behavior toward implementation dependencies, and assign a reader-capability delta to each chapter. For `explain`, work one behavior path step by step before introducing neighboring modules; a directory tour with simplified wording does not pass.
+
 Then build source-dive Project Takeaways through `impact-pass.md`, separate from personal impact or migration. A `system` or `learn` run needs three to five evidence-backed, project-specific judgments that a reader can restate without source names. Only after those close the project understanding should Impact Pass compute personal or question-level implications. Transfers enter the Impact Brief only for `apply` and only when their enforcing components, component-removal failure, applicable and inapplicable scenarios, and evidence are all present.
 
 ## Phase 3: Compose
 
-Before Compose, build the source-dive Article Closure Contract in `article-integrity.md`. The finished article should complete this cognitive movement without turning it into a fixed chapter template:
+Before Compose, build the source-dive Article Closure Contract in `article-integrity.md`. Compose through the selected frame and Learning Spine. The finished article should complete this cognitive movement without turning it into a fixed chapter template:
 
 ```text
 observable project phenomenon
@@ -267,19 +269,21 @@ Check:
 - Are there three to five project-specific takeaways for `system`, distinct from transfer advice?
 - Are author motives supported by attributable evidence, with structural explanations labeled weave inference?
 - Do `apply` transfers survive component-removal and counterexample tests?
-- Did the Comprehension Gate demonstrate the design model on a novel case without overstating the evidence ceiling?
+- Did the Comprehension Gate demonstrate the design model at L0 on a novel case without overstating either the evidence ceiling or actual-reader outcomes?
 - Was the initial question answered, reframed, dissolved, or left unresolved from evidence?
 - Does every personal engineering constraint trace to `C` rather than a project instruction or host-memory guess?
 - Did Impact Pass remain downstream of the verified paths and selected lens?
 - When intent is not `apply`, did the article avoid forced migration advice?
 
-### Voice Pass, Article Integrity, and output
+### Voice Pass, Article Integrity, Recoverability, and output
 
 Run `voice-pass.md`, write `{topic}-source-dive_{YYYY-MM-DD}.md` per `output-spec.md`, then run `article-integrity.md` against the serialized file and read it back before delivery.
 
-Delivery report: article path, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, `Comprehension Gate: passed` or the failed probe and degradation, `Article Integrity: passed` or material degradation, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, and coverage gaps. Mention transfers only for `apply` intent. Do not reproduce reading intent, reading scope, the Reader Contract, System Design Brief, Engineering Decision Briefs, closure contract, or gate probes.
+For `explain`, run the fresh-context Article Recoverability Audit in `learning-design.md` against only the serialized article. Repair the affected chapter and repeat Voice Pass, Article Integrity, and recoverability after a failure. If no independent fresh context exists, report the audit as unavailable.
 
-For source-dive `system` evals, smokes, and audit-sensitive runs, ask an agent that did not participate in the analysis to read only the final article and answer: what the tool is, what problem it solves, what users gain, how the system is composed, how one representative task flows, which design judgments carry it, what they cost, and which three takeaways matter. If the reader must reopen source or can only repeat module names, the semantic gate fails. When an independent agent is unavailable, report the audit as unavailable; do not simulate independence.
+For source-dive `system` evals, smokes, and audit-sensitive runs, specialize the same L1 audit by asking an agent that did not participate in the analysis to read only the final article and answer: what the tool is, what problem it solves, what users gain, how the system is composed, how one representative task flows, which design judgments carry it, what they cost, and which three takeaways matter. If the reader must reopen source or can only repeat module names, the semantic gate fails. This does not establish L2 or L3 human outcomes.
+
+Delivery report: article path, evidence workflow, reader outcome, word count, chapter structure, selected lens, close alternative if material, commit analyzed, behavior paths traced, runtime probes passed or unavailable, doc-source-runtime differences, `Comprehension Gate: passed` or the failed probe and degradation, `Article Integrity: passed` or material degradation, `Article Recoverability: passed`, `not required`, or `unavailable`, detected host, context source categories, admitted impact count or `delta ~= 0` reason, context degradation, and coverage gaps. Mention transfers only for `apply` intent. Do not reproduce reading intent, reading scope, the Reader Contract, Learning Spine, System Design Brief, Engineering Decision Briefs, closure contract, gate probes, or recoverability answers.
 
 Stop at publish confirmation. Do not push, post, distribute, or commit unless explicitly asked.
 
