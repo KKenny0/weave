@@ -53,6 +53,25 @@ function Invoke-NativeCommand {
     return $output
 }
 
+function Get-NormalizedTextSha256 {
+    param(
+        [Parameter(Mandatory)]
+        [string]$LiteralPath
+    )
+
+    $text = [System.IO.File]::ReadAllText($LiteralPath)
+    $normalizedText = $text.Replace("`r`n", "`n").Replace("`r", "`n")
+    $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($normalizedText)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $hashBytes = $sha256.ComputeHash($bytes)
+    }
+    finally {
+        $sha256.Dispose()
+    }
+    return ([System.BitConverter]::ToString($hashBytes) -replace '-', '').ToLowerInvariant()
+}
+
 function Get-CourseAtomicScores {
     param(
         [Parameter(Mandatory)]
@@ -435,12 +454,12 @@ try {
         }
 
         $expectedBaselineHash = 'e0635935c77d92e5a8ed8f70ec29371370fe59ebc0ec15a6e5d12a953cf1bbc8'
-        $actualBaselineHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $courseBaselinePath).Hash.ToLowerInvariant()
+        $actualBaselineHash = Get-NormalizedTextSha256 -LiteralPath $courseBaselinePath
         if ($actualBaselineHash -ne $expectedBaselineHash) {
             throw "Anthropic course baseline SHA-256 mismatch: expected $expectedBaselineHash, found $actualBaselineHash"
         }
         $expectedSaturatedHash = '5354efc7aa016fdae6a4031eedc5ec8809c538bf877475544723fce019764208'
-        $actualSaturatedHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $courseSaturatedPath).Hash.ToLowerInvariant()
+        $actualSaturatedHash = Get-NormalizedTextSha256 -LiteralPath $courseSaturatedPath
         if ($actualSaturatedHash -ne $expectedSaturatedHash) {
             throw "Anthropic course saturated artifact SHA-256 mismatch: expected $expectedSaturatedHash, found $actualSaturatedHash"
         }
