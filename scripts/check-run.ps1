@@ -20,6 +20,29 @@ function Assert-True {
     if (-not $Condition) { throw $Message }
 }
 
+function Get-YamlTagTokens {
+    param([string]$FrontmatterText)
+
+    $section = [regex]::Match($FrontmatterText, '(?ms)^tags:[ \t]*(?<inline>\[[^\]\r\n]*\]|[^\r\n]*)\r?\n(?<items>(?:[ \t]+-\s+[^\r\n]+\r?\n?)*)')
+    if (-not $section.Success) { return @() }
+
+    $rawValues = [System.Collections.Generic.List[string]]::new()
+    $inline = $section.Groups['inline'].Value.Trim()
+    if ($inline.StartsWith('[') -and $inline.EndsWith(']')) {
+        foreach ($value in $inline.Substring(1, $inline.Length - 2).Split(',')) { $rawValues.Add($value) }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($inline)) {
+        $rawValues.Add($inline)
+    }
+    foreach ($match in [regex]::Matches($section.Groups['items'].Value, '(?m)^\s*-\s*(?<value>[^\r\n]+?)\s*$')) {
+        $rawValues.Add($match.Groups['value'].Value)
+    }
+
+    return @($rawValues | ForEach-Object {
+        ([regex]::Replace($_, '\s+#.*$', '')).Trim().Trim('"', "'").ToLowerInvariant()
+    } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
 try {
     $runRoot = [System.IO.Path]::GetFullPath($RunDirectory)
     Assert-True (Test-Path -LiteralPath $runRoot -PathType Container) "Run directory does not exist: $runRoot"
@@ -40,21 +63,16 @@ try {
 
     $frontmatter = [regex]::Match($articleText, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', 'Singleline')
     Assert-True $frontmatter.Success 'Article is missing YAML frontmatter.'
+    $articleBodyText = $articleText.Substring($frontmatter.Length)
     foreach ($field in @('title', 'date', 'tags', 'sources', 'status')) {
         Assert-True ($frontmatter.Groups['body'].Value -match "(?m)^${field}:") "Article frontmatter is missing ${field}."
     }
 
     $frontmatterBody = $frontmatter.Groups['body'].Value
-    $tagsSection = [regex]::Match($frontmatterBody, '(?ms)^tags:\s*(?<inline>\[[^\]\r\n]*\]|[^\r\n]*)\r?\n(?<items>(?:[ \t]+-\s+[^\r\n]+\r?\n?)*)')
-    $hasInlineDeepReadTag = $tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bdeep-read\b'
-    $hasBlockDeepReadTag = $tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*deep-read\s*$'
-    $isDeepRead = $articles[0].Name -match '-deep-read_' -or $hasInlineDeepReadTag -or $hasBlockDeepReadTag
-    $hasInlineSourceDiveTag = $tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsource-dive\b'
-    $hasBlockSourceDiveTag = $tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*source-dive\s*$'
-    $isSourceDive = $articles[0].Name -match '-source-dive_' -or $hasInlineSourceDiveTag -or $hasBlockSourceDiveTag
-    $hasInlineSurveyTag = $tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsurvey\b'
-    $hasBlockSurveyTag = $tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*survey\s*$'
-    $isSurvey = $articles[0].Name -match '-survey_' -or $hasInlineSurveyTag -or $hasBlockSurveyTag
+    $tagTokens = @(Get-YamlTagTokens $frontmatterBody)
+    $isDeepRead = $articles[0].Name -match '-deep-read_' -or ($tagTokens -contains 'deep-read')
+    $isSourceDive = $articles[0].Name -match '-source-dive_' -or ($tagTokens -contains 'source-dive')
+    $isSurvey = $articles[0].Name -match '-survey_' -or ($tagTokens -contains 'survey')
     $workflowCandidates = @(
         if ($isDeepRead) { 'deep-read' }
         if ($isSourceDive) { 'source-dive' }
@@ -150,6 +168,8 @@ try {
         $visualAdmitted = [int]$visualPassStatus[0].Groups['admitted'].Value
         $visualDeleted = [int]$visualPassStatus[0].Groups['deleted'].Value
         Assert-True ($visualAdmitted + $visualDeleted -eq $visualCandidates) 'Survey Visual Pass counts must reconcile.'
+        $serializedVisualCount = ([regex]::Matches($articleBodyText, '(?im)^\s*<!--\s*weave-visual\s*-->\s*$')).Count
+        Assert-True ($visualAdmitted -eq $serializedVisualCount) "Survey Visual Pass admitted count ($visualAdmitted) must equal serialized article visual markers ($serializedVisualCount)."
     }
     else {
         Assert-True ($visualPassStatus.Count -eq 0 -and $humanReviewStatus.Count -eq 0) 'Non-Survey reports must not claim Survey-only Visual Pass or human Self-review status.'

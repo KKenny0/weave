@@ -1,6 +1,6 @@
 # Voice Pass
 
-Runs after Compose and before final file write. Mandatory, not optional — AI patterns are invisible to the writer-agent. Survey runs the prose scan during Refine, performs its Visual Pass, then reruns the scan on changed prose and captions before writing the final file.
+Runs after Compose and before final file write. Mandatory, not optional — AI patterns are invisible to the writer-agent. In Survey Refine, invoke `/write` first when installed, then use this Weave-specific pass; when `/write` is unavailable, this file supplies the manual fallback and the report records that degradation. Survey carries visual decisions across all phases, performs final admission in its Visual Pass, then reruns the scan on changed prose and captions before writing the final file.
 
 ## Step 1: De-AI scan (universal)
 

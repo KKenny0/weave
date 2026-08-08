@@ -10,7 +10,7 @@
 
 weave 是一个面向深度研究的 Agent Skill。给它一组文章、一篇论文、一个技术项目，或者一个领域名称，它会产出一篇有证据、有判断、可以独立阅读的中文长文。
 
-它不会直接把素材压成摘要。Deep Read 和 Source Dive 会根据素材与问题建立证据模型、比较取景框并测试边界；Survey 则直接采用 Learn 的 Collect、Digest、Outline、Fill、Refine、Self-review 主干，在正式写作前增加一次用户可见的 Spine Direction Gate，在精炼后增加一次稀疏的 Visual Pass。三条路线最后都要通过预留证据、理解检验、Voice Pass 和实际成稿检查。
+它不会直接把素材压成摘要。Deep Read 和 Source Dive 会根据素材与问题建立证据模型、比较取景框并测试边界；Survey 则直接采用 Learn 的 Collect、Digest、Outline、Fill、Refine、Self-review 主干，在正式写作前增加一次用户可见的 Spine Direction Gate。视觉判断从 Collect 就开始积累证据，经过 Digest、Outline、Fill 和 Refine，最后才由稀疏的 Visual Pass 决定是否保留。三条路线最后都要通过预留证据、理解检验、Voice Pass 和实际成稿检查。
 
 ```text
 宿主能力 → Context Envelope C
@@ -68,11 +68,11 @@ Source Dive 不按目录或文件大小写源码清单。它保留触发、入�
 
 ### Survey
 
-Survey 的唯一主干来自 Learn：Collect 先建立一手证据为主的来源集；Digest 完整阅读并用三条 claim test 决定保留、背景或删除；Outline 要求每一节先映射来源；Fill 按节写作，卡住就回到 Digest；Refine 只做结构与表达修正；最后把 agent preflight 和用户逐行 Self-review 分开。
+Survey 的唯一主干来自 Learn：先检查 `/read` 与 `/write` 是否可用；Collect 对每个来源严格分开 Discover、Fetch、File，并以一手证据承载方法、结果、机制与局限；Digest 完整阅读并用三条 claim test 决定保留、背景或删除；Outline 要求每一节先映射来源；Fill 按节写作，卡住就回到 Digest；Refine 只做结构与表达修正；最后把 agent preflight 和用户逐行 Self-review 分开。模式确实不明确时优先建议 Quick Reference。
 
 两项定制插在 Learn 主干的固定位置。Outline 之后、Fill 之前运行 Spine Direction Gate：候选可以是贯穿线型、扬弃型论证或议题/警示重心，但必须由证据准入并真正改变章节顺序、材料分组、解释因果或最终边界。贯穿线必须选择“奖励信号”“上下文窗口”这类可追踪的具体对象，并用 `📍` 标记每一站的状态变化。系统不会先自动选一个 frame，再让用户选择另一个装饰性 spine。
 
-Refine 之后、Self-review 之前运行 Visual Pass。它先判断文字不擅长表达的是结构、因果、循环、曲线、权衡、矩阵、对齐案例还是最小公式，再做删除测试：去掉图没有损失，就删掉。保留的图必须放在白话解释和例子之后，每个节点、箭头或曲线都能回到证据或明确标为 Weave 综合；一篇长文只有少量图，甚至没有图，都是合格结果。
+视觉不是 Refine 后才补的装饰。Collect 记录关系与边界证据，Digest 判断思想形状，Outline 固定“人话解释 → 具体案例 → 可选图 → 紧随其后的证据与适用边界”，Fill 先写解释与案例，Refine 再做表征和删除测试；之后、Self-review 之前的 Visual Pass 只是最终准入与渲染。去掉图没有损失就删掉；只看图也必须能说清概念如何作用和论文改变了什么判断，却不能得到超出实验支持的结论。每个保留图都必须在正前方放置唯一的 `<!-- weave-visual -->` 标记，交付报告的 admitted 数量必须与成稿标记数一致。ASCII 图必须使用成对的 Org `#+begin_example` / `#+end_example` 块，每行不超过 80 个 ASCII 字符，不得使用 Markdown 围栏或缩进代码块。
 
 ## 候选框怎么过关
 
@@ -241,12 +241,15 @@ weave/
 │   ├── voice-pass.md
 │   └── output-spec.md
 └── evals/
+    ├── anthropic-course-baseline.md
+    ├── anthropic-course-benchmark.md
+    ├── anthropic-course-saturated.md
     ├── evals.json
     ├── frame-quality.md
     └── smoke.md
 ```
 
-`evals/evals.json` 包含 24 个回归场景，除原有的素材、项目、领域和 Impact 路径外，还覆盖错误初始问题的修复、闭卷重建、新例预测、反例收缩、不强迫迁移的工程作品阅读、DeepChat 全系统理解、研究模型与真实读者证据的分层、Survey Learn 主干、Spine Direction Gate、Visual Pass、分类完整性，以及公开读者准入、时效边界、Editorial no-op 和反传播诱导。`evals/frame-quality.md` 定义候选框和 Survey spine 的准入、预留测试、成稿恢复性与成文追溯。
+`evals/evals.json` 包含 26 个回归场景，除原有的素材、项目、领域和 Impact 路径外，还覆盖错误初始问题的修复、闭卷重建、新例预测、反例收缩、不强迫迁移的工程作品阅读、DeepChat 全系统理解、研究模型与真实读者证据的分层、Survey Learn 主干、Spine Direction Gate、跨阶段 Visual 协议、分类完整性，以及公开读者准入、时效边界、Editorial no-op 和反传播诱导。`evals/anthropic-course-baseline.md` 与 `evals/anthropic-course-saturated.md` 保存可复算的基线和饱和成稿，`evals/anthropic-course-benchmark.md` 定义 Anthropic API 公开课程结构与学习目标的原子评分、迭代、跨阶段视觉审计和停止证据；`evals/frame-quality.md` 定义候选框和 Survey spine 的准入、预留测试、成稿恢复性与成文追溯。
 `evals/smoke.md` 提供安装后逐路线、Survey 两轮选择与一次性委托、跨宿主能力发现和背景冲突处理的人工回归协议。
 
 维护者可以使用 PowerShell 7 从仓库根目录运行统一验证入口：

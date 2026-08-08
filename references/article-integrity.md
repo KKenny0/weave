@@ -64,13 +64,15 @@ For Deep Read or Source Dive `map` also check:
 
 For survey also check:
 
-- the Survey Visual Pass completed after Refine and before agent preflight;
+- visual judgment is traceable through Collect, Digest, Outline, Fill, and Refine, with the Survey Visual Pass completing final admission before agent preflight;
 - the file fulfills the confirmed Survey mode and exact article promise rather than defaulting to a domain-map template;
 - the article follows the user-selected, evidence-admitted spine; there is no second lens structure competing with it;
 - every load-bearing section serves the spine and maps to admitted Digest evidence;
 - a throughline tracks one concrete object through consistent `📍` state changes, while a dialectical or issue-centered spine preserves its conflict or evidence chain;
 - a `Canonical Article` is self-contained inside its declared scope, works examples rather than naming them, includes supported common mistakes, and closes with three to five useful Further Reading items;
-- every admitted visual adds a relationship that the nearby prose does not already make equally recoverable, appears after plain-language grounding, has a bold one-line caption, and stays inside the evidence boundary;
+- every admitted visual adds a relationship that the nearby prose does not already make equally recoverable, has exactly one standalone `<!-- weave-visual -->` marker immediately before it, appears after plain-language grounding and a concrete example, has a bold one-line caption followed immediately by supporting evidence and applicability boundary, and stays inside the evidence boundary;
+- every ASCII visual uses one paired, non-nested Org `#+begin_example` / `#+end_example` block, never a Markdown fence or naked ASCII art, and no content line exceeds 80 ASCII columns;
+- the visual-only Self-review can recover the supported interaction and changed judgment without inferring beyond the cited experiments;
 - no visual contains unsupported nodes, arrows, comparisons, or broken asset references;
 - field-wide momentum, prevalence, consensus, or decline claims have trend-capable evidence or are scoped to the current source set;
 - the final coverage boundary matches the admitted corpus and claim-strength ceiling;
@@ -124,7 +126,7 @@ Resolve `<weave-skill-root>` from the installed skill location; do not assume th
 
 The executable gate rejects files larger than 512 KiB before reading the full Markdown. This is a safety bound for the serialized-article scanner, not a target article size.
 
-The checker covers only unambiguous properties: required frontmatter, title/H1 agreement, duplicate sources, known malformed source shapes, fence balance, malformed punctuation, damaged blockquotes, repeated long fragments, and leaked internal-artifact headings. It ignores fenced code when scanning prose and excludes a final Further Reading or reference appendix from repeated-fragment detection, because a source title may legitimately recur there.
+The checker covers only unambiguous properties: required frontmatter, title/H1 agreement, duplicate sources, known malformed source shapes, fence balance, malformed punctuation, damaged blockquotes, repeated long fragments, leaked internal-artifact headings, Survey visual-marker attachment, and Survey Org ASCII syntax. It ignores typed fenced code when scanning prose and excludes a final Further Reading or reference appendix from repeated-fragment detection, because a source title may legitimately recur there.
 
 Then read the file once more. Mechanical success cannot prove title closure, correct attribution, temporal honesty, or good prose.
 

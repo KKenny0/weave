@@ -2,6 +2,8 @@
 
 Gather primary sources. Three input cases — handle each explicitly.
 
+For Survey only, `survey.md` replaces the generic mechanics below with the stricter Learn contract: check `/read`, then keep Discover, Fetch, and File as three ordered operations for every source. Discovery returns URLs only; Fetch uses `/read` when installed; File indexes or moves the returned local copy without refetching. Deep Read and Source Dive continue to use the shared behavior below unchanged.
+
 ## Case 1: User provided sources (URL / PDF / file / pasted text)
 
 Skip auto-scout. Use what the user gave. Move directly to the workflow-specific Phase 2.

@@ -12,6 +12,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $skillPath = Join-Path $repoRoot 'SKILL.md'
 $evalPath = Join-Path $repoRoot 'evals/evals.json'
+$courseBaselinePath = Join-Path $repoRoot 'evals/anthropic-course-baseline.md'
+$courseSaturatedPath = Join-Path $repoRoot 'evals/anthropic-course-saturated.md'
 $scriptPath = Join-Path $repoRoot 'scripts/check.ps1'
 $runCheckPath = Join-Path $repoRoot 'scripts/check-run.ps1'
 $articleCheckPath = Join-Path $repoRoot 'scripts/check-article.ps1'
@@ -51,6 +53,169 @@ function Invoke-NativeCommand {
     return $output
 }
 
+function Get-CourseAtomicScores {
+    param(
+        [Parameter(Mandatory)]
+        [string]$AtomicText,
+
+        [Parameter(Mandatory)]
+        [string]$Label
+    )
+
+    $expectedSections = [ordered]@{
+        'Getting started with Claude' = 16
+        'Prompt engineering & evaluation' = 16
+        'Tool use with Claude' = 14
+        'Retrieval augmented generation' = 10
+        'Model Context Protocol (MCP)' = 12
+        'Claude Code & Computer Use' = 8
+        'Agents and workflows' = 11
+    }
+    $sectionRows = [regex]::Matches($AtomicText, '(?m)^\| (?<name>[^|]+?) \| (?<count>\d+) \| (?<p1>[01]) \| (?<p2>[01]) \| (?<p3>[01]) \| (?<p4>[01]) \| (?<p5>[01]) \| (?<sum>[0-5]) \|$')
+    if ($sectionRows.Count -ne 7) {
+        throw "Anthropic course $Label atomic record must contain exactly seven section rows; found $($sectionRows.Count)."
+    }
+    $weightedProbeSum = 0
+    $displayedLectureSum = 0
+    $seenSections = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($row in $sectionRows) {
+        $sectionName = $row.Groups['name'].Value.Trim()
+        if (-not $expectedSections.Contains($sectionName)) {
+            throw "Anthropic course $Label atomic record contains an unknown section: $sectionName"
+        }
+        if (-not $seenSections.Add($sectionName)) {
+            throw "Anthropic course $Label atomic record contains a duplicate section: $sectionName"
+        }
+        $probeSum = [int]$row.Groups['p1'].Value + [int]$row.Groups['p2'].Value + [int]$row.Groups['p3'].Value + [int]$row.Groups['p4'].Value + [int]$row.Groups['p5'].Value
+        if ($probeSum -ne [int]$row.Groups['sum'].Value) {
+            throw "Anthropic course $Label section probe row has an incorrect p_i sum: $($row.Groups['name'].Value)"
+        }
+        $lectureCount = [int]$row.Groups['count'].Value
+        if ($lectureCount -ne [int]$expectedSections[$sectionName]) {
+            throw "Anthropic course $Label section $sectionName must use the fixed public lecture count $($expectedSections[$sectionName]); found $lectureCount."
+        }
+        $displayedLectureSum += $lectureCount
+        $weightedProbeSum += $lectureCount * $probeSum
+    }
+    if ($displayedLectureSum -ne 87) {
+        throw "Anthropic course $Label atomic section lecture counts must sum to 87; found $displayedLectureSum."
+    }
+
+    $objectiveRows = [regex]::Matches($AtomicText, '(?m)^\| (?<objective>O[1-7]) \| (?<concept>[01]) \| (?<operation>[01]) \| (?<failure>[01]) \| (?<boundary>[01]) \| (?<pass>[01]) \|$')
+    if ($objectiveRows.Count -ne 7) {
+        throw "Anthropic course $Label atomic record must contain exactly seven objective rows; found $($objectiveRows.Count)."
+    }
+    $passedObjectives = 0
+    $seenObjectives = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($row in $objectiveRows) {
+        $objectiveName = $row.Groups['objective'].Value
+        if (-not $seenObjectives.Add($objectiveName)) {
+            throw "Anthropic course $Label atomic record contains a duplicate objective: $objectiveName"
+        }
+        $expectedPass = if ($row.Groups['concept'].Value -eq '1' -and $row.Groups['operation'].Value -eq '1' -and $row.Groups['failure'].Value -eq '1' -and $row.Groups['boundary'].Value -eq '1') { 1 } else { 0 }
+        if ([int]$row.Groups['pass'].Value -ne $expectedPass) {
+            throw "Anthropic course $Label objective verdict does not match its atomic probes."
+        }
+        $passedObjectives += $expectedPass
+    }
+
+    $componentRows = [regex]::Matches($AtomicText, '(?m)^\| (?<rubric>[CDE]) \| (?<v1>\d+) \| (?<v2>\d+) \| (?<v3>\d+) \| (?<v4>\d+|-) \| (?<score>\d+\.\d) \|$')
+    if ($componentRows.Count -ne 3) {
+        throw "Anthropic course $Label atomic record must contain exactly three C/D/E component rows; found $($componentRows.Count)."
+    }
+    $componentMaximums = @{
+        C = @(5, 5, 5, 5)
+        D = @(3, 3, 2, 2)
+        E = @(2, 2, 1, 0)
+    }
+    $componentScores = @{}
+    foreach ($row in $componentRows) {
+        $rubric = $row.Groups['rubric'].Value
+        if ($componentScores.ContainsKey($rubric)) {
+            throw "Anthropic course $Label atomic record contains a duplicate component row: $rubric"
+        }
+        if ($rubric -eq 'E' -and $row.Groups['v4'].Value -ne '-') {
+            throw "Anthropic course $Label E component row must use '-' for the unused fourth component."
+        }
+        if ($rubric -ne 'E' -and $row.Groups['v4'].Value -eq '-') {
+            throw "Anthropic course $Label $rubric component row must contain four numeric components."
+        }
+        $values = @(
+            [int]$row.Groups['v1'].Value,
+            [int]$row.Groups['v2'].Value,
+            [int]$row.Groups['v3'].Value,
+            $(if ($row.Groups['v4'].Value -eq '-') { 0 } else { [int]$row.Groups['v4'].Value })
+        )
+        for ($index = 0; $index -lt 4; $index++) {
+            if ($values[$index] -gt $componentMaximums[$rubric][$index]) {
+                throw "Anthropic course $Label $rubric component $($index + 1) exceeds its rubric maximum."
+            }
+        }
+        $computedScore = [double](($values | Measure-Object -Sum).Sum)
+        $storedScore = [double]::Parse($row.Groups['score'].Value, [System.Globalization.CultureInfo]::InvariantCulture)
+        if ($storedScore -ne $computedScore) {
+            throw "Anthropic course $Label $rubric component score is incorrect: stored $storedScore, computed $computedScore."
+        }
+        $componentScores[$rubric] = $storedScore
+    }
+
+    return [pscustomobject]@{
+        A = [Math]::Round(40.0 * $weightedProbeSum / 435.0, 1, [System.MidpointRounding]::AwayFromZero)
+        B = [Math]::Round(25.0 * $passedObjectives / 7.0, 1, [System.MidpointRounding]::AwayFromZero)
+        C = $componentScores.C
+        D = $componentScores.D
+        E = $componentScores.E
+    }
+}
+
+function Get-CourseLedgerRecord {
+    param(
+        [Parameter(Mandatory)]
+        [string]$BenchmarkText,
+
+        [Parameter(Mandatory)]
+        [string]$RunLabel
+    )
+
+    $runPattern = '^\|\s*' + [regex]::Escape($RunLabel) + '\s*\|'
+    $lines = @($BenchmarkText -split "`r?`n" | Where-Object { $_ -match $runPattern })
+    if ($lines.Count -ne 1) {
+        throw "Anthropic course benchmark requires exactly one $RunLabel ledger row."
+    }
+    $cells = @($lines[0].Trim('|').Split('|') | ForEach-Object { $_.Trim() })
+    if ($cells.Count -ne 12) {
+        throw "Anthropic course $RunLabel ledger row must contain exactly 12 cells; found $($cells.Count)."
+    }
+    foreach ($scoreIndex in 3..8) {
+        if ($cells[$scoreIndex] -notmatch '^\d+\.\d$') {
+            throw "Anthropic course $RunLabel score must use exactly one decimal place: $($cells[$scoreIndex])"
+        }
+    }
+
+    $parseCulture = [System.Globalization.CultureInfo]::InvariantCulture
+    $scores = @(3..8 | ForEach-Object { [double]::Parse($cells[$_], $parseCulture) })
+    $maximums = @(40.0, 25.0, 20.0, 10.0, 5.0, 100.0)
+    for ($index = 0; $index -lt $scores.Count; $index++) {
+        if ($scores[$index] -lt 0.0 -or $scores[$index] -gt $maximums[$index]) {
+            throw "Anthropic course $RunLabel score is outside its rubric range: $($scores[$index]) > $($maximums[$index])"
+        }
+    }
+    $computedTotal = [Math]::Round($scores[0] + $scores[1] + $scores[2] + $scores[3] + $scores[4], 1, [System.MidpointRounding]::AwayFromZero)
+    if ($scores[5] -ne $computedTotal) {
+        throw "Anthropic course $RunLabel total does not match stored components: stored $($scores[5]), computed $computedTotal"
+    }
+
+    return [pscustomobject]@{
+        Cells = $cells
+        A = $scores[0]
+        B = $scores[1]
+        C = $scores[2]
+        D = $scores[3]
+        E = $scores[4]
+        Total = $scores[5]
+    }
+}
+
 function Get-ProductMarkdownFiles {
     $files = @(
         (Join-Path $repoRoot 'SKILL.md'),
@@ -63,6 +228,33 @@ function Get-ProductMarkdownFiles {
     return $files
 }
 
+function Get-ExpectedRuntimeFiles {
+    $files = @(
+        'MIGRATION.md',
+        'README.en.md',
+        'README.md',
+        'SKILL.md',
+        'assets/weave-mark.svg',
+        'scripts/check.ps1',
+        'scripts/check-article.ps1',
+        'scripts/check-run.ps1',
+        'evals/anthropic-course-baseline.md',
+        'evals/anthropic-course-benchmark.md',
+        'evals/anthropic-course-saturated.md',
+        'evals/evals.json',
+        'evals/frame-quality.md',
+        'evals/smoke.md'
+    )
+    $files += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
+    return @($files | Sort-Object -Unique)
+}
+
+function Get-OptionalRuntimeFiles {
+    # skills@1.5.17 may preserve repository CI metadata for a direct local install,
+    # but the workflow is not required by the installed skill runtime.
+    return @('.github/workflows/check.yml')
+}
+
 try {
     Invoke-Check 'required files and SKILL frontmatter' {
         $required = @(
@@ -72,6 +264,9 @@ try {
             'scripts/check-article.ps1',
             'scripts/check-run.ps1',
             'evals/evals.json',
+            'evals/anthropic-course-baseline.md',
+            'evals/anthropic-course-benchmark.md',
+            'evals/anthropic-course-saturated.md',
             'evals/smoke.md',
             'references/collect.md',
             'references/article-integrity.md',
@@ -105,6 +300,11 @@ try {
         if (-not $description.Success -or [string]::IsNullOrWhiteSpace($description.Groups['value'].Value)) {
             throw 'SKILL.md frontmatter must contain a description.'
         }
+        foreach ($requiredSkillContract in @('Only after routing to Survey', 'prefix the first response line with 🥷 inline', 'support the user''s thinking rather than replacing it', 'This clause does not alter Deep Read or Source Dive', 'check whether `/read` and `/write` are installed', 'cross-phase visual protocol', '<!-- weave-visual -->', '#+begin_example', '#+end_example', '80 ASCII columns')) {
+            if ($skillText -notmatch [regex]::Escape($requiredSkillContract)) {
+                throw "SKILL.md is missing upstream Learn or Survey visual contract: $requiredSkillContract"
+            }
+        }
     }
 
     Invoke-Check 'eval JSON shape and unique IDs' {
@@ -124,7 +324,7 @@ try {
         if (($names | Sort-Object -Unique).Count -ne $names.Count) {
             throw 'evals/evals.json contains duplicate names.'
         }
-        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding', 'publication-reader-research-consequence', 'publication-reader-time-bound', 'publication-reader-editorial-noop', 'publication-reader-no-amplification', 'reader-evidence-truth-boundary', 'reader-effect-editorial-routing', 'survey-learn-canonical-article', 'survey-spine-direction-gate', 'survey-visual-pass', 'survey-classification-integrity')) {
+        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding', 'publication-reader-research-consequence', 'publication-reader-time-bound', 'publication-reader-editorial-noop', 'publication-reader-no-amplification', 'reader-evidence-truth-boundary', 'reader-effect-editorial-routing', 'survey-learn-canonical-article', 'survey-spine-direction-gate', 'survey-visual-pass', 'survey-classification-integrity', 'survey-cross-phase-visual-contract', 'survey-anthropic-api-course-benchmark')) {
             if ($requiredEvalName -notin $names) {
                 throw "evals/evals.json is missing reader-model regression: $requiredEvalName"
             }
@@ -158,7 +358,7 @@ try {
             }
         }
         $surveyLearnExpectations = @($evals | Where-Object { $_.name -like 'survey-*' } | ForEach-Object { $_.expectations }) -join "`n"
-        foreach ($requiredSurveyLearnConcept in @('Canonical Article', 'Collect', 'Digest', 'Outline', 'Fill', 'Refine', 'Spine Direction Gate', 'explicitly selects', 'through-object', 'Visual Pass', 'prose reflow', '80 columns', 'Article Integrity', 'Article Recoverability', 'Human Self-review', 'trend-capable evidence', 'hybrid method')) {
+        foreach ($requiredSurveyLearnConcept in @('Canonical Article', 'Collect', 'Digest', 'Outline', 'Fill', 'Refine', 'Spine Direction Gate', 'explicitly selects', 'through-object', 'Visual Pass', 'prose reflow', '<!-- weave-visual -->', '#+begin_example', '#+end_example', '80 ASCII columns', 'immediately followed', 'standalone', 'Article Integrity', 'Article Recoverability', 'Human Self-review', 'trend-capable evidence', 'hybrid method', 'course page and access date', 'baseline', 'stopping decision')) {
             if ($surveyLearnExpectations -notmatch [regex]::Escape($requiredSurveyLearnConcept)) {
                 throw "Survey Learn evals do not cover required concept: $requiredSurveyLearnConcept"
             }
@@ -222,10 +422,54 @@ try {
             }
         }
         $surveyText = Get-Content -LiteralPath (Join-Path $repoRoot 'references/survey.md') -Raw
-        foreach ($requiredSurveyConcept in @('## Mode Gate', '## Phase 1: Collect', '## Phase 2: Digest', '## Phase 3: Outline', '## Spine Direction Gate', '## Phase 4: Fill', '## Phase 5: Refine', '## Phase 5.5: Visual Pass', '## Phase 6: Self-review', 'two or three candidates', 'explicit choice', 'concrete through-object', '📍', '80 columns', 'Survey has no Domain Payoff')) {
+        foreach ($requiredSurveyConcept in @('## Mode Gate', '| Mode | Goal | Entry | Exit |', '| **Quick Reference** | Build a working mental model fast, no article planned | Phase 2 | Phase 2: notes only |', 'collection prerequisite', '## Learn pre-check', 'Prefix the first Survey response line with 🥷 inline', 'Support the user''s thinking; do not replace it', '## Phase 1: Collect', '## Phase 2: Digest', '## Phase 3: Outline', '## Spine Direction Gate', '## Phase 4: Fill', '## Phase 5: Refine', '## Phase 5.5: Visual Pass', '## Phase 6: Self-review', '/read', '/write', '**Discover**', '**Fetch**', '**File**', 'official specifications and documentation', 'first-party technical blogs or reports', 'systematic reviews and textbooks', '### Conversation or review distillation', 'opening sentence rewritten three times', 'accurate mental model, an executable or inspectable operation, a common failure, and an evidence or version boundary', 'two or three candidates', 'explicit choice', 'concrete through-object', '📍', '<!-- weave-visual -->', '#+begin_example', '#+end_example', '80 ASCII columns', 'supporting evidence and applicability boundary immediately after', 'standalone test', 'Survey has no Domain Payoff')) {
             if ($surveyText -notmatch [regex]::Escape($requiredSurveyConcept)) {
                 throw "Survey is missing Learn-based workflow concept: $requiredSurveyConcept"
             }
+        }
+        $courseBenchmarkText = Get-Content -LiteralPath (Join-Path $repoRoot 'evals/anthropic-course-benchmark.md') -Raw
+        foreach ($requiredBenchmarkConcept in @('Building with the Claude API', '## Public course inventory', 'Getting started with Claude', 'Prompt engineering & evaluation', 'Tool use with Claude', 'Retrieval augmented generation', 'Model Context Protocol (MCP)', 'Claude Code & Computer Use', 'Agents and workflows', '84 lectures', '8.1 hours', '10 quizzes', 'displayed lecture counts sum to 87', '## 100-point rubric', '### A. Section coverage — 40 points', 'five binary probes', 'A = 40 × Σ(c_i × p_i) / (87 × 5)', '### B. Objective completion — 25 points', 'B = 25 × passed objectives / 7', 'there is no partial objective credit', '### C. Correctness and evidence — 20 points', '### D. Learnability and integration — 10 points', '### E. Artifact and visual integrity — 5 points', '## Hard fails', 'at least 85/100', 'at least 92/100', '## Run ledger', '## Iteration 3 cross-phase visual audit', 'Iteration 3 — saturated', '100.0', '## Defect analysis', '## Saturation gate', 'no proposed workflow change', '### Authoritative baseline atomic record', 'Σ(c_i × p_i) = 375', 'passed objectives = 2', '### Saturated comparison atomic record', 'Σ(c_i × p_i) = 435', 'passed objectives = 7', 'evals/anthropic-course-baseline.md', 'e0635935c77d92e5a8ed8f70ec29371370fe59ebc0ec15a6e5d12a953cf1bbc8', 'evals/anthropic-course-saturated.md', '5354efc7aa016fdae6a4031eedc5ec8809c538bf877475544723fce019764208')) {
+            if ($courseBenchmarkText -notmatch [regex]::Escape($requiredBenchmarkConcept)) {
+                throw "Anthropic course benchmark is missing required concept: $requiredBenchmarkConcept"
+            }
+        }
+
+        $expectedBaselineHash = 'e0635935c77d92e5a8ed8f70ec29371370fe59ebc0ec15a6e5d12a953cf1bbc8'
+        $actualBaselineHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $courseBaselinePath).Hash.ToLowerInvariant()
+        if ($actualBaselineHash -ne $expectedBaselineHash) {
+            throw "Anthropic course baseline SHA-256 mismatch: expected $expectedBaselineHash, found $actualBaselineHash"
+        }
+        $expectedSaturatedHash = '5354efc7aa016fdae6a4031eedc5ec8809c538bf877475544723fce019764208'
+        $actualSaturatedHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $courseSaturatedPath).Hash.ToLowerInvariant()
+        if ($actualSaturatedHash -ne $expectedSaturatedHash) {
+            throw "Anthropic course saturated artifact SHA-256 mismatch: expected $expectedSaturatedHash, found $actualSaturatedHash"
+        }
+
+        $baselineAtomicMatch = [regex]::Match($courseBenchmarkText, '(?ms)^### Authoritative baseline atomic record\s*(?<body>.*?)(?=^### Saturated comparison atomic record\s*$)')
+        $saturatedAtomicMatch = [regex]::Match($courseBenchmarkText, '(?ms)^### Saturated comparison atomic record\s*(?<body>.*?)(?=^\| Run \|)')
+        if (-not $baselineAtomicMatch.Success -or -not $saturatedAtomicMatch.Success) {
+            throw 'Anthropic course benchmark must contain separate baseline and saturated atomic records.'
+        }
+        $baselineAtomic = Get-CourseAtomicScores -AtomicText $baselineAtomicMatch.Groups['body'].Value -Label 'baseline'
+        $saturatedAtomic = Get-CourseAtomicScores -AtomicText $saturatedAtomicMatch.Groups['body'].Value -Label 'saturated'
+
+        $baselineLedger = Get-CourseLedgerRecord -BenchmarkText $courseBenchmarkText -RunLabel 'Authoritative rescore'
+        if ($baselineLedger.A -ne $baselineAtomic.A -or $baselineLedger.B -ne $baselineAtomic.B -or $baselineLedger.C -ne $baselineAtomic.C -or $baselineLedger.D -ne $baselineAtomic.D -or $baselineLedger.E -ne $baselineAtomic.E) {
+            throw "Anthropic course authoritative scores do not match baseline atomic records."
+        }
+        if ($baselineLedger.Cells[2] -notmatch [regex]::Escape('evals/anthropic-course-baseline.md') -or $baselineLedger.Cells[2] -notmatch $expectedBaselineHash) {
+            throw 'Anthropic course authoritative ledger does not identify the verified baseline artifact and hash.'
+        }
+
+        $saturatedLedger = Get-CourseLedgerRecord -BenchmarkText $courseBenchmarkText -RunLabel 'Iteration 3 — saturated'
+        if ($saturatedLedger.A -ne $saturatedAtomic.A -or $saturatedLedger.B -ne $saturatedAtomic.B -or $saturatedLedger.C -ne $saturatedAtomic.C -or $saturatedLedger.D -ne $saturatedAtomic.D -or $saturatedLedger.E -ne $saturatedAtomic.E) {
+            throw "Anthropic course saturated scores do not match saturated atomic records."
+        }
+        if ($saturatedLedger.C -ne 20.0 -or $saturatedLedger.D -ne 10.0 -or $saturatedLedger.E -ne 5.0 -or $saturatedLedger.Total -ne 100.0) {
+            throw 'Anthropic course saturated ledger must preserve the independently audited 20.0/10.0/5.0 component scores and 100.0 total.'
+        }
+        if ($saturatedLedger.Cells[2] -notmatch [regex]::Escape('evals/anthropic-course-saturated.md') -or $saturatedLedger.Cells[2] -notmatch $expectedSaturatedHash) {
+            throw 'Anthropic course saturated ledger does not identify the verified saturated artifact and hash.'
         }
         $articleIntegrityText = Get-Content -LiteralPath (Join-Path $repoRoot 'references/article-integrity.md') -Raw
         foreach ($requiredIntegrityConcept in @('Every deep-read, source-dive, and survey run', 'For Deep Read or Source Dive `explain` also check', 'For Deep Read or Source Dive `map` also check', 'For survey also check', 'selected Survey spine', 'Visual Pass')) {
@@ -340,11 +584,29 @@ Artifact: .weave-frame/pre-reveal.md
             $surveyRouteRoot = Join-Path $fixtureRoot 'survey-route'
             New-Item -ItemType Directory -Path (Join-Path $surveyRouteRoot '.weave-frame') -Force | Out-Null
             Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $surveyRouteRoot '.weave-frame/pre-reveal.md')
-            $surveyArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', "tags: [survey]`ntopic: test`nscope: focused`nrelated:`n  - deep-read")
-            $surveyArticle | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'test-survey_2026-07-14.md') -Encoding utf8NoBOM
-            $surveyReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Evidence workflow: deep-read', 'Evidence workflow: survey').Replace('Reader outcome: map', "Survey mode: Deep Research`nVisual Pass: candidates=3, admitted=1, deleted=2`nHuman Self-review: pending")
+            $surveyArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', "tags:`n  - survey # route comment`ntopic: test`nscope: focused`nrelated:`n  - deep-read")
+            $surveyArticle | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'nonstandard-name.md') -Encoding utf8NoBOM
+            $surveyReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Evidence workflow: deep-read', 'Evidence workflow: survey').Replace('Reader outcome: map', "Survey mode: Deep Research`nVisual Pass: candidates=2, admitted=0, deleted=2`nHuman Self-review: pending")
             $surveyReport | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'smoke-report.md') -Encoding utf8NoBOM
             $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $surveyRouteRoot, '-ImpactMode', 'personal')
+
+            $visualCountMismatchRoot = Join-Path $fixtureRoot 'visual-count-mismatch'
+            New-Item -ItemType Directory -Path (Join-Path $visualCountMismatchRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $surveyRouteRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $visualCountMismatchRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $surveyRouteRoot 'nonstandard-name.md') -Destination (Join-Path $visualCountMismatchRoot 'nonstandard-name.md')
+            $surveyReport.Replace('Visual Pass: candidates=2, admitted=0, deleted=2', 'Visual Pass: candidates=2, admitted=1, deleted=1') | Set-Content -LiteralPath (Join-Path $visualCountMismatchRoot 'smoke-report.md') -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $visualCountMismatchRoot -ImpactMode personal 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Run verifier accepted a Survey admitted count that differs from serialized visual markers.'
+            }
+
+            $exactTagRoot = Join-Path $fixtureRoot 'exact-tag-route'
+            New-Item -ItemType Directory -Path (Join-Path $exactTagRoot '.weave-frame') -Force | Out-Null
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $exactTagRoot '.weave-frame/pre-reveal.md')
+            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $exactTagRoot 'smoke-report.md')
+            $exactTagArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', 'tags: [deep-read, survey-notes, source-dive-notes]')
+            $exactTagArticle | Set-Content -LiteralPath (Join-Path $exactTagRoot 'nonstandard-name.md') -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $exactTagRoot, '-ImpactMode', 'personal')
 
             $reportLeakRoot = Join-Path $fixtureRoot 'report-leak'
             New-Item -ItemType Directory -Path (Join-Path $reportLeakRoot '.weave-frame') -Force | Out-Null
@@ -556,6 +818,225 @@ status: draft
 ```text
 code remains open
 '@
+                'survey-unclosed-org-example.md' = @'
+---
+title: survey unclosed org example
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey unclosed org example
+
+<!-- weave-visual -->
+#+begin_example
+A --> B
+'@
+                'survey-orphan-org-end.md' = @'
+---
+title: survey orphan org end
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey orphan org end
+
+#+end_example
+'@
+                'survey-nested-org-example.md' = @'
+---
+title: survey nested org example
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey nested org example
+
+<!-- weave-visual -->
+#+begin_example
+#+begin_example
+A --> B
+#+end_example
+#+end_example
+'@
+                'survey-invalid-org-delimiter.md' = @'
+---
+title: survey invalid org delimiter
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey invalid org delimiter
+
+<!-- weave-visual -->
+#+begin_example ascii
+A --> B
+#+end_example
+'@
+                'survey-markdown-fenced-ascii.md' = @'
+---
+title: survey markdown fenced ascii
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey markdown fenced ascii
+
+<!-- weave-visual -->
+```text
+A --> B
+```
+'@
+                'survey-naked-ascii.md' = @'
+---
+title: survey naked ascii
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey naked ascii
+
+A --> B
+'@
+                'survey-indented-naked-ascii.md' = @'
+---
+title: survey indented naked ascii
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey indented naked ascii
+
+    A => B
+
+	A ==> B
+'@
+                'survey-unmarked-org-visual.md' = @'
+---
+title: survey unmarked org visual
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey unmarked org visual
+
+#+begin_example
+A --> B
+#+end_example
+'@
+                'survey-unmarked-mermaid-visual.md' = @'
+---
+title: survey unmarked mermaid visual
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey unmarked mermaid visual
+
+```mermaid
+flowchart LR
+    A --> B
+```
+'@
+                'survey-naked-wide-arrow.md' = @'
+---
+title: survey naked wide arrow
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey naked wide arrow
+
+A ==> B => C
+'@
+                'survey-naked-curve.md' = @'
+---
+title: survey naked curve
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey naked curve
+
+loss | __/****
+'@
+                'survey-diagram-fence.md' = @'
+---
+title: survey diagram fence
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey diagram fence
+
+```diagram
+A ==> B
+```
+'@
+                'survey-pandoc-text-fence.md' = @'
+---
+title: survey pandoc text fence
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey pandoc text fence
+
+```{.text}
+A => B
+```
+'@
                 'internal-heading.md' = @'
 ---
 title: internal heading
@@ -711,6 +1192,250 @@ status: draft
                 }
             }
 
+            $overwideOrgPath = Join-Path $articleFixtureRoot 'survey-overwide-org-example.md'
+            $overwideOrgArticle = @'
+---
+title: survey overwide org example
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey overwide org example
+
+<!-- weave-visual -->
+#+begin_example
+{org-line}
+#+end_example
+'@.Replace('{org-line}', ('x' * 81))
+            $overwideOrgArticle | Set-Content -LiteralPath $overwideOrgPath -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $overwideOrgPath 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Article verifier accepted an Org example line wider than 80 columns.'
+            }
+
+            $overwideTabOrgPath = Join-Path $articleFixtureRoot 'survey-overwide-tab-org-example.md'
+            $overwideTabOrgArticle = @'
+---
+title: survey overwide tab org example
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey overwide tab org example
+
+<!-- weave-visual -->
+#+begin_example
+{org-line}
+#+end_example
+'@.Replace('{org-line}', ("`t" * 11))
+            $overwideTabOrgArticle | Set-Content -LiteralPath $overwideTabOrgPath -Encoding utf8NoBOM
+            $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $overwideTabOrgPath 2>&1)
+            if ($LASTEXITCODE -eq 0) {
+                throw 'Article verifier accepted an Org example line wider than 80 columns after tab expansion.'
+            }
+
+            $validOrgPath = Join-Path $articleFixtureRoot 'survey-valid-org-example.md'
+            $validOrgArticle = @'
+---
+title: survey valid org example
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey valid org example
+
+正文先用人话和案例解释关系。
+
+<!-- weave-visual -->
+#+begin_example
+{org-line}
+#+end_example
+
+**状态从 A 流向 B。**
+
+Evidence: https://example.com/source. Boundary: this shows flow, not effect size.
+'@.Replace('{org-line}', ('x' * 74 + ' --> B'))
+            $validOrgArticle | Set-Content -LiteralPath $validOrgPath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $validOrgPath)
+
+            $validVisualTablePath = Join-Path $articleFixtureRoot 'survey-valid-visual-table.md'
+            @'
+---
+title: survey valid visual table
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey valid visual table
+
+正文和案例先解释状态变化。
+
+<!-- weave-visual -->
+| Stage | Transition |
+|---|---|
+| request | model -> tool |
+
+**表格对齐状态与转移。**
+
+Evidence: https://example.com/source. Boundary: this is an ordering aid.
+'@ | Set-Content -LiteralPath $validVisualTablePath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $validVisualTablePath)
+
+            $validTabOrgPath = Join-Path $articleFixtureRoot 'survey-valid-tab-org-example.md'
+            $validTabOrgArticle = @'
+---
+title: survey valid tab org example
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey valid tab org example
+
+<!-- weave-visual -->
+#+begin_example
+{org-line}
+#+end_example
+'@.Replace('{org-line}', ("`t" * 10))
+            $validTabOrgArticle | Set-Content -LiteralPath $validTabOrgPath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $validTabOrgPath)
+
+            $surveyTypedCodePath = Join-Path $articleFixtureRoot 'survey-typed-code.md'
+            @'
+---
+title: survey typed code
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey typed code
+
+这段代码中的箭头是类型标注，不是 ASCII 图。
+
+```python
+def build_request() -> dict:
+    return {}
+```
+'@ | Set-Content -LiteralPath $surveyTypedCodePath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyTypedCodePath)
+
+            $surveyIndentedTypedCodePath = Join-Path $articleFixtureRoot 'survey-indented-typed-code.md'
+            @'
+---
+title: survey indented typed code
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey indented typed code
+
+真实的 Python 返回类型标注不是 ASCII 图。
+
+    def f() -> dict:
+        return {}
+'@ | Set-Content -LiteralPath $surveyIndentedTypedCodePath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyIndentedTypedCodePath)
+
+            $surveyNonVisualCodePath = Join-Path $articleFixtureRoot 'survey-nonvisual-code.md'
+            @'
+---
+title: survey nonvisual code
+date: 2026-08-08
+tags: [survey]
+topic: test
+scope: focused
+sources:
+  - https://example.com/source
+status: draft
+---
+# survey nonvisual code
+
+Inline syntax such as `A => B` is not a visual.
+
+<!-- weave-visual -->
+```mermaid
+flowchart LR
+    A --> B
+```
+'@ | Set-Content -LiteralPath $surveyNonVisualCodePath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyNonVisualCodePath)
+
+            $surveyNotesPath = Join-Path $articleFixtureRoot 'neutral-survey-notes.md'
+            @'
+---
+title: neutral survey notes
+date: 2026-08-08
+tags: [survey-notes]
+sources:
+  - https://example.com/source
+status: draft
+---
+# neutral survey notes
+
+A ==> B
+'@ | Set-Content -LiteralPath $surveyNotesPath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyNotesPath)
+
+            $sourceDiveNotesPath = Join-Path $articleFixtureRoot 'neutral-source-dive-notes.md'
+            @'
+---
+title: neutral source dive notes
+date: 2026-08-08
+tags: [source-dive-notes]
+sources:
+  - https://example.com/source
+status: draft
+---
+# neutral source dive notes
+
+Observed problem: this is ordinary reader-visible prose for a non-route tag.
+'@ | Set-Content -LiteralPath $sourceDiveNotesPath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $sourceDiveNotesPath)
+
+            $nonSurveyOrgPath = Join-Path $articleFixtureRoot 'deep-read-org-example.md'
+            @'
+---
+title: deep read org example
+date: 2026-08-08
+tags: [deep-read]
+sources:
+  - https://example.com/source
+status: draft
+---
+# deep read org example
+
+#+begin_example
+A ==> B
+'@ | Set-Content -LiteralPath $nonSurveyOrgPath -Encoding utf8NoBOM
+            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $nonSurveyOrgPath)
+
             $referenceAppendixPath = Join-Path $articleFixtureRoot 'reference-appendix-repeat.md'
             @'
 ---
@@ -814,8 +1539,17 @@ status: draft
                     throw 'Isolated install did not create .agents/skills/weave.'
                 }
 
-                $runtimeFiles = @('SKILL.md', 'scripts/check.ps1', 'scripts/check-article.ps1', 'scripts/check-run.ps1')
-                $runtimeFiles += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
+                $runtimeFiles = @(Get-ExpectedRuntimeFiles)
+                $optionalRuntimeFiles = @(Get-OptionalRuntimeFiles)
+                $installedFiles = @(Get-ChildItem -LiteralPath $installed -File -Recurse | ForEach-Object {
+                    [System.IO.Path]::GetRelativePath($installed, $_.FullName).Replace('\', '/')
+                } | Sort-Object -Unique)
+                $missingRuntimeFiles = @($runtimeFiles | Where-Object { $_ -notin $installedFiles })
+                $allowedRuntimeFiles = @($runtimeFiles + $optionalRuntimeFiles | Sort-Object -Unique)
+                $unexpectedRuntimeFiles = @($installedFiles | Where-Object { $_ -notin $allowedRuntimeFiles })
+                if ($missingRuntimeFiles.Count -gt 0 -or $unexpectedRuntimeFiles.Count -gt 0) {
+                    throw "Packaged runtime file set differs from the exact allowlist. Missing: $($missingRuntimeFiles -join ', '); unexpected: $($unexpectedRuntimeFiles -join ', ')"
+                }
                 foreach ($relativePath in $runtimeFiles) {
                     $source = Join-Path $repoRoot $relativePath
                     $copy = Join-Path $installed $relativePath
@@ -824,6 +1558,13 @@ status: draft
                     }
                     if ((Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $copy).Hash) {
                         throw "Packaged runtime file differs: $relativePath"
+                    }
+                }
+                foreach ($relativePath in @($optionalRuntimeFiles | Where-Object { $_ -in $installedFiles })) {
+                    $source = Join-Path $repoRoot $relativePath
+                    $copy = Join-Path $installed $relativePath
+                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $copy).Hash) {
+                        throw "Optional packaged runtime file differs: $relativePath"
                     }
                 }
 
@@ -948,9 +1689,18 @@ Artifact: .weave-frame/pre-reveal.md
             if ($liveWeavePaths.Count -eq 0) {
                 throw 'No live weave installation was found in the supported skill roots.'
             }
-            $liveRuntimeFiles = @('SKILL.md', 'scripts/check.ps1', 'scripts/check-article.ps1', 'scripts/check-run.ps1')
-            $liveRuntimeFiles += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
+            $liveRuntimeFiles = @(Get-ExpectedRuntimeFiles)
+            $optionalRuntimeFiles = @(Get-OptionalRuntimeFiles)
             foreach ($liveWeavePath in @($liveWeavePaths | Sort-Object -Unique)) {
+                $installedFiles = @(Get-ChildItem -LiteralPath $liveWeavePath -File -Recurse | ForEach-Object {
+                    [System.IO.Path]::GetRelativePath($liveWeavePath, $_.FullName).Replace('\', '/')
+                } | Sort-Object -Unique)
+                $missingRuntimeFiles = @($liveRuntimeFiles | Where-Object { $_ -notin $installedFiles })
+                $allowedRuntimeFiles = @($liveRuntimeFiles + $optionalRuntimeFiles | Sort-Object -Unique)
+                $unexpectedRuntimeFiles = @($installedFiles | Where-Object { $_ -notin $allowedRuntimeFiles })
+                if ($missingRuntimeFiles.Count -gt 0 -or $unexpectedRuntimeFiles.Count -gt 0) {
+                    throw "Live weave installation differs from the exact runtime allowlist. Missing: $($missingRuntimeFiles -join ', '); unexpected: $($unexpectedRuntimeFiles -join ', ')"
+                }
                 foreach ($relativePath in $liveRuntimeFiles) {
                     $sourcePath = Join-Path $repoRoot $relativePath
                     $installedPath = Join-Path $liveWeavePath $relativePath
@@ -959,6 +1709,13 @@ Artifact: .weave-frame/pre-reveal.md
                     }
                     if ((Get-FileHash -Algorithm SHA256 -LiteralPath $sourcePath).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $installedPath).Hash) {
                         throw "Live weave installation differs from the repository for ${relativePath}: $liveWeavePath"
+                    }
+                }
+                foreach ($relativePath in @($optionalRuntimeFiles | Where-Object { $_ -in $installedFiles })) {
+                    $sourcePath = Join-Path $repoRoot $relativePath
+                    $installedPath = Join-Path $liveWeavePath $relativePath
+                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $sourcePath).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $installedPath).Hash) {
+                        throw "Optional live weave installation file differs for ${relativePath}: $liveWeavePath"
                     }
                 }
             }

@@ -18,16 +18,55 @@ function Add-Failure {
     $Failures.Add($Message)
 }
 
+function Get-YamlTagTokens {
+    param([string]$FrontmatterText)
+
+    $section = [regex]::Match($FrontmatterText, '(?ms)^tags:[ \t]*(?<inline>\[[^\]\r\n]*\]|[^\r\n]*)\r?\n(?<items>(?:[ \t]+-\s+[^\r\n]+\r?\n?)*)')
+    if (-not $section.Success) { return @() }
+
+    $rawValues = [System.Collections.Generic.List[string]]::new()
+    $inline = $section.Groups['inline'].Value.Trim()
+    if ($inline.StartsWith('[') -and $inline.EndsWith(']')) {
+        foreach ($value in $inline.Substring(1, $inline.Length - 2).Split(',')) { $rawValues.Add($value) }
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($inline)) {
+        $rawValues.Add($inline)
+    }
+    foreach ($match in [regex]::Matches($section.Groups['items'].Value, '(?m)^\s*-\s*(?<value>[^\r\n]+?)\s*$')) {
+        $rawValues.Add($match.Groups['value'].Value)
+    }
+
+    return @($rawValues | ForEach-Object {
+        ([regex]::Replace($_, '\s+#.*$', '')).Trim().Trim('"', "'").ToLowerInvariant()
+    } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
 function Get-ProseText {
     param([string]$Text)
 
     $lines = $Text -split "`r?`n"
     $result = [System.Collections.Generic.List[string]]::new()
     $inFence = $false
+    $inOrgExample = $false
     $fenceMarker = $null
     $fenceLength = 0
 
     foreach ($line in $lines) {
+        if (-not $inFence -and $line -match '(?i)^\s*#\+begin_example\s*$') {
+            $inOrgExample = $true
+            $result.Add('')
+            continue
+        }
+        if (-not $inFence -and $line -match '(?i)^\s*#\+end_example\s*$') {
+            $inOrgExample = $false
+            $result.Add('')
+            continue
+        }
+        if ($inOrgExample) {
+            $result.Add('')
+            continue
+        }
+
         if (-not $inFence) {
             $fence = [regex]::Match($line, '^\s{0,3}(?<marker>`{3,}|~{3,})')
             if ($fence.Success) {
@@ -105,6 +144,191 @@ function Find-RepeatedFragment {
     return $null
 }
 
+function Get-DisplayColumnWidth {
+    param([string]$Line)
+
+    $width = 0
+    foreach ($character in $Line.ToCharArray()) {
+        if ($character -eq "`t") {
+            $width += 8 - ($width % 8)
+        }
+        elseif ([int]$character -le 0x7f) {
+            $width += 1
+        }
+        else {
+            # Org example blocks should prefer ASCII. Count non-ASCII conservatively
+            # as two display columns so CJK alignment cannot pass a byte-blind check.
+            $width += 2
+        }
+    }
+    return $width
+}
+
+function Get-OrgExampleFailures {
+    param(
+        [string]$Text,
+        [bool]$EnforceSurveyAscii
+    )
+
+    $result = [System.Collections.Generic.List[string]]::new()
+    $lines = $Text -split "`r?`n"
+    $inOrgExample = $false
+    $orgStartLine = 0
+    $inMarkdownFence = $false
+    $fenceMarker = $null
+    $fenceLength = 0
+    $fenceLanguage = ''
+    $fenceStartLine = 0
+    $fenceLooksLikeAscii = $false
+    $previousContentLine = ''
+    $pendingVisualMarkerLine = 0
+    $inMarkedMarkdownTable = $false
+    $visualMarkerPattern = '^\s*<!--\s*weave-visual\s*-->\s*$'
+    $asciiVisualPattern = '(?:[-=]{1,3}>|<[-=]{1,3}|<[-=]{1,3}>|\+-{2,}\+|\|\s*[/\\_^~*.-]{2,}\s*\||^\s*[/\\_]{3,}\s*$|^\s*(?:[A-Za-z][\w -]*\s+)?\|\s*.*[/\\_*].*$)'
+
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        $line = $lines[$index]
+        $lineNumber = $index + 1
+
+        if ($inMarkdownFence) {
+            $closingPattern = '^\s{0,3}' + [regex]::Escape($fenceMarker) + '{' + $fenceLength + ',}\s*$'
+            if ($line -match $closingPattern) {
+                if ($EnforceSurveyAscii -and $fenceLooksLikeAscii -and $fenceLanguage -in @('', 'text', 'txt', 'ascii', 'plaintext', 'org', 'diagram')) {
+                    $result.Add("Survey ASCII visual at line $fenceStartLine uses a Markdown fence; use a paired Org example block.")
+                }
+                $inMarkdownFence = $false
+                $fenceMarker = $null
+                $fenceLength = 0
+                $fenceLanguage = ''
+                $fenceStartLine = 0
+                $fenceLooksLikeAscii = $false
+            }
+            elseif ($line -match $asciiVisualPattern) {
+                $fenceLooksLikeAscii = $true
+            }
+            continue
+        }
+
+        if ($EnforceSurveyAscii -and $line -match $visualMarkerPattern) {
+            if ($pendingVisualMarkerLine -gt 0) {
+                $result.Add("Survey visual marker at line $pendingVisualMarkerLine is not attached to a visual.")
+            }
+            $pendingVisualMarkerLine = $lineNumber
+            $previousContentLine = $line
+            continue
+        }
+
+        if ($EnforceSurveyAscii -and $pendingVisualMarkerLine -gt 0 -and -not [string]::IsNullOrWhiteSpace($line)) {
+            $isVisualStart = $line -match '(?i)^\s*#\+begin_example\s*$' -or
+                $line -match '^\s{0,3}`{3,}\s*mermaid(?:\s|$)' -or
+                $line -match '^\s{0,3}~{3,}\s*mermaid(?:\s|$)' -or
+                $line -match '^\s*!\[' -or
+                $line -match '(?i)^\s*<figure(?:\s|>)' -or
+                $line -match '^\s*\|' -or
+                $line -match '^\s*(?:\$\$|\\\[)'
+            if (-not $isVisualStart) {
+                $result.Add("Survey visual marker at line $pendingVisualMarkerLine is not immediately followed by a supported visual.")
+            }
+            elseif ($line -match '^\s*\|') {
+                $inMarkedMarkdownTable = $true
+            }
+            $pendingVisualMarkerLine = 0
+        }
+
+        if ($inMarkedMarkdownTable -and $line -notmatch '^\s*\|') {
+            $inMarkedMarkdownTable = $false
+        }
+
+        if (-not $inOrgExample) {
+            $fence = [regex]::Match($line, '^\s{0,3}(?<marker>`{3,}|~{3,})(?<info>.*)$')
+            if ($fence.Success) {
+                $markerText = $fence.Groups['marker'].Value
+                $inMarkdownFence = $true
+                $fenceMarker = $markerText.Substring(0, 1)
+                $fenceLength = $markerText.Length
+                $fenceInfo = $fence.Groups['info'].Value
+                $pandocLanguage = [regex]::Match($fenceInfo, '^\s*\{\.(?<language>[^}\s]+)')
+                $fenceLanguage = if ($pandocLanguage.Success) {
+                    $pandocLanguage.Groups['language'].Value.ToLowerInvariant()
+                }
+                else {
+                    [regex]::Match($fenceInfo, '^\s*(?<language>\S*)').Groups['language'].Value.ToLowerInvariant()
+                }
+                $fenceStartLine = $lineNumber
+                if ($EnforceSurveyAscii -and $fenceLanguage -eq 'mermaid' -and $previousContentLine -notmatch $visualMarkerPattern) {
+                    $result.Add("Survey Mermaid visual at line $lineNumber is missing its immediately preceding visual marker.")
+                }
+                $previousContentLine = $line
+                continue
+            }
+        }
+
+        if ($line -match '(?i)^\s*#\+begin_example\s*$') {
+            if ($EnforceSurveyAscii -and -not $inOrgExample -and $previousContentLine -notmatch $visualMarkerPattern) {
+                $result.Add("Survey Org example visual at line $lineNumber is missing its immediately preceding visual marker.")
+            }
+            if ($inOrgExample) {
+                $result.Add("Nested Org example block begins at line $lineNumber.")
+            }
+            else {
+                $inOrgExample = $true
+                $orgStartLine = $lineNumber
+            }
+            $previousContentLine = $line
+            continue
+        }
+
+        if ($line -match '(?i)^\s*#\+end_example\s*$') {
+            if (-not $inOrgExample) {
+                $result.Add("Orphan Org example block terminator at line $lineNumber.")
+            }
+            else {
+                $inOrgExample = $false
+                $orgStartLine = 0
+            }
+            $previousContentLine = $line
+            continue
+        }
+
+        if ($line -match '(?i)^\s*#\+(?:begin|end)_example\b') {
+            $result.Add("Invalid Org example delimiter at line $lineNumber; use the exact delimiter alone on its line.")
+            $previousContentLine = $line
+            continue
+        }
+
+        if ($inOrgExample) {
+            $displayWidth = Get-DisplayColumnWidth $line
+            if ($displayWidth -gt 80) {
+                $result.Add("Org example content at line $lineNumber is $displayWidth columns; maximum is 80.")
+            }
+            continue
+        }
+
+        if ($EnforceSurveyAscii -and -not $inMarkedMarkdownTable) {
+            $unmaskedLine = [regex]::Replace($line, '`[^`\r\n]*`', '')
+            $looksLikePythonTypeSignature = $unmaskedLine -match '^\s*(?:async\s+)?def\s+[A-Za-z_]\w*\s*\([^)]*\)\s*->\s*[^:]+:\s*$'
+            if (-not $looksLikePythonTypeSignature -and $unmaskedLine -match $asciiVisualPattern) {
+                $result.Add("Survey ASCII visual at line $lineNumber is outside a paired Org example block.")
+            }
+        }
+        if ($EnforceSurveyAscii -and $line -match '^\s*!\[' -and $previousContentLine -notmatch $visualMarkerPattern) {
+            $result.Add("Survey image visual at line $lineNumber is missing its immediately preceding visual marker.")
+        }
+        if (-not [string]::IsNullOrWhiteSpace($line)) {
+            $previousContentLine = $line
+        }
+    }
+
+    if ($inOrgExample) {
+        $result.Add("Org example block opened at line $orgStartLine is not closed.")
+    }
+    if ($pendingVisualMarkerLine -gt 0) {
+        $result.Add("Survey visual marker at line $pendingVisualMarkerLine is not attached to a visual.")
+    }
+
+    return @($result)
+}
+
 try {
     $resolvedPath = [System.IO.Path]::GetFullPath($ArticlePath)
     if (-not (Test-Path -LiteralPath $resolvedPath -PathType Leaf)) {
@@ -130,13 +354,9 @@ try {
     }
     else {
         $frontmatterText = $frontmatter.Groups['body'].Value
-        $tagsSection = [regex]::Match($frontmatterText, '(?ms)^tags:\s*(?<inline>\[[^\]\r\n]*\]|[^\r\n]*)\r?\n(?<items>(?:[ \t]+-\s+[^\r\n]+\r?\n?)*)')
-        $isSourceDive = $isSourceDive -or
-            ($tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsource-dive\b') -or
-            ($tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*source-dive\s*$')
-        $isSurvey = $isSurvey -or
-            ($tagsSection.Success -and $tagsSection.Groups['inline'].Value -match '(?i)\bsurvey\b') -or
-            ($tagsSection.Success -and $tagsSection.Groups['items'].Value -match '(?im)^\s*-\s*survey\s*$')
+        $tagTokens = @(Get-YamlTagTokens $frontmatterText)
+        $isSourceDive = $isSourceDive -or ($tagTokens -contains 'source-dive')
+        $isSurvey = $isSurvey -or ($tagTokens -contains 'survey')
         foreach ($field in @('title', 'date', 'tags', 'sources', 'status')) {
             if ($frontmatterText -notmatch "(?m)^${field}:") {
                 Add-Failure $failures "Frontmatter is missing ${field}."
@@ -191,6 +411,11 @@ try {
     }
 
     $prose = $proseResult.Text
+    if ($isSurvey) {
+        foreach ($orgFailure in @(Get-OrgExampleFailures -Text $bodyText -EnforceSurveyAscii $true)) {
+            Add-Failure $failures $orgFailure
+        }
+    }
     if (-not $proseResult.FenceClosed) {
         Add-Failure $failures 'Markdown contains an unclosed fenced code block.'
     }

@@ -59,7 +59,9 @@ Fail the extension when it creates only a marketing persona, when its alleged co
 Evaluate Survey as one Learn-based sequence, not as the retired lens and outcome system:
 
 - **Mode Gate**: the user confirmed `Canonical Article`, `Deep Research`, `Quick Reference`, or `Write to Learn`, or explicitly delegated the recommendation.
-- **Collect**: load-bearing evidence is primary-source first, canonical identities are verified, and broad coverage is not padded with weak sources.
+- **Learn pre-check**: actual `/read` and `/write` availability is checked; a missing helper is reported as degradation rather than silently bypassed.
+- **Collect**: load-bearing evidence is primary-source first; official specifications, documentation, repositories, and first-party technical reports may carry the product or API behavior they define, while reviews and textbooks remain orientation; canonical identities are verified, and broad coverage is not padded with weak sources.
+- **Collect ordering**: each source preserves Discover, Fetch, and File as separate operations; fetched files are moved or indexed rather than fetched again for filing.
 - **Digest**: every source is read before outlining; the three claim tests determine `outline`, `background`, `boundary`, or `cut`; contradictions remain visible.
 - **Outline**: every section maps to admitted sources before prose begins.
 - **Candidate consequence**: each spine changes at least two of chapter order, evidence grouping, comparison set, causal explanation, inclusion, exclusion, or boundary.
@@ -117,28 +119,35 @@ After the Comprehension Gate, evaluate the Learning Spine against `o`:
 - **Central model**: one load-bearing mechanism, distinction, path, or set of axes controls the article.
 - **Dependency order**: no term is required before the article has supplied the concept it depends on.
 - **Worked reasoning**: at least one example exposes the mechanism or classification operation rather than decorating it.
+- **Objective completion**: every declared Canonical Article objective includes an accurate mental model, an executable or inspectable operation, a common failure, and an evidence or version boundary; a heading or keyword match is zero coverage.
 - **Misconception repair**: tempting shortcuts contradicted by the evidence are corrected where they become likely.
 - **Chapter delta**: each chapter adds a named reconstruction, distinction, prediction, evaluation, or decision ability.
 - **Transfer and boundary**: a materially different case follows from the model, and a real condition stops it.
 
 For `explain`, fail an approachable inventory, detached glossary, analogy-only explanation, or reading list that carries prerequisites the article promised to supply. For `map`, fail mixed abstraction levels or mutually exclusive families that collapse when a hybrid item is tested.
 
-## Survey Fill and Visual protocol
+## Survey Fill and cross-phase visual protocol
 
 After the Spine Direction Gate passes:
 
+- Collect inventories relationship evidence and support limits without requiring a visual;
+- Digest records idea shape, element-level evidence, and applicability boundary, with text as the default;
+- Outline orders plain-language concept, concrete example, optional visual, then immediate evidence and boundary;
 - every Fill section serves the selected spine and its source map;
 - a stalled section returns to Digest instead of receiving fluent unsupported connective tissue;
-- Refine removes cross-section repetition and writes the opening last;
-- Visual Pass matches relationship shape to representation;
+- Fill never materializes a visual before its explanation and example;
+- Refine removes cross-section repetition, writes the opening last, and applies the visual deletion test;
+- Visual Pass is final admission and rendering rather than the first visual decision, and matches relationship shape to representation;
 - a retained figure adds a relationship not equally recoverable from adjacent prose;
 - every node, arrow, curve, or comparison traces to evidence or is labeled Weave synthesis;
-- figures appear after plain-language grounding and a concrete example, with a bold one-line caption;
+- figures appear after plain-language grounding and a concrete example, with a bold one-line caption followed immediately by supporting evidence and an applicability boundary;
+- every retained figure has exactly one standalone `<!-- weave-visual -->` marker immediately before it, and the delivery report's admitted count equals the serialized article's marker count;
 - sparse output, including zero figures, passes;
-- ASCII remains within 80 columns and avoids fragile CJK alignment;
+- every ASCII visual uses one paired, non-nested, case-insensitive `#+begin_example` / `#+end_example` Org block rather than a Markdown fence, indented block, or other naked ASCII art;
+- every Org ASCII content line remains within 80 ASCII columns and avoids fragile CJK alignment;
 - the delivery report's candidate, admitted, and deleted counts reconcile.
 
-Fail a figure that merely turns prose into boxes, appears before the concept is explained, overclaims the evidence, or leaves a broken asset.
+Fail a figure that merely turns prose into boxes, appears before the concept is explained, overclaims the evidence, or leaves a broken asset. During Self-review, also fail a figure when a reader limited to its caption, evidence, and boundary cannot recover the interaction and changed judgment, or can infer more than the experiments support.
 
 ## Final-article recoverability
 
@@ -182,4 +191,6 @@ Delete a chapter that does not serve the selected frame or Survey spine. In the 
 - A Survey article uses accessible language but never works a mechanism or transfers it to a new case.
 - A Survey article gives unconditional advice even though its evidence supports only description or comparison.
 - Every Survey section receives a diagram, or retained diagrams only reflow nearby prose.
+- A Survey ASCII visual uses a Markdown fence, naked text, an unpaired or nested Org example block, or a line wider than 80 ASCII columns.
+- Visual evidence and placement are first considered after Refine rather than carried through Collect, Digest, Outline, Fill, and Refine.
 - Agent preflight is reported as completed human Self-review.

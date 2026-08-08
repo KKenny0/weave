@@ -390,21 +390,23 @@
       "id": 21,
       "name": "survey-learn-canonical-article",
       "prompt": "使用 Weave Survey 的 Canonical Article 模式研究 reinforce learning 强化学习，让非专业背景的人也能读懂。脊柱方向按证据最强的推荐项继续，不需要停下来等我二次确认。",
-      "expected_output": "Survey 直接运行 Learn 的 Collect、Digest、Outline、Fill、Refine、Self-review 主干，在 Outline 与 Fill 之间完成证据准入后的 Spine Direction Gate，并在 Refine 后完成稀疏 Visual Pass，交付一篇自包含的强化学习长文草稿。",
+      "expected_output": "Survey 直接运行 Learn 的 Collect、Digest、Outline、Fill、Refine、Self-review 主干，在 Outline 与 Fill 之间完成证据准入后的 Spine Direction Gate；视觉证据与思想形状贯穿六阶段，Refine 后的 Visual Pass 只做最终准入与渲染，交付一篇自包含的强化学习长文草稿。",
       "files": [],
       "expectations": [
         "The workflow is Survey and the confirmed mode is Canonical Article; it does not route through the retired explain or map outcome axis",
         "The Reader Contract records a non-professional prerequisite floor without inventing a persona or prior belief",
-        "Collect is primary-source first, verifies canonical source identity and evidence type, and targets broad canonical coverage without padding weak sources",
+        "Collect checks /read and /write availability, preserves Discover, Fetch, and File as separate operations, uses primary sources for load-bearing claims, and targets broad canonical coverage without padding weak sources",
         "Digest reads sources before outlining and applies the three keep-or-cut claim tests; contradictions and evidence limits remain visible",
         "Every outlined section maps to admitted sources before Fill begins",
         "The Spine Direction Gate admits two or three genuinely different candidates from evidence, and the user's explicit delegation permits the recommended candidate to continue without another pause",
         "The selected spine changes at least two structural consequences and controls every load-bearing section",
         "A throughline uses a concrete through-object and consistent 📍 state changes; another spine type preserves its own dialectical or issue-centered structure",
+        "Every Canonical Article objective includes an accurate mental model, an executable or inspectable operation, a common failure, and an evidence or version boundary; headings and keyword matches do not count as coverage",
         "Canonical Article includes worked examples, supported common mistakes, a real boundary, and three to five Further Reading items without outsourcing prerequisites",
+        "Collect inventories visual evidence, Digest records idea shape and element-level boundaries, Outline plans plain language then example then optional visual then immediate evidence and boundary, Fill preserves that order, Refine runs the deletion test, and Visual Pass performs only final admission",
         "Visual Pass is sparse, deletes prose reflow, traces visual relationships to evidence or Weave synthesis, and uses no broken assets",
         "The serialized article passes Article Integrity and fresh-context Article Recoverability",
-        "The delivery report records Survey mode, selected spine, Visual Pass counts, and Human Self-review: pending without dumping Digest Notes or Spine Contract"
+        "Every retained visual has exactly one standalone <!-- weave-visual --> marker, and the delivery report records Survey mode, selected spine, marker-matched Visual Pass counts, and Human Self-review: pending without dumping Digest Notes or Spine Contract"
       ]
     },
     {
@@ -429,19 +431,20 @@
       "id": 23,
       "name": "survey-visual-pass",
       "prompt": "使用 Survey 的 Canonical Article 模式研究强化学习，脊柱采用证据最强的推荐项并直接完成。图只在文字确实不擅长表达关系时使用，不要把每节摘要画成框图。",
-      "expected_output": "Refine 后逐段扫描关系形状，以删除测试和证据追踪准入少量图示；保留的图放在白话解释和例子之后，并以一句加粗图注说明关系。",
+      "expected_output": "从 Collect 开始记录关系证据，Digest 判断思想形状，Outline 固定人话、案例、可选图、证据与边界的顺序，Fill 与 Refine 延续该约束；Refine 后以删除测试和证据追踪最终准入少量图示。",
       "files": [],
       "expectations": [
-        "Visual Pass runs after Refine and before agent preflight and human Self-review",
+        "Visual judgment runs through Collect, Digest, Outline, Fill, Refine, final Visual Pass, and Self-review rather than beginning after Refine",
         "Every candidate visual names a relationship that would be harder to recover from prose alone",
         "Architecture or flow, causal stages, feedback loops, curves, matrices, aligned traces, and minimal formulas are matched to their idea shapes instead of using one diagram format everywhere",
         "A candidate is deleted when it merely rearranges adjacent prose into boxes",
         "Every retained node, arrow, curve, or comparison traces to admitted evidence or is labeled as Weave synthesis",
-        "Each retained visual appears only after plain-language grounding and a concrete example and has one bold sentence as caption",
+        "Each retained visual appears only after plain-language grounding and a concrete example, has one bold sentence as caption, and is immediately followed by supporting evidence and an applicability boundary",
         "Sparse output, including zero valid visuals, is accepted; one visual per section is a failure",
-        "ASCII stays within 80 columns and avoids fragile CJK alignment",
+        "Every retained visual has exactly one standalone <!-- weave-visual --> marker immediately before it; every ASCII visual uses one paired case-insensitive #+begin_example and #+end_example Org block, never a Markdown fence, indented block, or other naked ASCII art, and every content line stays within 80 ASCII columns",
+        "A standalone reader can recover which concepts interact and what judgment the paper changes from the visual, caption, evidence, and boundary without inferring more than the experiments support",
         "No polished PNG is generated by default and no missing local asset is referenced",
-        "The delivery report records reconciled candidate, admitted, and deleted counts without persisting a Visual Evidence Ledger"
+        "The delivery report records reconciled candidate, admitted, and deleted counts, with admitted equal to the serialized article's <!-- weave-visual --> marker count, without persisting a Visual Evidence Ledger"
       ]
     },
     {
@@ -459,6 +462,42 @@
         "Field-wide prevalence or momentum claims require trend-capable evidence or are scoped to the admitted corpus",
         "Ambiguous and residual cases remain visible",
         "The final Survey article passes Article Integrity without leaking Digest Notes or Spine Contract"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "survey-cross-phase-visual-contract",
+      "prompt": "使用 Survey 的 Deep Research 模式研究一个包含模型架构、训练反馈回路、尺度曲线和新旧指标对照的论文族。脊柱按推荐项继续。图不是标配；请让视觉判断跟着研究流程走，并严格使用要求的 ASCII 格式。",
+      "expected_output": "视觉不是末尾装饰：Collect 收集关系证据，Digest 判断思想形状与证据边界，Outline 安排人话与案例优先，Fill 只实现仍有必要的候选，Refine 做删除测试，Visual Pass 最终准入，Self-review 检查只看图也不越过证据。",
+      "files": [],
+      "expectations": [
+        "Collect records source locations and support limits for architecture, causal, loop, curve, trade-off, matrix, aligned-trace, or formula relationships without deciding that a figure must exist",
+        "Digest defaults to text and records idea shape, element-level evidence, and the immediate applicability boundary for each surviving visual candidate",
+        "Outline preserves plain-language concept, concrete example, optional visual, then immediate evidence and boundary in that order",
+        "Fill materializes no visual before its prose and example and returns to Digest when a node, arrow, curve, comparison, or formula lacks evidence",
+        "Refine deletes prose reflow and selects the representation that exposes the supported relationship with the least additional interpretation",
+        "Visual Pass is the final admission and rendering gate rather than the first visual decision",
+        "Self-review applies the standalone visual test and rejects any graphic that implies a conclusion beyond the cited experiments",
+        "Zero retained visuals is valid",
+        "Every retained visual has exactly one standalone <!-- weave-visual --> marker and the report's admitted count matches those markers; every ASCII visual uses paired #+begin_example and #+end_example delimiters and no content line exceeds 80 ASCII columns"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "survey-anthropic-api-course-benchmark",
+      "prompt": "使用 Survey 的 Canonical Article 模式，把 Anthropic Skilljar 的 Building with the Claude API 课程整理成一篇从零可用的中文权威参考。脊柱按证据最强的推荐项继续。课程地址：https://anthropic.skilljar.com/claude-with-the-anthropic-api?next=%2Fclaude-with-the-anthropic-api%2F287726",
+      "expected_output": "依据 evals/anthropic-course-benchmark.md 的课程覆盖清单建立 baseline，评分产稿的概念、操作、边界、案例和独立可恢复性，逐轮修复遗漏与误导，直到停止准则成立。",
+      "files": [
+        "evals/anthropic-course-benchmark.md"
+      ],
+      "expectations": [
+        "The run records the course page and access date, distinguishes accessible lesson evidence from unavailable or login-gated material, and does not invent lesson coverage",
+        "The baseline is scored before workflow changes against every coverage row in evals/anthropic-course-benchmark.md",
+        "Each optimization round names a concrete draft defect, the workflow change intended to repair it, and the rerun score",
+        "The final article contains runnable worked examples where the course supplies them, common mistakes, evidence boundaries, and a three-to-five-item Further Reading section",
+        "Visuals follow the cross-phase contract and every ASCII visual uses a paired Org example block no wider than 80 ASCII columns",
+        "The stopping decision requires no remaining supported coverage gap, no failed deterministic gate, no Article Recoverability failure, and no proposed change with a predicted rubric gain",
+        "The benchmark never equates inaccessible course material with completed coverage"
       ]
     }
   ]
