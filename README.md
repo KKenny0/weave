@@ -276,3 +276,7 @@ pwsh -File scripts/check-run.ps1 -RunDirectory <output-dir> -ImpactMode personal
 - 不同宿主暴露的背景能力可能不同；显式请求始终优先，缺少背景时只回答“对当前问题意味着什么”。
 - weave 不持久化或同步用户画像，Context Envelope 和 Impact Brief 只存在于单次运行的内部工作区。
 - Survey 交付时区分 agent preflight 与 Human Self-review；用户确认内容就绪也不等于授权提交、发布或分发。
+
+## 许可证
+
+本项目采用 [MIT 许可证](LICENSE)。

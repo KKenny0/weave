@@ -249,6 +249,7 @@ function Get-ProductMarkdownFiles {
 
 function Get-ExpectedRuntimeFiles {
     $files = @(
+        'LICENSE',
         'MIGRATION.md',
         'README.en.md',
         'README.md',
@@ -277,6 +278,7 @@ function Get-OptionalRuntimeFiles {
 try {
     Invoke-Check 'required files and SKILL frontmatter' {
         $required = @(
+            'LICENSE',
             'SKILL.md',
             'README.md',
             'scripts/check.ps1',
