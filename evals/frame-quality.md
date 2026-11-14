@@ -1,196 +1,63 @@
-# Frame Quality Evaluation
+# 取景框与初稿质量评价
 
-Use this rubric in addition to the workflow-specific expectations in `evals.json`. It evaluates whether weave found a useful way to see the material, not only whether it completed the pipeline.
+评价对象是成稿如何帮助用户回答原问题。取景框指文章选择的解释中心：什么是主要对象，哪些证据值得展开，哪些只需背景，哪些条件使结论停止适用。它可以是常见区别或具体机制，不需要新术语、独特比喻或多个候选。
 
-## Evaluation unit
+配合 `evals.json` 的具体场景使用；封闭材料的首次完整稿对照见 `first-draft-quality.md`。本说明不依赖内部流程、工作模式或报告字段出现。
 
-- `x`: supplied or collected material
-- `q`: the user's actual question or decision
-- `o`: the primary Deep Read or Source Dive reader outcome
-- `m`: the confirmed Survey mode and exact article promise
-- `E`: the evidence model produced by the workflow
-- `f`: one candidate frame
-- `f*`: the selected frame
-- `f*(x)`: the finished article
+## 先确认委托有没有兑现
 
-A frame sets the object boundary, foreground and background, load-bearing distinctions or mechanisms, and the conditions under which its explanation stops working.
+从请求中恢复用户真正想获得的解释、判断或作品，并核对明确重点、深度、读者的已知前提、来源范围和交付形式。只使用请求支持的背景，不猜人口属性、个人项目或既有观点。
 
-## Candidate admission gates
+成稿即使独立可读、事实无误、语言优美，只要主要回答另一个问题，目标匹配仍然失败。例如，用户要理解两次修改为何丢失一次，完整介绍登录、备份与协作界面也不算命中。反过来，话题相关但只说“竞争造成冲突”，没有展示旧值如何覆盖新状态，也没有达到解释目标。
 
-Every retained candidate must pass all six gates. A candidate that fails is discarded before comparison.
+清晰的请求应直接继续。只有未决歧义会实质改变研究对象或答案时才问关键问题。用户明确要求先选择或审批时遵守该要求；普通写作无需为了内部流程停顿。
 
-1. **Evidence fidelity**: every load-bearing part traces to `E`; no unsupported bridge is required to make the frame work.
-2. **Specificity**: the frame cannot be moved unchanged to an adjacent source, repository, or domain. It uses distinctions specific to this material.
-3. **Selection effect**: choosing the frame changes at least two of: included evidence, excluded evidence, chapter order, causal explanation, comparison set, or predicted boundary.
-4. **Boundary honesty**: the frame names at least one condition, counterexample, or evidence gap that limits it.
-5. **Distinctness**: it is not a paraphrase of another retained candidate. Two candidates must imply materially different selection or interpretation.
-6. **Outcome fit**: it supports `o` or `m`, not merely the topic. An `explain` frame generates a mechanism, prerequisite path, and transfer; a `map` frame generates coherent placement axes and an evidence boundary. A Survey spine fulfills the confirmed mode and exact article promise.
+## 评价取景框带来了什么
 
-For Deep Read and Source Dive, use one candidate when only one passes. Survey attempts to admit two or three genuinely different spine candidates. If fewer than two survive after one evidence-repair loop, ask whether to use the single valid direction or narrow the question. Never lower the gates to satisfy a candidate-count target.
+评审对下列问题给出“满足、部分满足、不满足、无法核实”，引用成稿中的具体内容和来源依据，不按标签或关键词计分。
 
-## Ranking criteria
+| 维度 | 可观察的合格表现 | 应识别的缺陷 |
+| --- | --- | --- |
+| 承接目标 | 主要篇幅解释用户真正关心的疑问，深度与读者前提相称 | 标题许诺原问题，正文变成背景综述或材料清单 |
+| 解释增量 | 建立机制、区别或关系，让读者理解为什么，并能沿具体例子复原过程 | 只换说法、换标题、贴术语；有结论却缺因果桥 |
+| 取舍作用 | 重点、背景与删减由问题和证据决定，来源数量不自动决定篇幅 | 每份来源等篇幅拼接；新源一来就盲目扩写 |
+| 证据支持 | 承重解释由适当证据支撑，事实、条件推演和未知分开 | 用宣传解释实现，用静态结构断言作者动机，用代表例断言普遍趋势 |
+| 边界与代价 | 明确哪些条件使解释成立，什么改变会限制推论；保留反证 | 泛说“因场景而异”，或把一次成功扩大为无条件保证 |
+| 读者承接 | 必要概念在需要处讲清，例子展示推理而非装饰，后续判断可由前文恢复 | 语气通俗但术语前提缺失；靠外链、比喻或术语表承担核心解释 |
+| 经济性 | 留下的背景和图都帮助完成问题，删掉它们会损失必要理解或关系 | 长篇背景、重复章节、每节框图遮住主线 |
 
-Rank admitted candidates without artificial numeric weights:
+不要求取景框改变固定数量的章节，也不把认知价值等同于必须反对用户。证据确认起始判断、缩小判断或诚实得出暂不能判断，都可能有用；关键是对原委托产生有依据的解释与取舍。
 
-- **Question and outcome fit**: directly answers `q`, supports `o` or `m`, and respects the user's named focus.
-- **Compression**: a small number of load-bearing parts explains many observations without erasing contradictions.
-- **Generative reach**: explains or predicts evidence not used to construct the frame.
-- **Cognitive delta**: produces a concrete correction, inversion, new axis, or sharper boundary relative to the default reading.
-- **Economy**: uses no decorative component; removing a load-bearing component should reduce explanatory power.
+## 允许证据改变解释方向
 
-Prefer the candidate with stronger evidence and narrower claims when two candidates remain close. Deep Read and Source Dive select it. Survey places it first as the recommendation, then waits for the user to choose among the admitted candidates or explicitly delegate that recommendation. Record the runner-up only when it would produce a materially different article.
+初始框架是可修正的解释假设。遇到反证时，评价修订后的解释是否吸收反证、缩小结论并继续回答原委托。把“重试总能避免丢失”修正为“必须区分盲重试与带条件检查的重新计算”是可能的进步；转去写重试产品推荐则丢失了原目标。
 
-## Publication reader check
+不把修正框架本身判为失败，也不要求每次修正都重新审批。若证据要求改变原委托的范围、来源授权或交付目标，则说明需要用户决定的实质变化。用户预设不是证据，早先选定的解释也不能成为隐藏反证的理由。
 
-Apply this section only when the user explicitly requests public publication, a WeChat Official Account or X longform article, a named public readership, or broader or sustained reach.
+## 材料如何服务问题
 
-- **Explicit trigger**: ordinary research and longform requests do not activate the extension.
-- **Supported reader**: the public reader comes from the current request or remains question-level; no demographic, role, project, or account persona is invented.
-- **Research consequence**: the extension changes at least one of source search, scope, evidence selection, or candidate-frame requirements. Title, opening, pacing, packaging, and shareability alone require an internal no-op and Editorial handoff.
-- **Recurring-situation use**: an admitted frame produces a usable distinction, explanation, prediction, or decision frame in the reader's reproducible situation.
-- **Time-boundary honesty**: durable structure is separated from launch-, version-, policy-, retrieval-, or event-bound facts; a genuinely time-bound result is accepted without an invented evergreen claim.
-- **Evidence invariance**: publication intent does not lower source quality, suppress counterevidence, amplify certainty, or preselect a conclusion.
-- **Artifact privacy**: Publication Reader Extension fields appear in no article, frontmatter, pre-reveal artifact, delivery report, or sidecar brief.
+混合材料可共同回答同一个问题：说明书提供承诺，代码提供执行语义，日志或测试提供某次实际行为，访谈提供可归属的说法，图表提供观测关系。评价它们是否被用于各自能支持的主张，是否解释矛盾，而非是否分别生成了某种内部表格。
 
-Fail the extension when it creates only a marketing persona, when its alleged consequence is editorial packaging, or when a topical fact is generalized into a durable claim without evidence. Failure of the optional extension does not fail an otherwise valid research run: record an internal no-op and continue under the default Reader Contract.
+严格遵守用户限制的来源。缺关键依据时，指出缺的是哪一步、目前能支持什么、哪些只是条件推演；不以背景常识填成已核实事实。已有稿加新来源时，先判断它是补证、反证、边界、例子还是与主线无关，再评价修改幅度是否必要。
 
-## Survey Learn and Spine check
+用户只想理解工程作品时，说明系统能力、一次任务如何经过各部分、关键设计的作用与代价即可，不强加迁移建议。用户确实要可迁移原理时，解释依赖条件与失效边界，不能只给口号或实施清单。
 
-Evaluate Survey as one Learn-based sequence, not as the retired lens and outcome system:
+## 自足性、事实与视觉分别检查
 
-- **Mode Gate**: the user confirmed `Canonical Article`, `Deep Research`, `Quick Reference`, or `Write to Learn`, or explicitly delegated the recommendation.
-- **Learn pre-check**: actual `/read` and `/write` availability is checked; a missing helper is reported as degradation rather than silently bypassed.
-- **Collect**: load-bearing evidence is primary-source first; official specifications, documentation, repositories, and first-party technical reports may carry the product or API behavior they define, while reviews and textbooks remain orientation; canonical identities are verified, and broad coverage is not padded with weak sources.
-- **Collect ordering**: each source preserves Discover, Fetch, and File as separate operations; fetched files are moved or indexed rather than fetched again for filing.
-- **Digest**: every source is read before outlining; the three claim tests determine `outline`, `background`, `boundary`, or `cut`; contradictions remain visible.
-- **Outline**: every section maps to admitted sources before prose begins.
-- **Candidate consequence**: each spine changes at least two of chapter order, evidence grouping, comparison set, causal explanation, inclusion, exclusion, or boundary.
-- **Explicit choice**: Fill does not begin until the user selects an admitted spine or delegates the recommendation.
-- **Concrete throughline**: a through-object is an inspectable noun or mechanism, and each load-bearing section states a real `📍` change.
-- **No double control**: there is no separately auto-selected Survey frame underneath the chosen spine.
-- **Claim ceiling**: descriptive evidence does not become comparative superiority, and representative examples do not become field-wide guidance.
-- **Classification integrity**: when classification is needed, sibling categories answer one question at one abstraction level; cross-cutting dimensions become axes or overlays, and a hybrid item can be placed without contradiction.
+自足性检查只给评审序列化后的成稿，看其能否恢复核心问题、机制、具体过程与边界，并尝试一个有意义的新情况。事实检查另由能看到指定来源的评审核对；独立可读不等于事实正确。两者都不能替代目标匹配。
 
-A Survey run fails when it drafts before explicit spine selection, generates candidates before Digest and Outline, presents paraphrases as choices, keeps sections that do not serve the selected spine, or leaks Digest Notes and Spine Contract fields into the article.
+视觉证据需要核对坐标、单位、观测条件、关系和缺失信息；不能由少量观测点编造趋势、因果或不确定度。新增图按需使用：能显著澄清关系才保留，零图可合格。节点、箭头、比较与曲线都应有依据，资源必须真实可用，不要求特定格式、标记或每节配额。
 
-## Hold-out protocol
+模型自评与独立模型审稿只是辅助证据，不是真人理解、偏好、记忆或复用。独立上下文不可用时如实记录，不以生成者回顾替代。
 
-Choose the hold-out before candidate assembly:
+## 可选的预测检验
 
-- single source: reserve the last load-bearing section;
-- exactly two sources: reserve one load-bearing section from each while keeping both construction briefs available for dialogue;
-- three or more sources: reserve the last Source Brief;
-- source-dive: reserve one non-entry module connected to a core behavior path; for `system`, test whether it fits the whole-system model or exposes a missing state owner, capability, or boundary; for narrower scopes, test whether it supports the decision, exposes a missed cost, lowers confidence in attributed intent, or forces the decision-mechanism chain to narrow;
-- survey: reserve the newest frontier-source group.
+若本次明确要测试解释的预测力，可以预先保留独立证据或新情况，记录预测后再揭示。只在确实未参与构框且有顺序证据时称为预先预测；事后写时间戳不能证明先后。失败应促使修正解释并报告适用范围，不应迫使文章保留错误框架。
 
-Reveal the hold-out after selecting `f*`. Pass when the frame explains the hold-out without changing its core components and reports a real miss honestly. Retrofitting the frame after reveal is a failure.
+这是一种可选测试方法。普通稿件不要求保留证据、多个候选、预揭示文件或固定探针；这些流程完成也不能抵消初稿偏题或解释缺桥。
 
-For evals, persist the Candidate Frame Brief and prediction before revealing the hold-out. Use the environment clock, then identify the later hold-out fetch/read in the execution transcript when available. Artifact content proves what was predicted; transcript order proves when. A retrospective report or handwritten timestamp alone cannot prove chronology. If access logs are unavailable, grade prediction content normally but report chronology as unverified.
+## 结论写到证据所及的位置
 
-## Deep-read dialogue protocol
+评审指出最影响交付的缺陷、对应段落和必要修法。核心目标未命中、关键机制错误、公众无法恢复必需推理、事实越界或泄露私有背景时，不能用篇幅、流畅度或机械检查通过来抵消。
 
-For two or more construction sources, verify that each Source Brief first reconstructs Problem World, Reasoning Machine, and World After in isolation. Then admit only Dialogue Matrix rows that identify evidence on both sides and change interpretation through shared ground, term mismatch, premise conflict, or an unresolved question.
-
-A matrix fails when it normalizes vocabulary before establishing what each author means, records topical overlap as agreement, labels different conclusions as conflict without locating the premise difference, or appears as a field dump in the final article. In multi-source deep-read, a candidate frame must explain at least one admitted relationship or justify why one source's mechanism legitimately organizes the others.
-
-## Comprehension protocol
-
-After hold-out testing and before Compose, evaluate the four probes in `references/reader-model.md`:
-
-1. **Reconstruction**: the problem, load-bearing explanation, strongest evidence, and boundary can be rebuilt without copying the evidence-model schema.
-2. **Novel case**: a genuinely new case receives a prediction or classification through the selected mechanism, with weave synthesis labeled.
-3. **Counterexample**: removing a premise or crossing a boundary either confirms the stated limit or narrows the frame.
-4. **Question repair**: the initial question is explicitly answered, reframed, dissolved, or left unresolved from evidence.
-
-The gate fails when fluent restatement substitutes for mechanism, a source example is renamed as a novel case, the counterexample strains no component, or question repair is manufactured without evidence. A surviving initial model may still pass; cognitive value does not require forced disagreement.
-
-For source-dive, reconstruction must connect a problem or design force to a load-bearing decision, its executable behavior path, capability, cost, and failure boundary. A candidate frame must connect at least two layers of `problem/force <-> decision <-> mechanism <-> consequence/boundary`; relabeling a call chain, plugin system, state lifecycle, or module relation does not qualify. The counterexample removes an enforcing component or changes a shaping force. Author intent requires attributable evidence; structure-only explanations remain weave inference.
-
-For source-dive `system`, candidate admission additionally requires one frame to explain the product problem, overall shape, canonical task, at least two load-bearing judgments, user capabilities, and system boundary together. Reconstruction must identify the tool and actor in product language, the core state, the system structure, and one representative task before naming implementation symbols. The finished article fails when local mechanisms are correct but the reader cannot recover the whole system or three project-specific takeaways.
-
-In a source-dive `system` eval, smoke, or audit, an independent reader agent sees only the final article and answers the eight system-understanding questions in `source-dive.md`. Grade the answers for product identity, problem, capabilities, system composition, task flow, design judgments, costs, and three takeaways. This rubric is semantic; no regex or required heading substitutes for it.
-
-For Survey, reconstruction follows the selected spine. A throughline must recover the concrete object across at least two state changes; a dialectical spine must recover the conflict and resolution; an issue-centered spine must recover the evidence chain and limiting condition. A renamed source example does not count as transfer.
-
-## Deep Read and Source Dive learning-design protocol
-
-After the Comprehension Gate, evaluate the Learning Spine against `o`:
-
-- **Central model**: one load-bearing mechanism, distinction, path, or set of axes controls the article.
-- **Dependency order**: no term is required before the article has supplied the concept it depends on.
-- **Worked reasoning**: at least one example exposes the mechanism or classification operation rather than decorating it.
-- **Objective completion**: every declared Canonical Article objective includes an accurate mental model, an executable or inspectable operation, a common failure, and an evidence or version boundary; a heading or keyword match is zero coverage.
-- **Misconception repair**: tempting shortcuts contradicted by the evidence are corrected where they become likely.
-- **Chapter delta**: each chapter adds a named reconstruction, distinction, prediction, evaluation, or decision ability.
-- **Transfer and boundary**: a materially different case follows from the model, and a real condition stops it.
-
-For `explain`, fail an approachable inventory, detached glossary, analogy-only explanation, or reading list that carries prerequisites the article promised to supply. For `map`, fail mixed abstraction levels or mutually exclusive families that collapse when a hybrid item is tested.
-
-## Survey Fill and cross-phase visual protocol
-
-After the Spine Direction Gate passes:
-
-- Collect inventories relationship evidence and support limits without requiring a visual;
-- Digest records idea shape, element-level evidence, and applicability boundary, with text as the default;
-- Outline orders plain-language concept, concrete example, optional visual, then immediate evidence and boundary;
-- every Fill section serves the selected spine and its source map;
-- a stalled section returns to Digest instead of receiving fluent unsupported connective tissue;
-- Fill never materializes a visual before its explanation and example;
-- Refine removes cross-section repetition, writes the opening last, and applies the visual deletion test;
-- Visual Pass is final admission and rendering rather than the first visual decision, and matches relationship shape to representation;
-- a retained figure adds a relationship not equally recoverable from adjacent prose;
-- every node, arrow, curve, or comparison traces to evidence or is labeled Weave synthesis;
-- figures appear after plain-language grounding and a concrete example, with a bold one-line caption followed immediately by supporting evidence and an applicability boundary;
-- every retained figure has exactly one standalone `<!-- weave-visual -->` marker immediately before it, and the delivery report's admitted count equals the serialized article's marker count;
-- sparse output, including zero figures, passes;
-- every ASCII visual uses one paired, non-nested, case-insensitive `#+begin_example` / `#+end_example` Org block rather than a Markdown fence, indented block, or other naked ASCII art;
-- every Org ASCII content line remains within 80 ASCII columns and avoids fragile CJK alignment;
-- the delivery report's candidate, admitted, and deleted counts reconcile.
-
-Fail a figure that merely turns prose into boxes, appears before the concept is explained, overclaims the evidence, or leaves a broken asset. During Self-review, also fail a figure when a reader limited to its caption, evidence, and boundary cannot recover the interaction and changed judgment, or can infer more than the experiments support.
-
-## Final-article recoverability
-
-For Deep Read or Source Dive `explain`, Survey `Canonical Article`, any self-contained explanation promise, and explicit semantic audits, give only the serialized final article to a fresh independent context. Grade whether it can recover the central model or Survey spine, use it on a new case, state a real boundary, and identify prerequisite gaps. Quoting headings or `📍` markers without operating the model fails.
-
-This result is L1 article recoverability only. It cannot establish actual-reader understanding, retention, retelling, reuse, or return. Unavailable independence must be reported and cannot pass an audit-sensitive run; audit answers remain ephemeral.
-
-## Final-article trace
-
-Before Compose, map every planned chapter to:
-
-- one component of `f*`, which is the user-selected spine for Survey;
-- the evidence it uses;
-- its role: establish, explain, contrast, test, bound, or apply.
-- the reader capability it adds.
-
-Delete a chapter that does not serve the selected frame or Survey spine. In the final audit, verify that the article's ordering still follows this map and that the strongest counterevidence remains visible.
-
-## Failure patterns
-
-- Candidate labels differ but chapter maps are the same.
-- Multi-source synthesis stacks conclusions without reconstructing author worlds or explaining a Dialogue Matrix relationship.
-- A vivid metaphor replaces an evidence-backed mechanism.
-- The winner is generic enough to fit any topic in the field.
-- A fixed workflow template determines the answer before the evidence is read.
-- The article contains the selected thesis but most chapters remain an inventory.
-- The frame explains included evidence only and collapses on the hold-out.
-- Runner-up candidates are obvious strawmen.
-- Field-wide prevalence or momentum is inferred from representative examples rather than trend-capable evidence.
-- The selected lens is named in the report but the article keeps the old top-level template.
-- The hold-out passes, but the run cannot reconstruct the mechanism or use it on a novel case.
-- The initial question is preserved after the evidence invalidates its categories.
-- A decorative counterexample is listed without removing a premise, crossing a boundary, or narrowing the frame.
-- Survey restores the retired `explain / map / evaluate / decide / enter` router or lens library.
-- Survey begins Fill before the user chooses or delegates a spine.
-- Survey generates spine candidates before Digest and Outline.
-- Survey candidates use different labels but produce the same article.
-- A throughline tracks an abstraction such as “learning” whose state cannot be named.
-- The selected spine appears in the report but most chapters remain an inventory.
-- A survey taxonomy puts mechanism, data regime, feedback source, and application context into one false sibling list.
-- A Survey article uses accessible language but never works a mechanism or transfers it to a new case.
-- A Survey article gives unconditional advice even though its evidence supports only description or comparison.
-- Every Survey section receives a diagram, or retained diagrams only reflow nearby prose.
-- A Survey ASCII visual uses a Markdown fence, naked text, an unpaired or nested Org example block, or a line wider than 80 ASCII columns.
-- Visual evidence and placement are first considered after Refine rather than carried through Collect, Digest, Outline, Fill, and Refine.
-- Agent preflight is reported as completed human Self-review.
+若要声称初稿改善，必须有同材料、同请求、同宿主配置的真实旧新首次完整稿及固定标准的比较。单稿分数或模型自我认可不能提供这个结论。

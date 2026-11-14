@@ -18,29 +18,6 @@ function Add-Failure {
     $Failures.Add($Message)
 }
 
-function Get-YamlTagTokens {
-    param([string]$FrontmatterText)
-
-    $section = [regex]::Match($FrontmatterText, '(?ms)^tags:[ \t]*(?<inline>\[[^\]\r\n]*\]|[^\r\n]*)\r?\n(?<items>(?:[ \t]+-\s+[^\r\n]+\r?\n?)*)')
-    if (-not $section.Success) { return @() }
-
-    $rawValues = [System.Collections.Generic.List[string]]::new()
-    $inline = $section.Groups['inline'].Value.Trim()
-    if ($inline.StartsWith('[') -and $inline.EndsWith(']')) {
-        foreach ($value in $inline.Substring(1, $inline.Length - 2).Split(',')) { $rawValues.Add($value) }
-    }
-    elseif (-not [string]::IsNullOrWhiteSpace($inline)) {
-        $rawValues.Add($inline)
-    }
-    foreach ($match in [regex]::Matches($section.Groups['items'].Value, '(?m)^\s*-\s*(?<value>[^\r\n]+?)\s*$')) {
-        $rawValues.Add($match.Groups['value'].Value)
-    }
-
-    return @($rawValues | ForEach-Object {
-        ([regex]::Replace($_, '\s+#.*$', '')).Trim().Trim('"', "'").ToLowerInvariant()
-    } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-}
-
 function Get-ProseText {
     param([string]$Text)
 
@@ -144,189 +121,115 @@ function Find-RepeatedFragment {
     return $null
 }
 
-function Get-DisplayColumnWidth {
-    param([string]$Line)
+function Get-OrgExampleFailures {
+    param([string]$Text)
 
-    $width = 0
-    foreach ($character in $Line.ToCharArray()) {
-        if ($character -eq "`t") {
-            $width += 8 - ($width % 8)
+    $failures = [System.Collections.Generic.List[string]]::new()
+    $inOrg = $false
+    $fence = ''
+    foreach ($line in ($Text -split "`r?`n")) {
+        if ($fence) {
+            if ($line -match ('^ {0,3}' + [regex]::Escape($fence[0]) + '{' + $fence.Length + ',}\s*$')) { $fence = '' }
+            continue
         }
-        elseif ([int]$character -le 0x7f) {
-            $width += 1
+        if (-not $inOrg -and $line -match '^ {0,3}(`{3,}|~{3,})') { $fence = $Matches[1]; continue }
+        if ($line -match '(?i)^\s*#\+begin_example\s*$') {
+            if ($inOrg) { $failures.Add('Nested Org example block.') }
+            $inOrg = $true
         }
-        else {
-            # Org example blocks should prefer ASCII. Count non-ASCII conservatively
-            # as two display columns so CJK alignment cannot pass a byte-blind check.
-            $width += 2
+        elseif ($line -match '(?i)^\s*#\+end_example\s*$') {
+            if (-not $inOrg) { $failures.Add('Orphan Org example terminator.') }
+            $inOrg = $false
+        }
+        elseif ($line -match '(?i)^\s*#\+(?:begin|end)_example\b') {
+            $failures.Add('Malformed Org example delimiter.')
         }
     }
-    return $width
+    if ($inOrg) { $failures.Add('Unclosed Org example block.') }
+    return @($failures)
 }
 
-function Get-OrgExampleFailures {
-    param(
-        [string]$Text,
-        [bool]$EnforceSurveyAscii
-    )
+function Test-YamlValue {
+    param([string]$Value)
 
-    $result = [System.Collections.Generic.List[string]]::new()
-    $lines = $Text -split "`r?`n"
-    $inOrgExample = $false
-    $orgStartLine = 0
-    $inMarkdownFence = $false
-    $fenceMarker = $null
-    $fenceLength = 0
-    $fenceLanguage = ''
-    $fenceStartLine = 0
-    $fenceLooksLikeAscii = $false
-    $previousContentLine = ''
-    $pendingVisualMarkerLine = 0
-    $inMarkedMarkdownTable = $false
-    $visualMarkerPattern = '^\s*<!--\s*weave-visual\s*-->\s*$'
-    $asciiVisualPattern = '(?:[-=]{1,3}>|<[-=]{1,3}|<[-=]{1,3}>|\+-{2,}\+|\|\s*[/\\_^~*.-]{2,}\s*\||^\s*[/\\_]{3,}\s*$|^\s*(?:[A-Za-z][\w -]*\s+)?\|\s*.*[/\\_*].*$)'
+    $valueText = $Value.Trim()
+    if (-not $valueText -or $valueText -in @('null', '~', '[]', '{}') -or $valueText -match '^(["''])\s*\1(?:\s+#.*)?$') { return $false }
+    if ($valueText.StartsWith('"')) { return $valueText -match '^"(?:[^"\\]|\\.)*"(?:\s+#.*)?$' }
+    if ($valueText.StartsWith("'")) { return $valueText -match "^'(?:[^']|'')*'(?:\s+#.*)?$" }
+    # Frontmatter uses scalars and flat sequences, not YAML objects, anchors or tags.
+    return $valueText -notmatch '^[\[\]{}&*!|>@`]|:\s|[\[\]{}]'
+}
 
-    for ($index = 0; $index -lt $lines.Count; $index++) {
-        $line = $lines[$index]
-        $lineNumber = $index + 1
-
-        if ($inMarkdownFence) {
-            $closingPattern = '^\s{0,3}' + [regex]::Escape($fenceMarker) + '{' + $fenceLength + ',}\s*$'
-            if ($line -match $closingPattern) {
-                if ($EnforceSurveyAscii -and $fenceLooksLikeAscii -and $fenceLanguage -in @('', 'text', 'txt', 'ascii', 'plaintext', 'org', 'diagram')) {
-                    $result.Add("Survey ASCII visual at line $fenceStartLine uses a Markdown fence; use a paired Org example block.")
-                }
-                $inMarkdownFence = $false
-                $fenceMarker = $null
-                $fenceLength = 0
-                $fenceLanguage = ''
-                $fenceStartLine = 0
-                $fenceLooksLikeAscii = $false
-            }
-            elseif ($line -match $asciiVisualPattern) {
-                $fenceLooksLikeAscii = $true
-            }
-            continue
-        }
-
-        if ($EnforceSurveyAscii -and $line -match $visualMarkerPattern) {
-            if ($pendingVisualMarkerLine -gt 0) {
-                $result.Add("Survey visual marker at line $pendingVisualMarkerLine is not attached to a visual.")
-            }
-            $pendingVisualMarkerLine = $lineNumber
-            $previousContentLine = $line
-            continue
-        }
-
-        if ($EnforceSurveyAscii -and $pendingVisualMarkerLine -gt 0 -and -not [string]::IsNullOrWhiteSpace($line)) {
-            $isVisualStart = $line -match '(?i)^\s*#\+begin_example\s*$' -or
-                $line -match '^\s{0,3}`{3,}\s*mermaid(?:\s|$)' -or
-                $line -match '^\s{0,3}~{3,}\s*mermaid(?:\s|$)' -or
-                $line -match '^\s*!\[' -or
-                $line -match '(?i)^\s*<figure(?:\s|>)' -or
-                $line -match '^\s*\|' -or
-                $line -match '^\s*(?:\$\$|\\\[)'
-            if (-not $isVisualStart) {
-                $result.Add("Survey visual marker at line $pendingVisualMarkerLine is not immediately followed by a supported visual.")
-            }
-            elseif ($line -match '^\s*\|') {
-                $inMarkedMarkdownTable = $true
-            }
-            $pendingVisualMarkerLine = 0
-        }
-
-        if ($inMarkedMarkdownTable -and $line -notmatch '^\s*\|') {
-            $inMarkedMarkdownTable = $false
-        }
-
-        if (-not $inOrgExample) {
-            $fence = [regex]::Match($line, '^\s{0,3}(?<marker>`{3,}|~{3,})(?<info>.*)$')
-            if ($fence.Success) {
-                $markerText = $fence.Groups['marker'].Value
-                $inMarkdownFence = $true
-                $fenceMarker = $markerText.Substring(0, 1)
-                $fenceLength = $markerText.Length
-                $fenceInfo = $fence.Groups['info'].Value
-                $pandocLanguage = [regex]::Match($fenceInfo, '^\s*\{\.(?<language>[^}\s]+)')
-                $fenceLanguage = if ($pandocLanguage.Success) {
-                    $pandocLanguage.Groups['language'].Value.ToLowerInvariant()
-                }
-                else {
-                    [regex]::Match($fenceInfo, '^\s*(?<language>\S*)').Groups['language'].Value.ToLowerInvariant()
-                }
-                $fenceStartLine = $lineNumber
-                if ($EnforceSurveyAscii -and $fenceLanguage -eq 'mermaid' -and $previousContentLine -notmatch $visualMarkerPattern) {
-                    $result.Add("Survey Mermaid visual at line $lineNumber is missing its immediately preceding visual marker.")
-                }
-                $previousContentLine = $line
-                continue
+function Get-YamlSequenceItems {
+    param([string]$Value)
+    $items = [System.Collections.Generic.List[string]]::new()
+    $start = 1
+    $quote = [char]0
+    for ($index = 1; $index -lt $Value.Length - 1; $index++) {
+        $character = $Value[$index]
+        if ($quote -ne [char]0) {
+            if ($quote -eq [char]34 -and $character -eq [char]92) { $index++; continue }
+            if ($character -eq $quote) {
+                if ($quote -eq [char]39 -and $index + 1 -lt $Value.Length - 1 -and $Value[$index + 1] -eq $quote) { $index++ }
+                else { $quote = [char]0 }
             }
         }
+        elseif ($character -eq [char]34 -or $character -eq [char]39) { $quote = $character }
+        elseif ($character -eq ',') { $items.Add($Value.Substring($start, $index - $start).Trim()); $start = $index + 1 }
+    }
+    $items.Add($Value.Substring($start, $Value.Length - 1 - $start).Trim())
+    return @($items)
+}
 
-        if ($line -match '(?i)^\s*#\+begin_example\s*$') {
-            if ($EnforceSurveyAscii -and -not $inOrgExample -and $previousContentLine -notmatch $visualMarkerPattern) {
-                $result.Add("Survey Org example visual at line $lineNumber is missing its immediately preceding visual marker.")
-            }
-            if ($inOrgExample) {
-                $result.Add("Nested Org example block begins at line $lineNumber.")
-            }
-            else {
-                $inOrgExample = $true
-                $orgStartLine = $lineNumber
-            }
-            $previousContentLine = $line
-            continue
-        }
+function Get-FrontmatterFailures {
+    param([string]$Text)
 
-        if ($line -match '(?i)^\s*#\+end_example\s*$') {
-            if (-not $inOrgExample) {
-                $result.Add("Orphan Org example block terminator at line $lineNumber.")
+    $failures = [System.Collections.Generic.List[string]]::new()
+    $fields = @{}
+    $sequences = @{}
+    $listIndents = @{}
+    $activeField = ''
+    foreach ($line in ($Text -split "`r?`n")) {
+        if ($line -match '^\s*(?:#.*)?$') { continue }
+        if ($line -match '^(?<key>[A-Za-z_][\w-]*):[ \t]*(?<value>.*)$') {
+            $activeField = $Matches.key
+            if ($fields.ContainsKey($activeField)) { $failures.Add("Duplicate YAML field: $activeField") }
+            $fields[$activeField] = $Matches.value.Trim()
+            $value = $fields[$activeField]
+            if ($activeField -in @('tags', 'sources') -and $value.StartsWith('[') -and $value.EndsWith(']')) {
+                $items = @(Get-YamlSequenceItems $value)
+                $sequences[$activeField] = $items
+                if (@($items | Where-Object { -not (Test-YamlValue $_) }).Count) { $failures.Add("Malformed or empty YAML sequence: $activeField") }
             }
-            else {
-                $inOrgExample = $false
-                $orgStartLine = 0
-            }
-            $previousContentLine = $line
-            continue
+            elseif ($activeField -in @('tags', 'sources') -and $value) { $failures.Add("YAML $activeField must be a nonempty sequence.") }
+            elseif ($value -and -not (Test-YamlValue $value)) { $failures.Add("Malformed YAML value: $activeField") }
         }
-
-        if ($line -match '(?i)^\s*#\+(?:begin|end)_example\b') {
-            $result.Add("Invalid Org example delimiter at line $lineNumber; use the exact delimiter alone on its line.")
-            $previousContentLine = $line
-            continue
+        elseif ($line -match '^(?<indent> *)-[ \t]+(?<value>.+)$' -and $activeField -in @('tags', 'sources')) {
+            $indent = $Matches.indent.Length
+            if ($listIndents.ContainsKey($activeField) -and $listIndents[$activeField] -ne $indent) { $failures.Add("Inconsistent YAML list indentation: $activeField") }
+            $listIndents[$activeField] = $indent
+            if (-not (Test-YamlValue $Matches.value)) { $failures.Add("Malformed YAML list item: $activeField") }
+            if ($fields[$activeField] -and $fields[$activeField] -ne '__list__') { $failures.Add("Mixed inline and block YAML list: $activeField") }
+            $fields[$activeField] = '__list__'
+            if (-not $sequences.ContainsKey($activeField)) { $sequences[$activeField] = @() }
+            $sequences[$activeField] = @($sequences[$activeField]) + @($Matches.value)
         }
-
-        if ($inOrgExample) {
-            $displayWidth = Get-DisplayColumnWidth $line
-            if ($displayWidth -gt 80) {
-                $result.Add("Org example content at line $lineNumber is $displayWidth columns; maximum is 80.")
-            }
-            continue
-        }
-
-        if ($EnforceSurveyAscii -and -not $inMarkedMarkdownTable) {
-            $unmaskedLine = [regex]::Replace($line, '`[^`\r\n]*`', '')
-            $looksLikePythonTypeSignature = $unmaskedLine -match '^\s*(?:async\s+)?def\s+[A-Za-z_]\w*\s*\([^)]*\)\s*->\s*[^:]+:\s*$'
-            if (-not $looksLikePythonTypeSignature -and $unmaskedLine -match $asciiVisualPattern) {
-                $result.Add("Survey ASCII visual at line $lineNumber is outside a paired Org example block.")
-            }
-        }
-        if ($EnforceSurveyAscii -and $line -match '^\s*!\[' -and $previousContentLine -notmatch $visualMarkerPattern) {
-            $result.Add("Survey image visual at line $lineNumber is missing its immediately preceding visual marker.")
-        }
-        if (-not [string]::IsNullOrWhiteSpace($line)) {
-            $previousContentLine = $line
+        else { $failures.Add("Unsupported or malformed frontmatter line: $line") }
+    }
+    foreach ($field in @('title', 'date', 'tags', 'sources', 'status')) {
+        if (-not $fields.ContainsKey($field) -or -not $fields[$field]) { $failures.Add("Missing or empty YAML field: $field") }
+    }
+    if ($sequences.ContainsKey('sources')) {
+        $sources = @($sequences.sources | ForEach-Object { $_.Trim().Trim('"', "'") })
+        if (@($sources | Sort-Object -Unique).Count -ne $sources.Count) { $failures.Add('Frontmatter sources contain duplicate entries.') }
+    }
+    if ($fields.ContainsKey('date')) {
+        $dateValue = [datetime]::MinValue
+        if (-not [datetime]::TryParseExact($fields.date.Trim('"', "'"), 'yyyy-MM-dd', [cultureinfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::None, [ref]$dateValue)) {
+            $failures.Add('Frontmatter date must be a real YYYY-MM-DD date.')
         }
     }
-
-    if ($inOrgExample) {
-        $result.Add("Org example block opened at line $orgStartLine is not closed.")
-    }
-    if ($pendingVisualMarkerLine -gt 0) {
-        $result.Add("Survey visual marker at line $pendingVisualMarkerLine is not attached to a visual.")
-    }
-
-    return @($result)
+    return @($failures)
 }
 
 try {
@@ -342,10 +245,10 @@ try {
         throw "Article exceeds the 512 KiB integrity-check limit: $resolvedPath"
     }
 
+    if ($articleFile.Length -eq 0) { throw 'Article file is empty.' }
+
     $text = Get-Content -LiteralPath $resolvedPath -Raw -Encoding utf8
     $failures = [System.Collections.Generic.List[string]]::new()
-    $isSourceDive = [System.IO.Path]::GetFileName($resolvedPath) -match '-source-dive_'
-    $isSurvey = [System.IO.Path]::GetFileName($resolvedPath) -match '-survey_'
     $frontmatter = [regex]::Match($text, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $bodyText = if ($frontmatter.Success) { $text.Substring($frontmatter.Length) } else { $text }
     $proseResult = Get-ProseText $bodyText
@@ -354,25 +257,11 @@ try {
     }
     else {
         $frontmatterText = $frontmatter.Groups['body'].Value
-        $tagTokens = @(Get-YamlTagTokens $frontmatterText)
-        $isSourceDive = $isSourceDive -or ($tagTokens -contains 'source-dive')
-        $isSurvey = $isSurvey -or ($tagTokens -contains 'survey')
-        foreach ($field in @('title', 'date', 'tags', 'sources', 'status')) {
-            if ($frontmatterText -notmatch "(?m)^${field}:") {
-                Add-Failure $failures "Frontmatter is missing ${field}."
-            }
-        }
-        if ($isSurvey) {
-            foreach ($field in @('topic', 'scope')) {
-                if ($frontmatterText -notmatch "(?m)^${field}:") {
-                    Add-Failure $failures "Survey frontmatter is missing ${field}."
-                }
-            }
-        }
-        if ($frontmatterText -match '(?im)^(?:reader_outcome|prerequisite_floor|transfer_case|explanation_boundary|learning_spine|digest_note|spine_contract|visual_evidence_ledger|domain_use_contract|domain_payoff|article_recoverability_audit):') {
+        foreach ($failure in @(Get-FrontmatterFailures $frontmatterText)) { Add-Failure $failures $failure }
+        if ($frontmatterText -match '(?im)^(?:capability_manifest|context_envelope|reader_contract|source_brief|source_catalog|candidate_frame_brief|synthesis_pack|impact_brief|comprehension_gate|reader_outcome|prerequisite_floor|transfer_case|explanation_boundary|learning_spine|digest_note|spine_contract|visual_evidence_ledger|domain_use_contract|domain_payoff|article_recoverability_audit):') {
             Add-Failure $failures 'Frontmatter contains a forbidden reader, Survey spine, or learning-design artifact field.'
         }
-        if ($isSourceDive -and $frontmatterText -match '(?im)^(?:reading_intent|primary_intent|secondary_intent|reading_scope|primary_scope|secondary_scope|system_design_brief|engineering_decision_brief|article_closure_contract):') {
+        if ($frontmatterText -match '(?im)^(?:reading_intent|primary_intent|secondary_intent|reading_scope|primary_scope|secondary_scope|system_design_brief|engineering_decision_brief|article_closure_contract):') {
             Add-Failure $failures 'Source-dive frontmatter contains a forbidden internal-artifact field.'
         }
 
@@ -392,30 +281,11 @@ try {
             }
         }
 
-        $sourcesMatch = [regex]::Match($frontmatterText, '(?ms)^sources:\s*\r?\n(?<items>(?:\s{2,}-\s+.*(?:\r?\n|$))+)')
-        if (-not $sourcesMatch.Success) {
-            Add-Failure $failures 'Frontmatter sources must contain at least one list item.'
-        }
-        else {
-            $sources = @([regex]::Matches($sourcesMatch.Groups['items'].Value, '(?m)^\s{2,}-\s+(?<source>.+?)\s*$') | ForEach-Object { $_.Groups['source'].Value.Trim().Trim('"', "'") })
-            $uniqueSources = @($sources | Sort-Object -Unique)
-            if ($uniqueSources.Count -ne $sources.Count) {
-                Add-Failure $failures 'Frontmatter sources contain duplicate entries.'
-            }
-            foreach ($source in $sources) {
-                if ($source -match '^https://x\.com/(?!i/article/)[^/]+/article/\d+(?:[/?#]|$)') {
-                    Add-Failure $failures "X article source uses a non-canonical author/article path: $source"
-                }
-            }
-        }
     }
 
     $prose = $proseResult.Text
-    if ($isSurvey) {
-        foreach ($orgFailure in @(Get-OrgExampleFailures -Text $bodyText -EnforceSurveyAscii $true)) {
-            Add-Failure $failures $orgFailure
-        }
-    }
+    foreach ($orgFailure in @(Get-OrgExampleFailures -Text $bodyText)) { Add-Failure $failures $orgFailure }
+    if ([string]::IsNullOrWhiteSpace(($prose -replace '(?m)^# .+$', ''))) { Add-Failure $failures 'Article has no prose body.' }
     if (-not $proseResult.FenceClosed) {
         Add-Failure $failures 'Markdown contains an unclosed fenced code block.'
     }
@@ -425,7 +295,7 @@ try {
             Add-Failure $failures "Malformed punctuation sequence found: $pattern"
         }
     }
-    if ($prose -match '(?m)^>(?![ >])') {
+    if ($prose -match '(?m)^>(?![ >]|\r?$)') {
         Add-Failure $failures 'Blockquote marker must be followed by a space.'
     }
     if ($prose -match '(?m)[。！？；：，]>\s*$') {
@@ -446,15 +316,17 @@ try {
     if ($prose -match $forbiddenHeadings) {
         Add-Failure $failures 'Article contains a forbidden internal-artifact heading.'
     }
-    $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Reader outcome|Prerequisite floor|Target capability|Transfer case|Explanation boundary|Revision trigger|Route expression|Central model|Dependency order|Worked examples|Misconception repairs|Chapter deltas|Final transfer|Digest Note|Spine Contract|Through-object|Section-source map|Visual Evidence Ledger|Domain Use Contract|Domain Payoff|Primary reader outcome|Reasoning object|Payoff question|Condition set|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|Reconstruction|Novel case|Counterexample|Question repair|初始问题|起始模型|未决判断|读者结果|前提下限|目标能力|迁移案例|解释边界|修正触发条件|路线表达|中央模型|依赖顺序|承重示例|误解修复|章节增量|最终迁移|消化笔记|脊柱契约|贯穿对象|章节来源映射|视觉证据台账|领域用途契约|领域收益|主要读者结果|推理对象|收益问题|条件集合|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题|重建|新例|反例|问题修复)(?:\*\*)?\s*:'
+    $readerArtifactFields = '(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:Initial question|Starting model|Unsettled judgment|Reader outcome|Prerequisite floor|Target capability|Transfer case|Explanation boundary|Revision trigger|Route expression|Central model|Dependency order|Worked examples|Misconception repairs|Chapter deltas|Final transfer|Digest Note|Spine Contract|Through-object|Section-source map|Visual Evidence Ledger|Domain Use Contract|Domain Payoff|Primary reader outcome|Reasoning object|Payoff question|Condition set|Problem World|Reasoning Machine|World After|Shared ground|Term mismatch|Premise conflict|Unresolved question|初始问题|起始模型|未决判断|读者结果|前提下限|目标能力|迁移案例|解释边界|修正触发条件|路线表达|中央模型|依赖顺序|承重示例|误解修复|章节增量|最终迁移|消化笔记|脊柱契约|贯穿对象|章节来源映射|视觉证据台账|领域用途契约|领域收益|主要读者结果|推理对象|收益问题|条件集合|问题世界|推理机器|接受后的世界|共同地基|术语错位|前提冲突|未决问题)(?:\*\*)?\s*:'
     $readerArtifactTableFields = '(?im)^\s*\|\s*(?:\*\*)?(?:Reader outcome|Prerequisite floor|Target capability|Transfer case|Explanation boundary|Central model|Dependency order|Worked examples|Misconception repairs|Chapter deltas|Final transfer|Digest Note|Spine Contract|Through-object|Section-source map|Visual Evidence Ledger|Primary reader outcome|Reasoning object|Payoff question|Condition set|读者结果|前提下限|目标能力|迁移案例|解释边界|中央模型|依赖顺序|承重示例|误解修复|章节增量|最终迁移|消化笔记|脊柱契约|贯穿对象|章节来源映射|视觉证据台账|主要读者结果|推理对象|收益问题|条件集合)(?:\*\*)?\s*\|'
-    if ($prose -match $readerArtifactFields -or $prose -match $readerArtifactTableFields) {
+    $readerFieldCount = [regex]::Matches($prose, $readerArtifactFields).Count + [regex]::Matches($prose, $readerArtifactTableFields).Count
+    $explicitArtifactField = '(?im)^\s*(?:[-*]\s*|\|\s*)?(?:\*\*)?(?:Reader outcome|Route expression|Digest Note|Spine Contract|Visual Evidence Ledger|Domain Use Contract|Domain Payoff|读者结果|路线表达|消化笔记|脊柱契约|视觉证据台账|领域用途契约|领域收益)(?:\*\*)?\s*[:|]'
+    if ($readerFieldCount -ge 3 -or $prose -match $explicitArtifactField) {
         Add-Failure $failures 'Article contains Reader Contract, Learning Spine, Survey spine, Domain Use, Dialogue Matrix, or Comprehension Gate field dumps.'
     }
     $sourceDiveInternalFieldNames = 'Primary reading intent|Secondary reading intent|Reading intent|Primary reading scope|Secondary reading scope|Reading scope|Observed problem|Design forces|Executable mechanism|Evidence status|Core project problem|Decision chains|Attribution boundary|Version boundary|Product identity|Target user or actor|User capabilities|System boundary|Entry points|Core state|Major subsystems|Canonical task loop|Organizing principle|主要阅读意图|次要阅读意图|阅读意图|主要阅读范围|次要阅读范围|阅读范围|观察到的问题|设计力量|可执行机制|证据状态|核心项目问题|承重判断链|归属边界|版本边界|产品身份|目标用户或行动者|用户能力|系统边界|入口|核心状态|主要子系统|代表性任务循环|组织原则'
     $sourceDiveArtifactFields = "(?im)^\s*(?:[-*]\s*)?(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*:"
     $sourceDiveArtifactTableFields = "(?im)^\s*\|\s*(?:\*\*)?(?:$sourceDiveInternalFieldNames)(?:\*\*)?\s*\|"
-    if ($isSourceDive -and ($prose -match $sourceDiveArtifactFields -or $prose -match $sourceDiveArtifactTableFields)) {
+    if ([regex]::Matches($prose, $sourceDiveArtifactFields).Count + [regex]::Matches($prose, $sourceDiveArtifactTableFields).Count -ge 3 -or $prose -match '(?im)^\s*(?:[-*]\s*)?(?:Primary reading intent|Reading scope|主要阅读意图|阅读范围):') {
         Add-Failure $failures 'Article contains source-dive intent, scope, design-brief, decision-brief, or closure-contract field dumps.'
     }
 
@@ -462,7 +334,7 @@ try {
         throw ($failures -join [Environment]::NewLine)
     }
 
-    Write-Host "Article integrity passed: $(Split-Path -Leaf $resolvedPath)" -ForegroundColor Green
+    Write-Host "Article mechanical checks completed: $(Split-Path -Leaf $resolvedPath). Semantic quality and source truth are not verified by this script." -ForegroundColor Green
 }
 catch {
     Write-Error "Article integrity failed: $($_.Exception.Message)"

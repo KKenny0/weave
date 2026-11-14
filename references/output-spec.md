@@ -1,81 +1,72 @@
-# Output Specification
+# 输出与文件规范
 
-## File naming
+写入文章文件前读取。普通研究长文默认写文件；用户要求讨论、只读分析或笔记时按要求返回，不强行生成文章。用户明确指定格式或路径时以其委托为准。
 
-`{topic}-{workflow}_{YYYY-MM-DD}.md`
+## 默认文件名与路径
 
-- `{topic}`: 2-6 字简洁主题名 (从素材推断或用户指定)
-- `{workflow}`: `deep-read` / `source-dive` / `survey` (which workflow ran)
-- `{YYYY-MM-DD}`: `date +%Y-%m-%d` at write time
+新文章默认命名：
 
-Examples:
+```text
+{topic}-weave_{YYYY-MM-DD}.md
+```
 
-- `anthropic-agent-architecture-deep-read_2026-05-29.md`
-- `hermes-agent-source-dive_2026-06-15.md`
-- `rag-survey_2026-07-07.md`
+主题简洁且可辨认，可使用中文或英文；日期取实际写入时的环境日期。文件名不编码材料路线。例如 `智能体记忆-weave_2026-11-14.md`。既有文章保留原文件名和内容，本次规则不触发批量重命名、迁移或改写。
 
-## YAML frontmatter (required at file top)
+输出位置优先级保持：
+
+1. 用户明确指定的文件路径或输出目录。
+2. 任务范围内已有 `.loom/config.yaml` 的 `vault_path`，使用 `<vault-root>/03_Content_Output/Longform/`。
+3. 当前工作目录。
+
+读取旧配置是兼容输入，不改写配置，不搜索无关目录猜测 vault。路径不可用时说明具体问题，不静默写到另一处。已有同名文件时先读取，按委托更新指定稿件；若是无关稿件则选择可辨认的新文件名，避免覆盖。用户要求其他产物形式时不强套文章五字段。
+
+## 文章 frontmatter
+
+默认文章在文件最上方保留五字段：
 
 ```yaml
 ---
-title: {主题}
-date: {YYYY-MM-DD}
-tags: [{workflow}, {主题标签}]
+title: "主题标题"
+date: 2026-11-14
+tags: [智能体, 记忆机制]
 sources:
-  - {source 1 URL or path}
-  - {source 2 URL or path}
+  - "https://example.org/original-source"
 status: draft
 ---
 ```
 
-Workflow-specific extra fields:
+示例仅展示格式，实际值必须来自本次文章。`title` 与正文标题一致，`date` 用实际日期，`tags` 表达主题而非路线，`sources` 列出实际使用且可回查的来源，`status` 默认 `draft`。本地相对路径应从文章所在目录解析；只有确认标题或显式锚点存在时才添加片段，不能把材料编号或自拟标签拼成不存在的锚点。无法确认时链接到真实文件或页面，并在正文说明章节或材料编号。无需读者选 Mode，也不添加 workflow、mode、scope、reader outcome 或内部研究字段。用户要求的其他合法元数据按其需求处理，私人背景和内部结构仍不写入。
 
-- **survey**: add `topic: {领域}` and `scope: {broad/focused}`
-- **source-dive**: add `source_repo: {repo_url}` and `source_docs: {docs_url}` if applicable
+`draft` 表示内容尚可继续编辑，不表示已获得用户确认或发布授权，也不减轻初次交付质量要求。不为了机器检查填入未读取、未使用或虚构的来源；来源不足时处理研究缺口或说明边界。
 
-## Output path priority
+## 成稿与隐私边界
 
-1. User-specified `output_dir` → use that
-2. Vault config exists (`.loom/config.yaml` `vault_path`) → `<vault-root>/03_Content_Output/Longform/`
-3. Otherwise → current working directory
+文件只包含可独立阅读的最终文章、必要图表、引用和适当的来源说明。图形格式依阅读环境选择，无强制 Org 代码块、视觉 marker 或数量字段。个人意义段落只有确有内容时出现，标题依内容决定，无固定影响标题或零增量填充。
 
-## Context-aware impact section
+不得持久化用户 brief、原始私聊、背景画像、内部 schema、研究笔记字段、候选评分、审阅问答，或以改名 sidecar 方式保存同样内容。文章需要个人应用时，仅使用与当前目标相关且获准进入成稿的背景，不暴露无关记忆、私人路径或私密引文。特殊审计仅按 [audit.md](audit.md) 保存允许的最小证据，不扩展为内部过程档案。
 
-The filename and YAML schema do not change when Impact Pass runs.
+交付报告保持简短，写产物位置、主要覆盖或结论边界、实际检查及重要未验证事项。可说明哪些结论是静态分析、哪些得到运行验证，或来源访问失败影响了什么。不要复制原始委托、个人背景或内部推理结构；没有实施的审计不添加假 passed 状态，也无需默认报告 hold-out、视觉计数或用户待审状态。
 
-- Use `## 对我意味着什么` when the Context Envelope supports any personal baseline, preference, decision, goal, or constraint tied to the research. An explicit current-request statement such as “我正在决定…” or “我目前偏向…” is sufficient; user role and persistent memory are not required.
-- Use `## 对当前问题意味着什么` only when none of those personal fields is supported and the context is genuinely question-only.
-- When no impact passes admission, keep the applicable heading and state the `delta ~= 0` reason briefly.
-- Omit the section when the user explicitly requests a pure research article without personal implications.
-- Place the section after the explanatory body and before a final evidence-boundary or coverage statement when the workflow has one.
+## 检查实际文件
 
-The section is finished article content, not a dump of internal fields.
+写入后回读最终文件，并按 [review.md](review.md) 核对目标、自足性、事实和实际内容。存在检查器时先确认本地版本符合当前规范，再对明确的文章路径执行：
 
-## Delivery report allowlist
+```powershell
+pwsh -NoProfile -File <weave-skill-root>/scripts/check-article.ps1 -ArticlePath <article.md>
+```
 
-When a delivery report or `smoke-report.md` is requested, persist only:
+从实际安装位置解析 `<weave-skill-root>`，不要假定文章所在目录有 scripts。机械检查只验证实现覆盖的格式性质，不证明来源正确、重点充分或读者理解。
 
-- output path and size or chapter metrics;
-- evidence workflow and, for Deep Read or Source Dive, reader outcome; for Survey, confirmed mode and exact article promise; for installed-behavior verification, the resolved weave skill path and version or source commit when available;
-- selected frame, or selected Survey spine and through-object when applicable, why it was admitted, material close alternative, and final boundary;
-- hold-out identifier, prediction summary, result, chronology status, and pre-reveal artifact path;
-- Comprehension Gate pass status, or the failed probe and material degradation, without the Reader Contract or probe contents;
-- detected host label, context source category names, and material degradation;
-- admitted impact count or `delta ~= 0` reason, without Impact Brief fields;
-- Voice Pass result and scoped style-reference status;
-- Survey Visual Pass candidate, admitted, and deleted counts;
-- Article Integrity result and any material degradation, without Article Closure Contract fields;
-- Article Recoverability status as `passed`, `not required`, or `unavailable`, without audit answers;
-- Survey human Self-review status as `pending` or `confirmed`;
-- runtime verification, static inference, source gaps, and coverage limits.
+新 `check-run.ps1` 支持显式 `ArticlePath`，并保留旧 `RunDirectory` 用法兼容；`ImpactMode` 改为 optional 兼容参数。显式指定文章时不自动关联同目录报告；需要检查某份报告时用 `ReportPath` 明确指定。新版可用时优先明确指定待检查文章：
 
-Never use report sections named `Capability Manifest`, `Context Envelope`, `Reader Contract`, `Learning Spine`, `Digest Note`, `Spine Contract`, `Visual Evidence Ledger`, `Source Brief`, `Source Catalog`, `Domain Use Contract`, `Domain Payoff`, `Dialogue Matrix`, `Candidate Frame Brief`, `Synthesis Pack`, `Comprehension Gate`, `Article Recoverability Audit`, `Impact Brief`, `System Design Brief`, `Engineering Decision Brief`, or `Article Closure Contract`, and never reproduce their schemas or raw contents. Do not persist source-dive reading intent or scope. One-line status records such as `Comprehension Gate: passed`, `Article Integrity: passed`, and `Article Recoverability: not required` are allowed without headings. “Complete” means the allowlisted verification summary is complete, not that internal artifacts are copied into the report.
+```powershell
+pwsh -NoProfile -File <weave-skill-root>/scripts/check-run.ps1 -ArticlePath <article.md>
+```
 
-Apply the allowlist to content, not only headings. The report may say `Context categories: explicit current request` and `Admitted impacts: 3`. It must not quote or paraphrase what the user is deciding, prefers, wants, or is constrained by, and must not summarize Impact 1/2/3. Read the report back and remove those details before delivery. The final article is the only persisted output that may contain admitted personal application.
+旧调用方仍可使用 `-RunDirectory <output-dir>`；需要检查旧格式时可显式带 `-ImpactMode personal`、`question` 或 `none`，此时分别按旧约定检查个人影响标题、问题影响标题或两者均无。新稿不传 `ImpactMode` 就不要求固定影响标题，也不要求产生运行目录、审计 sidecar 或路线元数据。
 
-## Never
+这是新接口约定，不是对当前安装实现的保证。执行前检查实际脚本参数和行为；尚未更新的检查器若强制旧 schema，报告不兼容及未验证范围，不用它的失败证明文章不完整，也不为通过旧检查添加被移除的流程。工具不可用时完成手动文件检查，如实报告机械检查未执行。
 
-- Don't change the naming pattern
-- Don't omit YAML fields
-- Don't put pipeline artifacts (Capability Manifest, Context Envelope, Reader Contract, Learning Spine, Digest Notes, Spine Contract, Visual Evidence Ledger, Source Brief tables, Source Catalog tables, retired Domain Use Contract, retired Domain Payoff, Dialogue Matrix, Synthesis Pack, Candidate Frame Brief, Comprehension Gate probes, Article Recoverability Audit answers, Impact Brief, System Design Brief, Engineering Decision Brief, Article Closure Contract, reading-intent or reading-scope fields, Evidence Weight grids, internal notes) in the output file — only the finished article
-- Don't expose raw remembered material, private memory paths, or unrelated user context
+## 交付与发布
+
+交付的是已完成可用审阅的文章，不默认插入样章确认或要求用户反复逐行审稿。可继续接受用户反馈，但内容质量不能交给用户兜底。内容就绪不授权提交、推送、发布、分发或修改知识库其他文件；这些动作需另行明确指令。

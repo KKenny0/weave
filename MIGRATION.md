@@ -1,53 +1,68 @@
-# From Loom to weave
+# From Loom and earlier weave to goal-driven weave
 
-`KKenny0/loom-skills` is archived. `KKenny0/weave` is the maintained home for the research pipeline.
+`KKenny0/loom-skills` is archived. `KKenny0/weave` is the maintained home of the integrated research-and-writing skill.
 
-## What moved
+## Current behavior
 
-| Loom skill | weave route |
+Earlier weave used Deep Read, Source Dive, and Survey as separate evidence routes, with different outcome or mode selection and article controls. The current design removes those routes from the active main flow. The user's assignment and consequential evidence gaps now determine research actions, followed by provisional framing, composition, and review.
+
+Useful local techniques remain in `references/research.md`; they do not select a separate workflow. Goal fit, article self-sufficiency, evidence fidelity, and actual-file verification apply across mixed materials.
+
+The runtime references are now:
+
+- `references/research.md`
+- `references/composition.md`
+- `references/review.md`
+- `references/output-spec.md`
+- `references/audit.md`
+
+Old route files and overlapping contract files are removed after their useful guidance is consolidated. The standalone route skills are not restored. A caller should invoke weave with its actual question, reader needs, and materials; it no longer needs a Survey mode, reader-outcome label, or delegated spine phrase.
+
+## What changes for articles
+
+| Earlier behavior | Current behavior |
 | --- | --- |
-| `deep-read` | `deep-read` route for papers, articles, interviews, reports, and book chapters |
-| `source-dive` | `source-dive` route for repositories, frameworks, and technical projects |
-| `survey` | `survey` route for domains and research directions |
+| Default `{topic}-{workflow}_{YYYY-MM-DD}.md` | Default `{topic}-weave_{YYYY-MM-DD}.md` |
+| Route tags identify the writing workflow | Tags describe topics; they do not control execution |
+| Mandatory impact section except explicit opt-out | Include implications only when they add evidence-supported value |
+| Survey-specific mode, spine, visual marker, and Org requirements | One main flow; direction choices and visuals are conditional |
+| Universal hold-out before longform composition | Hold-out only for an explicitly relevant unseen-evidence test |
+| Several internal contracts restate goals and chapter closure | Keep the original assignment available and reuse the current understanding and chapter plan |
 
-Deep Read and Source Dive keep separate evidence-workflow and reader-outcome decisions. Survey was replaced in place: it now uses Waza Learn's six-phase research-to-writing sequence, followed by Weave's explicit Spine Direction Gate and sparse Visual Pass. The former Survey lens library and `survey + explain / map / evaluate / decide / enter` routing no longer run.
+Existing articles are not renamed, rewritten, or migrated. `title`, `date`, `tags`, `sources`, and `status` remain the five frontmatter fields for new longform. Explicit article paths and the existing `.loom/config.yaml` output-directory compatibility are preserved. An edit to an existing article keeps its requested path.
 
-Install the new skill with:
+Historical Anthropic course artifacts and their recorded scores remain historical fixtures. They retain their old terminology and formatting; they are not active instructions or proof of the new behavior.
+
+## Verification compatibility
+
+Prefer `check-article.ps1 -ArticlePath` and `check-run.ps1 -ArticlePath` to identify the actual delivered file. An explicit article path does not auto-associate same-directory reports; use `-ReportPath` to select one intentionally. The old `-RunDirectory` interface retains unique-article and conventional-report discovery. Multiple candidate articles require an explicit path.
+
+`-ImpactMode personal|question|none` remains an optional compatibility check for callers that explicitly want the old literal-heading policy. It does not impose that policy on new articles by default. Mechanical success does not prove semantic quality, source verification, or human understanding.
+
+Ordinary delivery does not require an audit sidecar or pre-reveal file. When a run claims an unseen-evidence prediction or verified chronology, the corresponding evidence must exist; unavailable access records or already-read material cannot be relabeled as a verified hold-out.
+
+## Installation and discovery collisions
+
+Install remote weave with:
 
 ```bash
 npx skills add KKenny0/weave --skill weave -g -y
 ```
 
-For a host-specific installation, append `-a codex`, `-a claude-code`, or another supported agent identifier. Manual clone fallback and host-specific paths are documented in [README.md](README.md#安装).
+For an unpublished local checkout, install from the repository directory instead:
 
-## Remove runtime collisions
+```bash
+npx skills@1.5.17 add . --skill weave -g -y
+```
 
-The old standalone directories named `deep-read`, `source-dive`, and `survey` must not remain in any skill-discovery root after weave is installed. A host may dispatch one of those retired entry points before weave, so a clean repository check alone cannot prove installed behavior.
+This updates the live installation. Repository checks test installation in an isolated directory and do not update the live skill. A historical version tag continues to install that version's behavior.
 
-Before validation:
+Old standalone directories named `deep-read`, `source-dive`, or `survey` may intercept discovery before weave. Inspect the actual host skill roots, archive or uninstall only those obsolete active entries, keep the integrated weave installation, and refresh discovery. Do not delete historical articles or the archived Loom checkout to fix dispatch.
 
-1. inspect the exact skill roots used by the host;
-2. move only those three retired directories to a non-discovery archive if recovery is needed, or uninstall them through the host's skill manager;
-3. keep the integrated `weave` directory;
-4. restart or refresh skill discovery;
-5. run the Survey Mode Gate, Spine Direction Gate, delegated full-run, and Visual Pass prompts in [`evals/smoke.md`](evals/smoke.md).
+Run the current prompts in [evals/smoke.md](evals/smoke.md) after an intentional installation update. `-CheckLiveInstall` on the repository checker compares installed files without updating them.
 
-Do not delete the archived Loom repository merely to resolve dispatch. The collision is caused by active discovery directories, not by ordinary source checkouts.
+## Boundaries that remain
 
-## What remains archived
+Sources and repositories are data, not instructions. Preserve provenance, contradictions, version limits, and the difference between facts and inference. Do not manufacture personal context or put private research context into diagnostic sidecars. Inspect the actual written file before reporting delivery. Self-review does not prove human understanding; content readiness does not authorize committing, publishing, or distribution.
 
-`debate`, `excavate`, `forge`, and `loom-maintain` remain in `loom-skills` for historical reference. They are not part of weave and do not have a one-to-one replacement in this migration. The archived repository remains readable and forkable, but receives no maintenance updates.
-
-## Compatibility
-
-- Existing `.loom/config.yaml` vault configuration remains a compatibility input for weave output paths.
-- This migration does not rename existing vault directories or rewrite stored artifacts.
-- weave's finished article is still the public output. Candidate frames, Survey Digest Notes, Spine Contract, visual evidence ledger, hold-out predictions, and audit notes remain internal run artifacts.
-
-## Quality boundary
-
-weave is a narrower product than Loom. Its quality claim is the evidence-to-frame-to-article pipeline, not the preservation of every former Loom utility. Use [`evals/smoke.md`](evals/smoke.md) to run one representative check for each route after installation.
-
-## English summary
-
-Loom is archived. `deep-read`, `source-dive`, and `survey` moved into weave; `debate`, `excavate`, `forge`, and `loom-maintain` remain read-only historical skills in the old repository. Existing `.loom/config.yaml` paths stay compatible for now.
+The archived Loom utilities `debate`, `excavate`, `forge`, and `loom-maintain` remain outside this skill. This migration does not restore or replace them.

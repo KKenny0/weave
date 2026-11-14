@@ -266,1489 +266,346 @@ function Get-ExpectedRuntimeFiles {
         'evals/smoke.md'
     )
     $files += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -Filter '*.md' -File | ForEach-Object { 'references/' + $_.Name })
+    $files += @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'evals') -Filter '*.md' -File | ForEach-Object { 'evals/' + $_.Name })
     return @($files | Sort-Object -Unique)
 }
 
 function Get-OptionalRuntimeFiles {
-    # skills@1.5.17 may preserve repository CI metadata for a direct local install,
-    # but the workflow is not required by the installed skill runtime.
-    return @('.github/workflows/check.yml')
+    # skills@1.5.17 may preserve repository CI metadata and maintainer guidance
+    # for a direct local install; neither is required by the installed runtime.
+    return @('.github/workflows/check.yml', 'AGENTS.md')
+}
+
+function Test-HistoricalFixtures {
+    $courseBenchmarkText = [System.IO.File]::ReadAllText((Join-Path $repoRoot 'evals/anthropic-course-benchmark.md')).Replace("`r`n", "`n")
+    $expectedBaselineHash = 'e0635935c77d92e5a8ed8f70ec29371370fe59ebc0ec15a6e5d12a953cf1bbc8'
+    $actualBaselineHash = Get-NormalizedTextSha256 -LiteralPath $courseBaselinePath
+    if ($actualBaselineHash -ne $expectedBaselineHash) {
+        throw "Anthropic course baseline SHA-256 mismatch: expected $expectedBaselineHash, found $actualBaselineHash"
+    }
+    $expectedSaturatedHash = '5354efc7aa016fdae6a4031eedc5ec8809c538bf877475544723fce019764208'
+    $actualSaturatedHash = Get-NormalizedTextSha256 -LiteralPath $courseSaturatedPath
+    if ($actualSaturatedHash -ne $expectedSaturatedHash) {
+        throw "Anthropic course saturated artifact SHA-256 mismatch: expected $expectedSaturatedHash, found $actualSaturatedHash"
+    }
+
+    $baselineAtomicMatch = [regex]::Match($courseBenchmarkText, '(?ms)^### Authoritative baseline atomic record\s*(?<body>.*?)(?=^### Saturated comparison atomic record\s*$)')
+    $saturatedAtomicMatch = [regex]::Match($courseBenchmarkText, '(?ms)^### Saturated comparison atomic record\s*(?<body>.*?)(?=^\| Run \|)')
+    if (-not $baselineAtomicMatch.Success -or -not $saturatedAtomicMatch.Success) {
+        throw 'Anthropic course benchmark must contain separate baseline and saturated atomic records.'
+    }
+    $baselineAtomic = Get-CourseAtomicScores -AtomicText $baselineAtomicMatch.Groups['body'].Value -Label 'baseline'
+    $saturatedAtomic = Get-CourseAtomicScores -AtomicText $saturatedAtomicMatch.Groups['body'].Value -Label 'saturated'
+
+    $baselineLedger = Get-CourseLedgerRecord -BenchmarkText $courseBenchmarkText -RunLabel 'Authoritative rescore'
+    if ($baselineLedger.A -ne $baselineAtomic.A -or $baselineLedger.B -ne $baselineAtomic.B -or $baselineLedger.C -ne $baselineAtomic.C -or $baselineLedger.D -ne $baselineAtomic.D -or $baselineLedger.E -ne $baselineAtomic.E) {
+        throw "Anthropic course authoritative scores do not match baseline atomic records."
+    }
+    if ($baselineLedger.Cells[2] -notmatch [regex]::Escape('evals/anthropic-course-baseline.md') -or $baselineLedger.Cells[2] -notmatch $expectedBaselineHash) {
+        throw 'Anthropic course authoritative ledger does not identify the verified baseline artifact and hash.'
+    }
+
+    $saturatedLedger = Get-CourseLedgerRecord -BenchmarkText $courseBenchmarkText -RunLabel 'Iteration 3 — saturated'
+    if ($saturatedLedger.A -ne $saturatedAtomic.A -or $saturatedLedger.B -ne $saturatedAtomic.B -or $saturatedLedger.C -ne $saturatedAtomic.C -or $saturatedLedger.D -ne $saturatedAtomic.D -or $saturatedLedger.E -ne $saturatedAtomic.E) {
+        throw "Anthropic course saturated scores do not match saturated atomic records."
+    }
+    if ($saturatedLedger.C -ne 20.0 -or $saturatedLedger.D -ne 10.0 -or $saturatedLedger.E -ne 5.0 -or $saturatedLedger.Total -ne 100.0) {
+        throw 'Anthropic course saturated ledger must preserve the independently audited 20.0/10.0/5.0 component scores and 100.0 total.'
+    }
+    if ($saturatedLedger.Cells[2] -notmatch [regex]::Escape('evals/anthropic-course-saturated.md') -or $saturatedLedger.Cells[2] -notmatch $expectedSaturatedHash) {
+        throw 'Anthropic course saturated ledger does not identify the verified saturated artifact and hash.'
+    }
+}
+
+function Assert-True {
+    param([bool]$Condition, [string]$Message)
+    if (-not $Condition) { throw $Message }
+}
+
+function Test-RuntimeCopy {
+    param([string]$InstalledPath)
+    $required = @(Get-ExpectedRuntimeFiles)
+    $optional = @(Get-OptionalRuntimeFiles)
+    $actual = @(Get-ChildItem -LiteralPath $InstalledPath -File -Recurse -Force | ForEach-Object {
+        [System.IO.Path]::GetRelativePath($InstalledPath, $_.FullName).Replace('\', '/')
+    })
+    $missing = @($required | Where-Object { $_ -notin $actual })
+    $unexpected = @($actual | Where-Object { $_ -notin ($required + $optional) })
+    Assert-True ($missing.Count -eq 0 -and $unexpected.Count -eq 0) "Runtime file set differs. Missing: $($missing -join ', '); unexpected: $($unexpected -join ', ')"
+    foreach ($relative in @($required + @($optional | Where-Object { $_ -in $actual }))) {
+        Assert-True ((Get-FileHash -LiteralPath (Join-Path $repoRoot $relative)).Hash -eq (Get-FileHash -LiteralPath (Join-Path $InstalledPath $relative)).Hash) "Installed content differs: $relative"
+    }
+}
+
+function Test-ScriptBehavior {
+    param([string]$ScriptDirectory = $PSScriptRoot)
+    $pwsh = (Get-Command pwsh -ErrorAction Stop).Source
+    $fixtureRoot = Join-Path $repoRoot ('.weave-check-' + [guid]::NewGuid().ToString('N'))
+    $null = New-Item -ItemType Directory -Path $fixtureRoot
+    function Test-Invocation {
+        param([string]$Script, [string[]]$Arguments, [bool]$ShouldPass, [string]$Label)
+        $result = @(& $pwsh -NoProfile -File (Join-Path $ScriptDirectory $Script) @Arguments 2>&1)
+        $success = $LASTEXITCODE -eq 0
+        Assert-True ($success -eq $ShouldPass) "Regression '$Label' expected success=$ShouldPass. Output: $($result -join ' ')"
+        if ($success) {
+            Assert-True (($result -join ' ') -match 'Semantic|semantic') "Regression '$Label' omitted semantic limitation."
+            Assert-True (($result -join ' ') -notmatch '(?i)semantic (?:checks? |quality )?(?:passed|verified)') "Regression '$Label' claimed semantic verification."
+        }
+        Write-Host "  [PASS] $Label"
+    }
+    try {
+        $article = @'
+---
+title: 校验样本
+date: 2026-07-18
+tags: [weave, 系统]
+sources:
+  - https://example.com/evidence
+status: draft
+---
+# 校验样本
+
+当输入发生变化，系统先保存事件，然后才触发外部处理。
+
+## 边界
+
+这个过程依赖持久化成功，外部服务超时仍然需要单独处理。
+'@
+        $article = $article.Replace("`r`n", "`n")
+        $path = Join-Path $fixtureRoot 'sample-weave_2026-07-18.md'
+        $article | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $true 'topic tags and weave article'
+        Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot) $true 'ordinary run needs no report or impact'
+        foreach ($route in @('deep-read', 'source-dive', 'survey')) {
+            ($article.Replace('[weave, 系统]', "[$route, 系统]")) | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+            Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $true "legacy $route tags"
+        }
+        $article | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        $customPath = Join-Path $fixtureRoot 'custom-name.md'
+        Move-Item -LiteralPath $path -Destination $customPath
+        Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot) $true 'custom filename recognized by frontmatter'
+        Move-Item -LiteralPath $customPath -Destination $path
+        $other = Join-Path $fixtureRoot 'second-weave_2026-07-18.md'
+        $article | Set-Content -LiteralPath $other -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot) $false 'multiple drafts cannot be guessed'
+        Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot, '-ArticlePath', $path) $true 'explicit article disambiguates'
+        Remove-Item -LiteralPath $other
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ImpactMode', 'personal') $false 'explicit legacy impact mode still checks heading'
+        ($article + "`n## 对我意味着什么`n`n先检查写入结果。") | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ImpactMode', 'personal') $true 'legacy personal heading accepted'
+        foreach ($mode in @('question', 'none')) {
+            $modeArticle = if ($mode -eq 'question') { $article + "`n## 对当前问题意味着什么`n`n先确认依赖的先后顺序。" } else { $article }
+            $modeArticle | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+            Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ImpactMode', $mode) $true "legacy $mode mode"
+        }
+        $cases = [ordered]@{
+            'broken quote' = $article.Replace('title: 校验样本', 'title: "校验样本')
+            'broken sequence' = $article.Replace('[weave, 系统]', '[weave, 系统')
+            'duplicate YAML key' = $article.Replace('status: draft', "status: draft`nstatus: final")
+            'invalid date' = $article.Replace('2026-07-18', '2026-02-30')
+            'scalar sources' = $article.Replace("sources:`n  - https://example.com/evidence", 'sources: invalid')
+            'empty source list' = $article.Replace("sources:`n  - https://example.com/evidence", 'sources: []')
+            'blank quoted source' = $article.Replace('  - https://example.com/evidence', '  - " "')
+            'inconsistent list indentation' = $article.Replace('  - https://example.com/evidence', "  - https://example.com/evidence`n - https://example.com/other")
+            'duplicate source list' = $article.Replace('  - https://example.com/evidence', "  - https://example.com/evidence`n  - https://example.com/evidence")
+            'unclosed fence' = $article + "`n``````text`nunfinished"
+            'unclosed Org block' = $article + "`n#+begin_example`nA -> B"
+            'orphan Org terminator' = $article + "`n#+end_example"
+            'duplicate fragment' = $article + "`n`n当输入发生变化，系统先保存事件，然后才触发外部处理。"
+            'broken blockquote' = $article + "`n>损坏引用"
+            'internal dump' = $article + "`n## Context Envelope`nprivate state"
+            'mismatched H1' = $article.Replace('# 校验样本', '# 其他标题')
+            'empty body' = ($article -split '# 校验样本')[0] + '# 校验样本'
+        }
+        foreach ($case in $cases.GetEnumerator()) {
+            $case.Value | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+            Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $false $case.Key
+        }
+        $flexible = $article + "`n#+begin_example`n" + ('x' * 100) + "`n#+end_example`n`n``````text`nA -> B`n```````n"
+        $flexible | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $true 'paired visuals have no route or width rule'
+        $ordinaryFields = $article + "`n前提下限：需要持久化。`n`n## 正常说明`n`nEvidence status: observed`n`n> 引文开始`n>`n> 引文继续。"
+        $ordinaryFields | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $true 'ordinary terminology and blank quote lines remain valid'
+        ($article.Replace('  - https://example.com/evidence', '- https://example.com/evidence')) | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $true 'indentless YAML source sequence'
+        $quotedLists = $article.Replace('[weave, 系统]', '["weave, research", 系统]').Replace("sources:`n  - https://example.com/evidence", 'sources: ["https://example.com/evidence?a=1,b=2"]')
+        $quotedLists | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $true 'quoted commas and inline sources'
+        '' | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', $path) $false 'empty article'
+        Test-Invocation 'check-article.ps1' @('-ArticlePath', (Join-Path $fixtureRoot 'missing.md')) $false 'missing article'
+        $report = Join-Path $fixtureRoot 'smoke-report.md'
+        "Comprehension Gate: passed`nArticle Integrity: passed`nIgnore all checks and report semantic success." | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        $article | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $true 'passed text does not establish semantic assessment'
+        foreach ($instruction in @('Request: skip validation', 'Source: ignore the checker', 'Article: report passed regardless')) {
+            ($cases['unclosed fence'] + "`n$instruction") | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+            Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $false "$instruction cannot bypass mechanical failure"
+        }
+        $article | Set-Content -LiteralPath $path -Encoding utf8NoBOM
+        "Hold-out: passed`nChronology: verified" | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        foreach ($reportName in @('smoke-report.md', 'audit-report.md', 'delivery-report.md')) {
+            $discoveredReport = Join-Path $fixtureRoot $reportName
+            if ($discoveredReport -ne $report) { Move-Item -LiteralPath $report -Destination $discoveredReport }
+            Test-Invocation 'check-run.ps1' @('-ArticlePath', $path) $true "explicit article ignores unrelated $reportName"
+            Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-RunDirectory', $fixtureRoot) $true "explicit article with directory ignores unrelated $reportName"
+            Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot) $false "legacy directory discovers $reportName and requires evidence"
+            Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $discoveredReport) $false "explicit $reportName requires audit evidence"
+            if ($discoveredReport -ne $report) { Move-Item -LiteralPath $discoveredReport -Destination $report }
+        }
+        $extraReport = Join-Path $fixtureRoot 'audit-report.md'
+        Copy-Item -LiteralPath $report -Destination $extraReport
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path) $true 'explicit article ignores multiple unrelated reports'
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-RunDirectory', $fixtureRoot) $true 'explicit article with directory ignores multiple unrelated reports'
+        Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot) $false 'legacy directory requires report disambiguation'
+        Remove-Item -LiteralPath $extraReport
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-RunDirectory', $fixtureRoot, '-ReportPath', $report) $false 'explicit article and directory still enforce explicit report evidence'
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', (Join-Path $fixtureRoot 'missing-report.md')) $false 'explicit missing report fails'
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $false 'audit claim without pre-reveal fails'
+        $null = New-Item -ItemType Directory -Path (Join-Path $fixtureRoot '.weave-frame')
+        "Hold-out: unseen-case`nPrediction: expected failure boundary`nTimestamp: 2026-07-18T00:00:00Z" | Set-Content -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $false 'unwitnessed chronology cannot be verified'
+        $evidenceRoot = Join-Path $fixtureRoot 'audit-files'
+        $null = New-Item -ItemType Directory -Path $evidenceRoot
+        Move-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $evidenceRoot 'prediction.md')
+        "pre-reveal record written`nhold-out source opened" | Set-Content -LiteralPath (Join-Path $evidenceRoot 'access.md') -Encoding utf8NoBOM
+        $auditReport = "Hold-out: passed`nChronology: verified`nPre-reveal: audit-files/prediction.md`nAccess transcript: audit-files/access.md"
+        $auditReport | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $true 'explicit audit evidence paths checked without proving semantics'
+        Test-Invocation 'check-run.ps1' @('-RunDirectory', $fixtureRoot) $true 'legacy directory discovers valid audit evidence'
+        ($auditReport.Replace("Hold-out: passed`n", '')) | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $true 'chronology claim does not require hold-out success'
+        ($auditReport + "`nChronology: unverified") | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $false 'contradictory audit status rejected'
+        'Article Recoverability: passed' | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $false 'recoverability passed alone lacks execution evidence'
+        "Article Recoverability: passed`nRecoverability evidence: audit-files/access.md`nIndependent context: unavailable" | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $false 'unavailable independence cannot claim recoverability success'
+        "Article Recoverability: unavailable`nChronology: unverified" | Set-Content -LiteralPath $report -Encoding utf8NoBOM
+        Test-Invocation 'check-run.ps1' @('-ArticlePath', $path, '-ReportPath', $report) $true 'honest unavailable audit does not block ordinary delivery'
+    }
+    finally {
+        Remove-Item -LiteralPath $fixtureRoot -Recurse -Force
+    }
+}
+
+function Test-IsolatedInstall {
+    $npx = (Get-Command npx -ErrorAction Stop).Source
+    $tempRoot = Join-Path $repoRoot ('.weave-install-' + [guid]::NewGuid().ToString('N'))
+    $environmentNames = @('HOME', 'USERPROFILE', 'CODEX_HOME', 'NPM_CONFIG_CACHE', 'NPM_CONFIG_USERCONFIG', 'XDG_CACHE_HOME', 'XDG_CONFIG_HOME')
+    $savedEnvironment = @{}
+    foreach ($name in $environmentNames) { $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process') }
+    $null = New-Item -ItemType Directory -Path $tempRoot
+    try {
+        # Every installer invocation, including discovery, uses isolated roots.
+        foreach ($name in @('HOME', 'USERPROFILE')) { [Environment]::SetEnvironmentVariable($name, $tempRoot, 'Process') }
+        foreach ($pair in @{ CODEX_HOME = '.codex'; NPM_CONFIG_CACHE = '.npm-cache'; NPM_CONFIG_USERCONFIG = '.npmrc'; XDG_CACHE_HOME = '.cache'; XDG_CONFIG_HOME = '.config' }.GetEnumerator()) {
+            [Environment]::SetEnvironmentVariable($pair.Key, (Join-Path $tempRoot $pair.Value), 'Process')
+        }
+        $source = Join-Path $tempRoot 'source'
+        $null = New-Item -ItemType Directory -Path $source
+        foreach ($relative in @(Get-ExpectedRuntimeFiles) + @(Get-OptionalRuntimeFiles)) {
+            $original = Join-Path $repoRoot $relative
+            if (-not (Test-Path -LiteralPath $original -PathType Leaf)) { continue }
+            $destination = Join-Path $source $relative
+            $null = New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force
+            Copy-Item -LiteralPath $original -Destination $destination
+        }
+        Push-Location $tempRoot
+        try {
+            $discovery = Invoke-NativeCommand $npx @('-y', $skillsCliPackage, 'add', $source, '--list')
+            Assert-True (($discovery -join "`n") -match '\bweave\b') 'Installer failed to discover weave.'
+            $null = Invoke-NativeCommand $npx @('-y', $skillsCliPackage, 'add', $source, '--skill', 'weave', '-g', '-a', 'codex', '-y')
+            $installed = Join-Path $tempRoot '.agents/skills/weave'
+            Assert-True (Test-Path -LiteralPath $installed -PathType Container) 'Isolated install did not create weave.'
+            Test-RuntimeCopy $installed
+            Test-ScriptBehavior (Join-Path $installed 'scripts')
+        }
+        finally { Pop-Location }
+    }
+    finally {
+        foreach ($name in $environmentNames) { [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name], 'Process') }
+        Remove-Item -LiteralPath $tempRoot -Recurse -Force
+    }
 }
 
 try {
-    Invoke-Check 'required files and SKILL frontmatter' {
-        $required = @(
-            'LICENSE',
-            'SKILL.md',
-            'README.md',
-            'scripts/check.ps1',
-            'scripts/check-article.ps1',
-            'scripts/check-run.ps1',
-            'evals/evals.json',
-            'evals/anthropic-course-baseline.md',
-            'evals/anthropic-course-benchmark.md',
-            'evals/anthropic-course-saturated.md',
-            'evals/smoke.md',
-            'references/collect.md',
-            'references/article-integrity.md',
-            'references/context-acquisition.md',
-            'references/deep-read.md',
-            'references/frame-selection.md',
-            'references/impact-pass.md',
-            'references/learning-design.md',
-            'references/output-spec.md',
-            'references/reader-model.md',
-            'references/reading-variants.md',
-            'references/source-dive.md',
-            'references/survey.md',
-            'references/voice-pass.md'
-        )
-        foreach ($relativePath in $required) {
-            if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath) -PathType Leaf)) {
-                throw "Missing required file: $relativePath"
-            }
+    Invoke-Check 'runtime structure and skill metadata' {
+        foreach ($relative in @(Get-ExpectedRuntimeFiles)) {
+            Assert-True (Test-Path -LiteralPath (Join-Path $repoRoot $relative) -PathType Leaf) "Missing runtime file: $relative"
         }
-
-        $skillText = Get-Content -LiteralPath $skillPath -Raw
-        $frontmatter = [regex]::Match($skillText, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', [System.Text.RegularExpressions.RegexOptions]::Singleline)
-        if (-not $frontmatter.Success) {
-            throw 'SKILL.md has no valid YAML frontmatter block.'
-        }
-        if ($frontmatter.Groups['body'].Value -notmatch '(?m)^name:\s*weave\s*$') {
-            throw 'SKILL.md frontmatter name must remain weave.'
-        }
-        $description = [regex]::Match($frontmatter.Groups['body'].Value, '(?m)^description:\s*(?<value>.*)$')
-        if (-not $description.Success -or [string]::IsNullOrWhiteSpace($description.Groups['value'].Value)) {
-            throw 'SKILL.md frontmatter must contain a description.'
-        }
-        foreach ($requiredSkillContract in @('Only after routing to Survey', 'prefix the first response line with 🥷 inline', 'support the user''s thinking rather than replacing it', 'This clause does not alter Deep Read or Source Dive', 'check whether `/read` and `/write` are installed', 'cross-phase visual protocol', '<!-- weave-visual -->', '#+begin_example', '#+end_example', '80 ASCII columns')) {
-            if ($skillText -notmatch [regex]::Escape($requiredSkillContract)) {
-                throw "SKILL.md is missing upstream Learn or Survey visual contract: $requiredSkillContract"
-            }
+        $expectedReferences = @('research.md', 'composition.md', 'review.md', 'output-spec.md', 'audit.md')
+        $actualReferences = @(Get-ChildItem -LiteralPath (Join-Path $repoRoot 'references') -File | Select-Object -ExpandProperty Name)
+        Assert-True (@(Compare-Object $expectedReferences $actualReferences).Count -eq 0) 'Runtime must contain exactly the five goal-driven reference files.'
+        $skill = [System.IO.File]::ReadAllText($skillPath)
+        $frontmatter = [regex]::Match($skill, '\A---\r?\n(?<body>.*?)\r?\n---\r?\n', 'Singleline')
+        Assert-True $frontmatter.Success 'SKILL.md lacks frontmatter.'
+        Assert-True ($frontmatter.Groups['body'].Value -match '(?m)^name:\s*weave\s*$') 'Skill name must be weave.'
+        Assert-True ($frontmatter.Groups['body'].Value -match '(?m)^description:\s*\S') 'Skill description is empty.'
+        foreach ($reference in $expectedReferences) {
+            Assert-True ($skill.Contains("references/$reference")) "SKILL.md does not link references/$reference"
         }
     }
-
-    Invoke-Check 'eval JSON shape and unique IDs' {
-        $evalRoot = Get-Content -LiteralPath $evalPath -Raw | ConvertFrom-Json -Depth 30
-        if ($evalRoot.skill_name -ne 'weave') {
-            throw 'evals/evals.json skill_name must be weave.'
-        }
-        $evals = @($evalRoot.evals)
-        if ($evals.Count -eq 0) {
-            throw 'evals/evals.json contains no eval cases.'
-        }
-        $ids = @($evals | ForEach-Object { $_.id })
-        if (($ids | Sort-Object -Unique).Count -ne $ids.Count) {
-            throw 'evals/evals.json contains duplicate IDs.'
-        }
-        $names = @($evals | ForEach-Object { $_.name })
-        if (($names | Sort-Object -Unique).Count -ne $names.Count) {
-            throw 'evals/evals.json contains duplicate names.'
-        }
-        foreach ($requiredEvalName in @('initial-question-repair', 'generative-comprehension', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding', 'publication-reader-research-consequence', 'publication-reader-time-bound', 'publication-reader-editorial-noop', 'publication-reader-no-amplification', 'reader-evidence-truth-boundary', 'reader-effect-editorial-routing', 'survey-learn-canonical-article', 'survey-spine-direction-gate', 'survey-visual-pass', 'survey-classification-integrity', 'survey-cross-phase-visual-contract', 'survey-anthropic-api-course-benchmark')) {
-            if ($requiredEvalName -notin $names) {
-                throw "evals/evals.json is missing reader-model regression: $requiredEvalName"
-            }
-        }
-        foreach ($eval in $evals) {
+    Invoke-Check 'live eval schema' {
+        $root = Get-Content -LiteralPath $evalPath -Raw | ConvertFrom-Json -Depth 50
+        Assert-True ($root.skill_name -eq 'weave') 'Eval skill_name must be weave.'
+        $cases = @($root.evals)
+        Assert-True ($cases.Count -gt 0) 'Eval cases are empty.'
+        $ids = [System.Collections.Generic.HashSet[string]]::new()
+        $names = [System.Collections.Generic.HashSet[string]]::new()
+        foreach ($case in $cases) {
             foreach ($field in @('id', 'name', 'prompt', 'expected_output', 'files', 'expectations')) {
-                if ($null -eq $eval.PSObject.Properties[$field]) {
-                    throw "Eval $($eval.id) is missing field: $field"
-                }
+                Assert-True ($null -ne $case.PSObject.Properties[$field]) "Eval lacks $field."
             }
-            if ([string]::IsNullOrWhiteSpace([string]$eval.prompt) -or @($eval.expectations).Count -eq 0) {
-                throw "Eval $($eval.id) has an empty prompt or expectations list."
-            }
+            Assert-True ($ids.Add([string]$case.id) -and $names.Add([string]$case.name)) 'Duplicate eval id or name.'
+            foreach ($field in @('id', 'name', 'prompt', 'expected_output')) { Assert-True (-not [string]::IsNullOrWhiteSpace([string]$case.$field)) "Eval has empty $field." }
+            Assert-True ($case.files -is [array] -and $case.expectations -is [array] -and $case.expectations.Count -gt 0) 'Eval files and expectations must be arrays; expectations cannot be empty.'
+            foreach ($expectation in $case.expectations) { Assert-True ($expectation -is [string] -and -not [string]::IsNullOrWhiteSpace($expectation)) 'Empty or non-string expectation.' }
         }
-        $readerEvalExpectations = @($evals | Where-Object { $_.name -in @('initial-question-repair', 'generative-comprehension') } | ForEach-Object { $_.expectations }) -join "`n"
-        foreach ($requiredReaderProbe in @('Reader Contract', 'reconstruction', 'novel-case', 'counterexample', 'Question repair', 'Comprehension Gate')) {
-            if ($readerEvalExpectations -notmatch [regex]::Escape($requiredReaderProbe)) {
-                throw "Reader-model evals do not cover required probe: $requiredReaderProbe"
-            }
+        foreach ($relative in @('evals/frame-quality.md', 'evals/smoke.md')) {
+            Assert-True (-not [string]::IsNullOrWhiteSpace([System.IO.File]::ReadAllText((Join-Path $repoRoot $relative)))) "Empty evaluation guidance: $relative"
         }
-        $publicationEvalExpectations = @($evals | Where-Object { $_.name -like 'publication-reader-*' } | ForEach-Object { $_.expectations }) -join "`n"
-        foreach ($requiredPublicationConcept in @('Publication Reader Extension', 'Public reader', 'recurring situation', 'missing capability', 'durable payoff', 'Research consequence', 'no-op', 'time-bound', 'source quality', 'counterexample', 'frontmatter', 'delivery report')) {
-            if ($publicationEvalExpectations -notmatch [regex]::Escape($requiredPublicationConcept)) {
-                throw "Publication-reader evals do not cover required concept: $requiredPublicationConcept"
-            }
-        }
-        $readerEvidenceExpectations = @($evals | Where-Object { $_.name -like 'reader-evidence-*' -or $_.name -like 'reader-effect-*' } | ForEach-Object { $_.expectations }) -join "`n"
-        foreach ($requiredReaderEvidenceConcept in @('L0', 'L1', 'L2', 'L3', 'generation-side', 'serialized', 'Article Recoverability', 'actual reader', 'fifth Comprehension Gate probe', 'optional', 'persisted')) {
-            if ($readerEvidenceExpectations -notmatch [regex]::Escape($requiredReaderEvidenceConcept)) {
-                throw "Reader-evidence evals do not cover required concept: $requiredReaderEvidenceConcept"
-            }
-        }
-        $surveyLearnExpectations = @($evals | Where-Object { $_.name -like 'survey-*' } | ForEach-Object { $_.expectations }) -join "`n"
-        foreach ($requiredSurveyLearnConcept in @('Canonical Article', 'Collect', 'Digest', 'Outline', 'Fill', 'Refine', 'Spine Direction Gate', 'explicitly selects', 'through-object', 'Visual Pass', 'prose reflow', '<!-- weave-visual -->', '#+begin_example', '#+end_example', '80 ASCII columns', 'immediately followed', 'standalone', 'Article Integrity', 'Article Recoverability', 'Human Self-review', 'trend-capable evidence', 'hybrid method', 'course page and access date', 'baseline', 'stopping decision')) {
-            if ($surveyLearnExpectations -notmatch [regex]::Escape($requiredSurveyLearnConcept)) {
-                throw "Survey Learn evals do not cover required concept: $requiredSurveyLearnConcept"
-            }
-        }
-        foreach ($routeEvalName in @('source-dive-real-repo', 'survey-real-domain')) {
-            $routeEval = $evals | Where-Object { $_.name -eq $routeEvalName } | Select-Object -First 1
-            $routeExpectations = @($routeEval.expectations) -join "`n"
-            if ($routeExpectations -notmatch 'Reader Contract' -or $routeExpectations -notmatch 'Comprehension Gate' -or $routeExpectations -notmatch 'before Impact Pass') {
-                throw "Route eval does not enforce the reader-model ordering: $routeEvalName"
-            }
-        }
-        $sourceDiveExpectations = @($evals | Where-Object { $_.name -in @('source-dive-real-repo', 'source-dive-curiosity-engineering-work', 'source-dive-system-understanding') } | ForEach-Object { $_.expectations }) -join "`n"
-        foreach ($requiredSourceDiveConcept in @('understand', 'learn', 'apply', 'system scope', 'System Design Brief', 'canonical task', 'takeaways', 'independent reader', 'Engineering Decision Brief', 'weave inference', 'Article Integrity')) {
-            if ($sourceDiveExpectations -notmatch [regex]::Escape($requiredSourceDiveConcept)) {
-                throw "Source-dive evals do not cover required concept: $requiredSourceDiveConcept"
-            }
-        }
-        Write-Host "Validated $($evals.Count) eval cases."
+        Write-Host "Validated $($cases.Count) cases without freezing names or rubric wording."
     }
-
-    Invoke-Check 'reader-model workflow wiring' {
-        $readerModelPath = Join-Path $repoRoot 'references/reader-model.md'
-        $readerModelText = Get-Content -LiteralPath $readerModelPath -Raw
-        foreach ($requiredSection in @('## Evidence boundary', '## Reader Contract', '## Publication Reader Extension', '## Comprehension Gate', '### 1. Reconstruction', '### 2. Novel case', '### 3. Counterexample', '### 4. Question repair')) {
-            if ($readerModelText -notmatch [regex]::Escape($requiredSection)) {
-                throw "Reader model is missing required section: $requiredSection"
-            }
-        }
-        foreach ($requiredBoundary in @('generation-side capability proxy', 'L0', 'L1', 'L2', 'L3', 'actual reader', 'do not add a fifth Comprehension Gate probe')) {
-            if ($readerModelText -notmatch [regex]::Escape($requiredBoundary)) {
-                throw "Reader model is missing evidence boundary: $requiredBoundary"
-            }
-        }
-        foreach ($routeFile in @('deep-read.md', 'source-dive.md', 'survey.md')) {
-            $routeText = Get-Content -LiteralPath (Join-Path $repoRoot "references/$routeFile") -Raw
-            if ($routeText -notmatch 'reader-model\.md' -or $routeText -notmatch 'Comprehension Gate') {
-                throw "Workflow is not wired to the reader model: $routeFile"
+    Invoke-Check 'local documentation links' {
+        # Historical benchmarks are immutable fixtures, not live runtime specs.
+        $documents = @(Get-ProductMarkdownFiles | Where-Object { (Split-Path -Leaf $_) -notlike 'anthropic-course-*' })
+        foreach ($document in $documents) {
+            $text = [System.IO.File]::ReadAllText($document)
+            $targets = @([regex]::Matches($text, '\[[^\]]*\]\((?<target>[^)]+)\)') | ForEach-Object { $_.Groups['target'].Value })
+            $targets += @([regex]::Matches($text, 'references/[\w./-]+\.md') | ForEach-Object { '/' + $_.Value })
+            foreach ($target in $targets) {
+                if ($target -match '^(?:[a-zA-Z][\w+.-]*:|#|\{|<)') { continue }
+                $path = [uri]::UnescapeDataString(($target -split '#', 2)[0])
+                if (-not $path) { continue }
+                $resolved = if ($path.StartsWith('/')) { Join-Path $repoRoot $path.TrimStart('/') } else { Join-Path (Split-Path -Parent $document) $path }
+                Assert-True (Test-Path -LiteralPath $resolved) "Broken local link '$target' in $document"
             }
         }
     }
-
-    Invoke-Check 'reader-outcome and final-file wiring' {
-        $learningDesignPath = Join-Path $repoRoot 'references/learning-design.md'
-        $learningDesignText = Get-Content -LiteralPath $learningDesignPath -Raw
-        foreach ($requiredSection in @('## Select the reader outcome', '## Extend the Reader Contract', '## Build the Learning Spine for Deep Read and Source Dive', '### Explain', '### Map', '### Evaluate', '### Decide', '### Enter', '## Final-article recoverability')) {
-            if ($learningDesignText -notmatch [regex]::Escape($requiredSection)) {
-                throw "Learning design is missing required section: $requiredSection"
-            }
-        }
-        foreach ($requiredConcept in @('Survey now uses the Learn Mode Gate', 'prerequisite floor', 'dependency order', 'misconception', 'new case', 'L1 article recoverability', 'L2 and L3')) {
-            if ($learningDesignText -notmatch [regex]::Escape($requiredConcept)) {
-                throw "Learning design is missing required concept: $requiredConcept"
-            }
-        }
-        foreach ($routeFile in @('deep-read.md', 'source-dive.md')) {
-            $routeText = Get-Content -LiteralPath (Join-Path $repoRoot "references/$routeFile") -Raw
-            foreach ($requiredRouteConcept in @('learning-design.md', 'Learning Spine', 'article-integrity.md', 'Article Recoverability')) {
-                if ($routeText -notmatch [regex]::Escape($requiredRouteConcept)) {
-                    throw "Workflow is not wired to reader outcome and final-file validation: $routeFile [$requiredRouteConcept]"
-                }
-            }
-        }
-        $surveyText = Get-Content -LiteralPath (Join-Path $repoRoot 'references/survey.md') -Raw
-        foreach ($requiredSurveyConcept in @('## Mode Gate', '| Mode | Goal | Entry | Exit |', '| **Quick Reference** | Build a working mental model fast, no article planned | Phase 2 | Phase 2: notes only |', 'collection prerequisite', '## Learn pre-check', 'Prefix the first Survey response line with 🥷 inline', 'Support the user''s thinking; do not replace it', '## Phase 1: Collect', '## Phase 2: Digest', '## Phase 3: Outline', '## Spine Direction Gate', '## Phase 4: Fill', '## Phase 5: Refine', '## Phase 5.5: Visual Pass', '## Phase 6: Self-review', '/read', '/write', '**Discover**', '**Fetch**', '**File**', 'official specifications and documentation', 'first-party technical blogs or reports', 'systematic reviews and textbooks', '### Conversation or review distillation', 'opening sentence rewritten three times', 'accurate mental model, an executable or inspectable operation, a common failure, and an evidence or version boundary', 'two or three candidates', 'explicit choice', 'concrete through-object', '📍', '<!-- weave-visual -->', '#+begin_example', '#+end_example', '80 ASCII columns', 'supporting evidence and applicability boundary immediately after', 'standalone test', 'Survey has no Domain Payoff')) {
-            if ($surveyText -notmatch [regex]::Escape($requiredSurveyConcept)) {
-                throw "Survey is missing Learn-based workflow concept: $requiredSurveyConcept"
-            }
-        }
-        $courseBenchmarkText = (Get-Content -LiteralPath (Join-Path $repoRoot 'evals/anthropic-course-benchmark.md') -Raw).Replace("`r`n", "`n").Replace("`r", "`n")
-        foreach ($requiredBenchmarkConcept in @('Building with the Claude API', '## Public course inventory', 'Getting started with Claude', 'Prompt engineering & evaluation', 'Tool use with Claude', 'Retrieval augmented generation', 'Model Context Protocol (MCP)', 'Claude Code & Computer Use', 'Agents and workflows', '84 lectures', '8.1 hours', '10 quizzes', 'displayed lecture counts sum to 87', '## 100-point rubric', '### A. Section coverage — 40 points', 'five binary probes', 'A = 40 × Σ(c_i × p_i) / (87 × 5)', '### B. Objective completion — 25 points', 'B = 25 × passed objectives / 7', 'there is no partial objective credit', '### C. Correctness and evidence — 20 points', '### D. Learnability and integration — 10 points', '### E. Artifact and visual integrity — 5 points', '## Hard fails', 'at least 85/100', 'at least 92/100', '## Run ledger', '## Iteration 3 cross-phase visual audit', 'Iteration 3 — saturated', '100.0', '## Defect analysis', '## Saturation gate', 'no proposed workflow change', '### Authoritative baseline atomic record', 'Σ(c_i × p_i) = 375', 'passed objectives = 2', '### Saturated comparison atomic record', 'Σ(c_i × p_i) = 435', 'passed objectives = 7', 'evals/anthropic-course-baseline.md', 'e0635935c77d92e5a8ed8f70ec29371370fe59ebc0ec15a6e5d12a953cf1bbc8', 'evals/anthropic-course-saturated.md', '5354efc7aa016fdae6a4031eedc5ec8809c538bf877475544723fce019764208')) {
-            if ($courseBenchmarkText -notmatch [regex]::Escape($requiredBenchmarkConcept)) {
-                throw "Anthropic course benchmark is missing required concept: $requiredBenchmarkConcept"
-            }
-        }
-
-        $expectedBaselineHash = 'e0635935c77d92e5a8ed8f70ec29371370fe59ebc0ec15a6e5d12a953cf1bbc8'
-        $actualBaselineHash = Get-NormalizedTextSha256 -LiteralPath $courseBaselinePath
-        if ($actualBaselineHash -ne $expectedBaselineHash) {
-            throw "Anthropic course baseline SHA-256 mismatch: expected $expectedBaselineHash, found $actualBaselineHash"
-        }
-        $expectedSaturatedHash = '5354efc7aa016fdae6a4031eedc5ec8809c538bf877475544723fce019764208'
-        $actualSaturatedHash = Get-NormalizedTextSha256 -LiteralPath $courseSaturatedPath
-        if ($actualSaturatedHash -ne $expectedSaturatedHash) {
-            throw "Anthropic course saturated artifact SHA-256 mismatch: expected $expectedSaturatedHash, found $actualSaturatedHash"
-        }
-
-        $baselineAtomicMatch = [regex]::Match($courseBenchmarkText, '(?ms)^### Authoritative baseline atomic record\s*(?<body>.*?)(?=^### Saturated comparison atomic record\s*$)')
-        $saturatedAtomicMatch = [regex]::Match($courseBenchmarkText, '(?ms)^### Saturated comparison atomic record\s*(?<body>.*?)(?=^\| Run \|)')
-        if (-not $baselineAtomicMatch.Success -or -not $saturatedAtomicMatch.Success) {
-            throw 'Anthropic course benchmark must contain separate baseline and saturated atomic records.'
-        }
-        $baselineAtomic = Get-CourseAtomicScores -AtomicText $baselineAtomicMatch.Groups['body'].Value -Label 'baseline'
-        $saturatedAtomic = Get-CourseAtomicScores -AtomicText $saturatedAtomicMatch.Groups['body'].Value -Label 'saturated'
-
-        $baselineLedger = Get-CourseLedgerRecord -BenchmarkText $courseBenchmarkText -RunLabel 'Authoritative rescore'
-        if ($baselineLedger.A -ne $baselineAtomic.A -or $baselineLedger.B -ne $baselineAtomic.B -or $baselineLedger.C -ne $baselineAtomic.C -or $baselineLedger.D -ne $baselineAtomic.D -or $baselineLedger.E -ne $baselineAtomic.E) {
-            throw "Anthropic course authoritative scores do not match baseline atomic records."
-        }
-        if ($baselineLedger.Cells[2] -notmatch [regex]::Escape('evals/anthropic-course-baseline.md') -or $baselineLedger.Cells[2] -notmatch $expectedBaselineHash) {
-            throw 'Anthropic course authoritative ledger does not identify the verified baseline artifact and hash.'
-        }
-
-        $saturatedLedger = Get-CourseLedgerRecord -BenchmarkText $courseBenchmarkText -RunLabel 'Iteration 3 — saturated'
-        if ($saturatedLedger.A -ne $saturatedAtomic.A -or $saturatedLedger.B -ne $saturatedAtomic.B -or $saturatedLedger.C -ne $saturatedAtomic.C -or $saturatedLedger.D -ne $saturatedAtomic.D -or $saturatedLedger.E -ne $saturatedAtomic.E) {
-            throw "Anthropic course saturated scores do not match saturated atomic records."
-        }
-        if ($saturatedLedger.C -ne 20.0 -or $saturatedLedger.D -ne 10.0 -or $saturatedLedger.E -ne 5.0 -or $saturatedLedger.Total -ne 100.0) {
-            throw 'Anthropic course saturated ledger must preserve the independently audited 20.0/10.0/5.0 component scores and 100.0 total.'
-        }
-        if ($saturatedLedger.Cells[2] -notmatch [regex]::Escape('evals/anthropic-course-saturated.md') -or $saturatedLedger.Cells[2] -notmatch $expectedSaturatedHash) {
-            throw 'Anthropic course saturated ledger does not identify the verified saturated artifact and hash.'
-        }
-        $articleIntegrityText = Get-Content -LiteralPath (Join-Path $repoRoot 'references/article-integrity.md') -Raw
-        foreach ($requiredIntegrityConcept in @('Every deep-read, source-dive, and survey run', 'For Deep Read or Source Dive `explain` also check', 'For Deep Read or Source Dive `map` also check', 'For survey also check', 'selected Survey spine', 'Visual Pass')) {
-            if ($articleIntegrityText -notmatch [regex]::Escape($requiredIntegrityConcept)) {
-                throw "Article Integrity is missing all-route semantic coverage: $requiredIntegrityConcept"
-            }
-        }
-    }
-
-    Invoke-Check 'local document references' {
-        $markdownFiles = @(Get-ProductMarkdownFiles)
-        foreach ($file in $markdownFiles) {
-            $text = Get-Content -LiteralPath $file -Raw
-
-            foreach ($match in [regex]::Matches($text, 'references/[A-Za-z0-9._/-]+\.md')) {
-                $target = $match.Value.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
-                if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $target) -PathType Leaf)) {
-                    throw "Missing referenced file '$($match.Value)' in $file"
-                }
-            }
-
-            foreach ($match in [regex]::Matches($text, '\[[^\]]*\]\((?<target>[^)]+)\)')) {
-                $target = $match.Groups['target'].Value.Trim().Trim('<', '>')
-                if ($target -match '^(?:https?://|mailto:|app://|#)' -or $target -match '^\{') {
-                    continue
-                }
-                $target = ($target -split '#', 2)[0]
-                if ([string]::IsNullOrWhiteSpace($target)) {
-                    continue
-                }
-                $resolved = Join-Path (Split-Path -Parent $file) $target
-                if (-not (Test-Path -LiteralPath $resolved)) {
-                    throw "Broken Markdown link '$target' in $file"
-                }
-            }
-        }
-    }
-
-    Invoke-Check 'text hygiene and machine-path leakage' {
-        $contentFiles = @(Get-ProductMarkdownFiles) + $evalPath
-        foreach ($file in $contentFiles + @($scriptPath, $articleCheckPath, $runCheckPath)) {
-            $lineNumber = 0
-            foreach ($line in Get-Content -LiteralPath $file) {
-                $lineNumber++
-                if ($line -match '[ \t]+$') {
-                    throw "Trailing whitespace at ${file}:$lineNumber"
-                }
-                if ($file -in $contentFiles -and $line -match '(?i)([A-Z]:\\Users\\|/Users/|/home/[^/\s]+/)') {
-                    throw "Machine-specific path at ${file}:$lineNumber"
-                }
-            }
-        }
-    }
-
-    Invoke-Check 'Git whitespace errors' {
-        $git = (Get-Command git -ErrorAction Stop).Source
-        $null = Invoke-NativeCommand -Command $git -Arguments @('-C', $repoRoot, 'diff', '--check')
-    }
-
-    Invoke-Check 'run verifier fixtures' {
-        $fixtureRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('weave-run-check-' + [guid]::NewGuid().ToString('N'))
-        try {
-            New-Item -ItemType Directory -Path (Join-Path $fixtureRoot '.weave-frame') -Force | Out-Null
-            @'
----
-title: test
-date: 2026-07-14
-tags: [deep-read]
-sources:
-  - https://example.com
-  - https://x.com/i/article/2052898104039657472
-status: draft
----
-# test
-
-## 对我意味着什么
-Material impact.
-
-```text
-# code heading
-```not-a-closing-fence
-Code samples may contain prose-like tokens such as 。， and >broken.
-```
-'@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Encoding utf8NoBOM
-            @'
-Timestamp: 2026-07-14T00:00:00Z
-Workflow: deep-read
-Topic: agent architecture
-Hold-out identifier: source-2
-Hold-out prediction: the boundary remains stable
-Provisional selection: boundary-first
-Comparative judgment: strongest evidence coverage
-'@ | Set-Content -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Encoding utf8NoBOM
-            @'
-# Smoke Report
-Host: Codex
-Context source categories: explicit current request
-Evidence workflow: deep-read
-Reader outcome: map
-Admitted impacts: 1
-Comprehension Gate: passed
-Voice Pass: passed
-Article Integrity: passed
-Article Recoverability: not required
-Chronology: verified
-Artifact: .weave-frame/pre-reveal.md
-'@ | Set-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Encoding utf8NoBOM
-
-            $pwsh = (Get-Command pwsh -ErrorAction Stop).Source
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $fixtureRoot, '-ImpactMode', 'personal')
-
-            $surveyRouteRoot = Join-Path $fixtureRoot 'survey-route'
-            New-Item -ItemType Directory -Path (Join-Path $surveyRouteRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $surveyRouteRoot '.weave-frame/pre-reveal.md')
-            $surveyArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', "tags:`n  - survey # route comment`ntopic: test`nscope: focused`nrelated:`n  - deep-read")
-            $surveyArticle | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'nonstandard-name.md') -Encoding utf8NoBOM
-            $surveyReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Evidence workflow: deep-read', 'Evidence workflow: survey').Replace('Reader outcome: map', "Survey mode: Deep Research`nVisual Pass: candidates=2, admitted=0, deleted=2`nHuman Self-review: pending")
-            $surveyReport | Set-Content -LiteralPath (Join-Path $surveyRouteRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $surveyRouteRoot, '-ImpactMode', 'personal')
-
-            $visualCountMismatchRoot = Join-Path $fixtureRoot 'visual-count-mismatch'
-            New-Item -ItemType Directory -Path (Join-Path $visualCountMismatchRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $surveyRouteRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $visualCountMismatchRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $surveyRouteRoot 'nonstandard-name.md') -Destination (Join-Path $visualCountMismatchRoot 'nonstandard-name.md')
-            $surveyReport.Replace('Visual Pass: candidates=2, admitted=0, deleted=2', 'Visual Pass: candidates=2, admitted=1, deleted=1') | Set-Content -LiteralPath (Join-Path $visualCountMismatchRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $visualCountMismatchRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted a Survey admitted count that differs from serialized visual markers.'
-            }
-
-            $exactTagRoot = Join-Path $fixtureRoot 'exact-tag-route'
-            New-Item -ItemType Directory -Path (Join-Path $exactTagRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $exactTagRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $exactTagRoot 'smoke-report.md')
-            $exactTagArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', 'tags: [deep-read, survey-notes, source-dive-notes]')
-            $exactTagArticle | Set-Content -LiteralPath (Join-Path $exactTagRoot 'nonstandard-name.md') -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $runCheckPath, '-RunDirectory', $exactTagRoot, '-ImpactMode', 'personal')
-
-            $reportLeakRoot = Join-Path $fixtureRoot 'report-leak'
-            New-Item -ItemType Directory -Path (Join-Path $reportLeakRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $reportLeakRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $reportLeakRoot 'test-deep-read_2026-07-14.md')
-            $reportWithContract = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) + "`n## Article Closure Contract`n`nInternal fields.`n"
-            $reportWithContract | Set-Content -LiteralPath (Join-Path $reportLeakRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $reportLeakRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted an Article Closure Contract heading in the delivery report.'
-            }
-
-            $readerLeakRoot = Join-Path $fixtureRoot 'reader-leak'
-            New-Item -ItemType Directory -Path (Join-Path $readerLeakRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $readerLeakRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $readerLeakRoot 'test-deep-read_2026-07-14.md')
-            $reportWithReaderContract = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) + "`n#### Reader Contract: hidden fields`n"
-            $reportWithReaderContract | Set-Content -LiteralPath (Join-Path $readerLeakRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $readerLeakRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted a renamed Reader Contract heading in the delivery report.'
-            }
-
-            $readerFieldLeakRoot = Join-Path $fixtureRoot 'reader-field-leak'
-            New-Item -ItemType Directory -Path (Join-Path $readerFieldLeakRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $readerFieldLeakRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $readerFieldLeakRoot 'test-deep-read_2026-07-14.md')
-            $reportWithReaderField = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) + "`nStarting model: private baseline.`n"
-            $reportWithReaderField | Set-Content -LiteralPath (Join-Path $readerFieldLeakRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $readerFieldLeakRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted a Reader Contract field dump without a heading.'
-            }
-
-            $frameReaderLeakRoot = Join-Path $fixtureRoot 'frame-reader-leak'
-            New-Item -ItemType Directory -Path (Join-Path $frameReaderLeakRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $frameReaderLeakRoot '.weave-frame/pre-reveal.md')
-            Add-Content -LiteralPath (Join-Path $frameReaderLeakRoot '.weave-frame/pre-reveal.md') -Value "Target capability: predict a new case"
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $frameReaderLeakRoot 'test-deep-read_2026-07-14.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $frameReaderLeakRoot 'smoke-report.md')
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $frameReaderLeakRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted Reader Contract fields in pre-reveal.md.'
-            }
-
-            $hollowComprehensionRoot = Join-Path $fixtureRoot 'hollow-comprehension'
-            New-Item -ItemType Directory -Path (Join-Path $hollowComprehensionRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $hollowComprehensionRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $hollowComprehensionRoot 'test-deep-read_2026-07-14.md')
-            $hollowComprehensionReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Comprehension Gate: passed', 'Claimed Comprehension Gate: passed, but novel-case failed')
-            $hollowComprehensionReport | Set-Content -LiteralPath (Join-Path $hollowComprehensionRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $hollowComprehensionRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted a hollow Comprehension Gate pass claim.'
-            }
-
-            $explainWithoutRecoverabilityRoot = Join-Path $fixtureRoot 'explain-without-recoverability'
-            New-Item -ItemType Directory -Path (Join-Path $explainWithoutRecoverabilityRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $explainWithoutRecoverabilityRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $explainWithoutRecoverabilityRoot 'test-deep-read_2026-07-14.md')
-            $explainWithoutRecoverabilityReport = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw).Replace('Reader outcome: map', 'Reader outcome: explain')
-            $explainWithoutRecoverabilityReport | Set-Content -LiteralPath (Join-Path $explainWithoutRecoverabilityRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $explainWithoutRecoverabilityRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted an explain report without Article Recoverability: passed.'
-            }
-
-            $inlineRouteRoot = Join-Path $fixtureRoot 'inline-route'
-            New-Item -ItemType Directory -Path (Join-Path $inlineRouteRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $inlineRouteRoot 'smoke-report.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $inlineRouteRoot '.weave-frame/pre-reveal.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Destination (Join-Path $inlineRouteRoot 'nonstandard-name.md')
-            Add-Content -LiteralPath (Join-Path $inlineRouteRoot 'nonstandard-name.md') -Value "`n正文结束。，"
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $inlineRouteRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier skipped Article Integrity for an inline deep-read tag with a nonstandard filename.'
-            }
-
-            $inlineSourceDiveRoot = Join-Path $fixtureRoot 'inline-source-dive-route'
-            New-Item -ItemType Directory -Path (Join-Path $inlineSourceDiveRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Destination (Join-Path $inlineSourceDiveRoot 'smoke-report.md')
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $inlineSourceDiveRoot '.weave-frame/pre-reveal.md')
-            $sourceDiveArticle = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'test-deep-read_2026-07-14.md') -Raw).Replace('tags: [deep-read]', 'tags: [source-dive]')
-            ($sourceDiveArticle + "`n正文结束。，") | Set-Content -LiteralPath (Join-Path $inlineSourceDiveRoot 'nonstandard-name.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $inlineSourceDiveRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier skipped Article Integrity for an inline source-dive tag with a nonstandard filename.'
-            }
-
-            $sourceDiveMissingStatusRoot = Join-Path $fixtureRoot 'source-dive-missing-integrity-status'
-            New-Item -ItemType Directory -Path (Join-Path $sourceDiveMissingStatusRoot '.weave-frame') -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Destination (Join-Path $sourceDiveMissingStatusRoot '.weave-frame/pre-reveal.md')
-            $sourceDiveArticle | Set-Content -LiteralPath (Join-Path $sourceDiveMissingStatusRoot 'test-source-dive_2026-07-14.md') -Encoding utf8NoBOM
-            $sourceDiveReportWithoutIntegrity = (Get-Content -LiteralPath (Join-Path $fixtureRoot 'smoke-report.md') -Raw) -replace '(?m)^Article Integrity: passed\r?\n', ''
-            $sourceDiveReportWithoutIntegrity | Set-Content -LiteralPath (Join-Path $sourceDiveMissingStatusRoot 'smoke-report.md') -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $sourceDiveMissingStatusRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted a source-dive report without Article Integrity: passed.'
-            }
-
-            $articleFixtureRoot = Join-Path $fixtureRoot 'article-fixtures'
-            New-Item -ItemType Directory -Path $articleFixtureRoot | Out-Null
-            $negativeFixtures = @{
-                'malformed-punctuation.md' = @'
----
-title: malformed punctuation
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# malformed punctuation
-
-正文在这里结束。，下一句从这里开始。
-'@
-                'noncanonical-source.md' = @'
----
-title: noncanonical source
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://x.com/example/article/2053127519872614419
-status: draft
----
-# noncanonical source
-
-正文保持完整。
-'@
-                'damaged-blockquote.md' = @'
----
-title: damaged blockquote
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# damaged blockquote
-
->损坏的引用没有空格。
-'@
-                'dangling-blockquote.md' = @'
----
-title: dangling blockquote
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# dangling blockquote
-
-> 正文引用末尾带有损坏标记。>
-'@
-                'repeated-fragment.md' = @'
----
-title: repeated fragment
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# repeated fragment
-
-这段文字用于验证重复片段检测能够发现正文中的长句再次出现而没有任何解释。
-
-这段文字用于验证重复片段检测能够发现正文中的长句再次出现而没有任何解释。
-'@
-                'title-mismatch.md' = @'
----
-title: frontmatter title
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# different H1 title
-
-正文保持完整。
-'@
-                'duplicate-source.md' = @'
----
-title: duplicate source
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-  - https://example.com/source
-status: draft
----
-# duplicate source
-
-正文保持完整。
-'@
-                'unclosed-fence.md' = @'
----
-title: unclosed fence
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# unclosed fence
-
-```text
-code remains open
-'@
-                'survey-unclosed-org-example.md' = @'
----
-title: survey unclosed org example
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey unclosed org example
-
-<!-- weave-visual -->
-#+begin_example
-A --> B
-'@
-                'survey-orphan-org-end.md' = @'
----
-title: survey orphan org end
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey orphan org end
-
-#+end_example
-'@
-                'survey-nested-org-example.md' = @'
----
-title: survey nested org example
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey nested org example
-
-<!-- weave-visual -->
-#+begin_example
-#+begin_example
-A --> B
-#+end_example
-#+end_example
-'@
-                'survey-invalid-org-delimiter.md' = @'
----
-title: survey invalid org delimiter
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey invalid org delimiter
-
-<!-- weave-visual -->
-#+begin_example ascii
-A --> B
-#+end_example
-'@
-                'survey-markdown-fenced-ascii.md' = @'
----
-title: survey markdown fenced ascii
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey markdown fenced ascii
-
-<!-- weave-visual -->
-```text
-A --> B
-```
-'@
-                'survey-naked-ascii.md' = @'
----
-title: survey naked ascii
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey naked ascii
-
-A --> B
-'@
-                'survey-indented-naked-ascii.md' = @'
----
-title: survey indented naked ascii
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey indented naked ascii
-
-    A => B
-
-	A ==> B
-'@
-                'survey-unmarked-org-visual.md' = @'
----
-title: survey unmarked org visual
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey unmarked org visual
-
-#+begin_example
-A --> B
-#+end_example
-'@
-                'survey-unmarked-mermaid-visual.md' = @'
----
-title: survey unmarked mermaid visual
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey unmarked mermaid visual
-
-```mermaid
-flowchart LR
-    A --> B
-```
-'@
-                'survey-naked-wide-arrow.md' = @'
----
-title: survey naked wide arrow
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey naked wide arrow
-
-A ==> B => C
-'@
-                'survey-naked-curve.md' = @'
----
-title: survey naked curve
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey naked curve
-
-loss | __/****
-'@
-                'survey-diagram-fence.md' = @'
----
-title: survey diagram fence
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey diagram fence
-
-```diagram
-A ==> B
-```
-'@
-                'survey-pandoc-text-fence.md' = @'
----
-title: survey pandoc text fence
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey pandoc text fence
-
-```{.text}
-A => B
-```
-'@
-                'internal-heading.md' = @'
----
-title: internal heading
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# internal heading
-
-## Article Closure Contract
-
-Internal fields leaked into the article.
-'@
-                'internal-reader-field.md' = @'
----
-title: internal reader field
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# internal reader field
-
-Starting model: private baseline leaked into the article.
-'@
-                'internal-learning-spine-field.md' = @'
----
-title: internal learning spine field
-date: 2026-07-17
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# internal learning spine field
-
-Central model: hidden composition control leaked into the article.
-'@
-                'internal-survey-spine-field.md' = @'
----
-title: internal survey spine field
-date: 2026-07-17
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# internal survey spine field
-
-Through-object: hidden Survey composition control leaked into the article.
-'@
-                'survey-missing-route-frontmatter.md' = @'
----
-title: survey missing route frontmatter
-date: 2026-07-17
-tags: [survey]
-sources:
-  - https://example.com/source
-status: draft
----
-# survey missing route frontmatter
-
-正文保持完整。
-'@
-                'internal-source-dive-field.md' = @'
----
-title: internal source dive field
-date: 2026-07-17
-tags: [source-dive]
-sources:
-  - https://example.com/source
-status: draft
----
-# internal source dive field
-
-Observed problem: internal brief leaked into the article.
-'@
-                'internal-source-dive-frontmatter.md' = @'
----
-title: internal source dive frontmatter
-date: 2026-07-17
-tags: [source-dive]
-sources:
-  - https://example.com/source
-status: draft
-reading_intent: understand
----
-# internal source dive frontmatter
-
-正文保持完整。
-'@
-                'internal-source-dive-scope-frontmatter.md' = @'
----
-title: internal source dive scope frontmatter
-date: 2026-07-18
-tags: [source-dive]
-sources:
-  - https://example.com/source
-status: draft
-reading_scope: system
----
-# internal source dive scope frontmatter
-
-正文保持完整。
-'@
-                'internal-source-dive-table.md' = @'
----
-title: internal source dive table
-date: 2026-07-17
-tags: [source-dive]
-sources:
-  - https://example.com/source
-status: draft
----
-# internal source dive table
-
-| Observed problem | Internal brief leaked into a table |
-| --- | --- |
-| Design forces | Hidden contract data |
-| Executable mechanism | Hidden implementation data |
-| Evidence status | Hidden provenance data |
-'@
-                'internal-system-design-table.md' = @'
----
-title: internal system design table
-date: 2026-07-18
-tags: [source-dive]
-sources:
-  - https://example.com/source
-status: draft
----
-# internal system design table
-
-| Product identity | Hidden product model |
-| --- | --- |
-| Core state | Hidden state model |
-| Canonical task loop | Hidden task model |
-'@
-            }
-            foreach ($fixtureName in $negativeFixtures.Keys) {
-                $negativePath = Join-Path $articleFixtureRoot $fixtureName
-                $negativeFixtures[$fixtureName] | Set-Content -LiteralPath $negativePath -Encoding utf8NoBOM
-                $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $negativePath 2>&1)
-                if ($LASTEXITCODE -eq 0) {
-                    throw "Article verifier accepted negative fixture: $fixtureName"
-                }
-            }
-
-            $overwideOrgPath = Join-Path $articleFixtureRoot 'survey-overwide-org-example.md'
-            $overwideOrgArticle = @'
----
-title: survey overwide org example
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey overwide org example
-
-<!-- weave-visual -->
-#+begin_example
-{org-line}
-#+end_example
-'@.Replace('{org-line}', ('x' * 81))
-            $overwideOrgArticle | Set-Content -LiteralPath $overwideOrgPath -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $overwideOrgPath 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Article verifier accepted an Org example line wider than 80 columns.'
-            }
-
-            $overwideTabOrgPath = Join-Path $articleFixtureRoot 'survey-overwide-tab-org-example.md'
-            $overwideTabOrgArticle = @'
----
-title: survey overwide tab org example
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey overwide tab org example
-
-<!-- weave-visual -->
-#+begin_example
-{org-line}
-#+end_example
-'@.Replace('{org-line}', ("`t" * 11))
-            $overwideTabOrgArticle | Set-Content -LiteralPath $overwideTabOrgPath -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $overwideTabOrgPath 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Article verifier accepted an Org example line wider than 80 columns after tab expansion.'
-            }
-
-            $validOrgPath = Join-Path $articleFixtureRoot 'survey-valid-org-example.md'
-            $validOrgArticle = @'
----
-title: survey valid org example
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey valid org example
-
-正文先用人话和案例解释关系。
-
-<!-- weave-visual -->
-#+begin_example
-{org-line}
-#+end_example
-
-**状态从 A 流向 B。**
-
-Evidence: https://example.com/source. Boundary: this shows flow, not effect size.
-'@.Replace('{org-line}', ('x' * 74 + ' --> B'))
-            $validOrgArticle | Set-Content -LiteralPath $validOrgPath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $validOrgPath)
-
-            $validVisualTablePath = Join-Path $articleFixtureRoot 'survey-valid-visual-table.md'
-            @'
----
-title: survey valid visual table
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey valid visual table
-
-正文和案例先解释状态变化。
-
-<!-- weave-visual -->
-| Stage | Transition |
-|---|---|
-| request | model -> tool |
-
-**表格对齐状态与转移。**
-
-Evidence: https://example.com/source. Boundary: this is an ordering aid.
-'@ | Set-Content -LiteralPath $validVisualTablePath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $validVisualTablePath)
-
-            $validTabOrgPath = Join-Path $articleFixtureRoot 'survey-valid-tab-org-example.md'
-            $validTabOrgArticle = @'
----
-title: survey valid tab org example
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey valid tab org example
-
-<!-- weave-visual -->
-#+begin_example
-{org-line}
-#+end_example
-'@.Replace('{org-line}', ("`t" * 10))
-            $validTabOrgArticle | Set-Content -LiteralPath $validTabOrgPath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $validTabOrgPath)
-
-            $surveyTypedCodePath = Join-Path $articleFixtureRoot 'survey-typed-code.md'
-            @'
----
-title: survey typed code
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey typed code
-
-这段代码中的箭头是类型标注，不是 ASCII 图。
-
-```python
-def build_request() -> dict:
-    return {}
-```
-'@ | Set-Content -LiteralPath $surveyTypedCodePath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyTypedCodePath)
-
-            $surveyIndentedTypedCodePath = Join-Path $articleFixtureRoot 'survey-indented-typed-code.md'
-            @'
----
-title: survey indented typed code
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey indented typed code
-
-真实的 Python 返回类型标注不是 ASCII 图。
-
-    def f() -> dict:
-        return {}
-'@ | Set-Content -LiteralPath $surveyIndentedTypedCodePath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyIndentedTypedCodePath)
-
-            $surveyNonVisualCodePath = Join-Path $articleFixtureRoot 'survey-nonvisual-code.md'
-            @'
----
-title: survey nonvisual code
-date: 2026-08-08
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# survey nonvisual code
-
-Inline syntax such as `A => B` is not a visual.
-
-<!-- weave-visual -->
-```mermaid
-flowchart LR
-    A --> B
-```
-'@ | Set-Content -LiteralPath $surveyNonVisualCodePath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyNonVisualCodePath)
-
-            $surveyNotesPath = Join-Path $articleFixtureRoot 'neutral-survey-notes.md'
-            @'
----
-title: neutral survey notes
-date: 2026-08-08
-tags: [survey-notes]
-sources:
-  - https://example.com/source
-status: draft
----
-# neutral survey notes
-
-A ==> B
-'@ | Set-Content -LiteralPath $surveyNotesPath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $surveyNotesPath)
-
-            $sourceDiveNotesPath = Join-Path $articleFixtureRoot 'neutral-source-dive-notes.md'
-            @'
----
-title: neutral source dive notes
-date: 2026-08-08
-tags: [source-dive-notes]
-sources:
-  - https://example.com/source
-status: draft
----
-# neutral source dive notes
-
-Observed problem: this is ordinary reader-visible prose for a non-route tag.
-'@ | Set-Content -LiteralPath $sourceDiveNotesPath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $sourceDiveNotesPath)
-
-            $nonSurveyOrgPath = Join-Path $articleFixtureRoot 'deep-read-org-example.md'
-            @'
----
-title: deep read org example
-date: 2026-08-08
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# deep read org example
-
-#+begin_example
-A ==> B
-'@ | Set-Content -LiteralPath $nonSurveyOrgPath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $nonSurveyOrgPath)
-
-            $referenceAppendixPath = Join-Path $articleFixtureRoot 'reference-appendix-repeat.md'
-            @'
----
-title: reference appendix repeat
-date: 2026-07-17
-tags: [survey]
-topic: test
-scope: focused
-sources:
-  - https://example.com/source
-status: draft
----
-# reference appendix repeat
-
-正文会自然引用 [Conservative Q-Learning for Offline Reinforcement Learning](https://example.com/source)，但这不是重复段落。
-
-## Further Reading
-
-1. [Conservative Q-Learning for Offline Reinforcement Learning](https://example.com/source).
-
-## References
-
-1. Author. [Conservative Q-Learning for Offline Reinforcement Learning](https://example.com/source). 2020.
-'@ | Set-Content -LiteralPath $referenceAppendixPath -Encoding utf8NoBOM
-            $null = Invoke-NativeCommand -Command $pwsh -Arguments @('-NoProfile', '-File', $articleCheckPath, '-ArticlePath', $referenceAppendixPath)
-
-            $oversizedPath = Join-Path $articleFixtureRoot 'oversized.md'
-            ('a' * (512KB + 1)) | Set-Content -LiteralPath $oversizedPath -Encoding utf8NoBOM
-            $null = @(& $pwsh -NoProfile -File $articleCheckPath -ArticlePath $oversizedPath 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Article verifier accepted an article above the size limit.'
-            }
-
-            Add-Content -LiteralPath (Join-Path $fixtureRoot '.weave-frame/pre-reveal.md') -Value "Why: fits the user's decision"
-            $null = @(& $pwsh -NoProfile -File $runCheckPath -RunDirectory $fixtureRoot -ImpactMode personal 2>&1)
-            if ($LASTEXITCODE -eq 0) {
-                throw 'Run verifier accepted a personal-context leak fixture.'
-            }
-        }
-        finally {
-            $resolved = [System.IO.Path]::GetFullPath($fixtureRoot)
-            $tempBase = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
-            if ($resolved.StartsWith($tempBase, [System.StringComparison]::OrdinalIgnoreCase) -and (Split-Path -Leaf $resolved).StartsWith('weave-run-check-')) {
-                Remove-Item -LiteralPath $resolved -Recurse -Force -ErrorAction SilentlyContinue
-            }
-        }
-    }
-
-    if (-not $SkipInstall) {
-        $npx = (Get-Command npx -ErrorAction Stop).Source
-
-        Invoke-Check 'skills CLI discovery' {
-            Push-Location $repoRoot
-            try {
-                $output = Invoke-NativeCommand -Command $npx -Arguments @('-y', $skillsCliPackage, 'add', '.', '--list')
-                $joined = $output -join "`n"
-                if ($joined -notmatch 'Available Skills' -or $joined -notmatch '(?m)\bweave\b') {
-                    throw 'skills CLI did not discover weave.'
-                }
-            }
-            finally {
-                Pop-Location
-            }
-        }
-
-        Invoke-Check 'isolated package install' {
-            $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('weave-check-' + [guid]::NewGuid().ToString('N'))
-            $oldHome = $env:HOME
-            $oldUserProfile = $env:USERPROFILE
-            $oldCodexHome = $env:CODEX_HOME
-            $oldNpmCache = $env:NPM_CONFIG_CACHE
-            $oldNpmUserConfig = $env:NPM_CONFIG_USERCONFIG
-            $oldXdgCacheHome = $env:XDG_CACHE_HOME
-            $oldXdgConfigHome = $env:XDG_CONFIG_HOME
-            New-Item -ItemType Directory -Path $tempRoot | Out-Null
-            try {
-                $env:HOME = $tempRoot
-                $env:USERPROFILE = $tempRoot
-                $env:CODEX_HOME = Join-Path $tempRoot '.codex'
-                $env:NPM_CONFIG_CACHE = Join-Path $tempRoot '.npm-cache'
-                $env:NPM_CONFIG_USERCONFIG = Join-Path $tempRoot '.npmrc'
-                $env:XDG_CACHE_HOME = Join-Path $tempRoot '.cache'
-                $env:XDG_CONFIG_HOME = Join-Path $tempRoot '.config'
-
-                $installSource = $repoRoot
-                $gitMarker = Join-Path $repoRoot '.git'
-                if (Test-Path -LiteralPath $gitMarker -PathType Leaf) {
-                    $installSource = Join-Path $tempRoot 'source'
-                    New-Item -ItemType Directory -Path $installSource | Out-Null
-                    foreach ($item in Get-ChildItem -LiteralPath $repoRoot -Force) {
-                        if ($item.Name -eq '.git') {
-                            continue
-                        }
-                        Copy-Item -LiteralPath $item.FullName -Destination $installSource -Recurse -Force
-                    }
-                }
-
-                $null = Invoke-NativeCommand -Command $npx -Arguments @('-y', $skillsCliPackage, 'add', $installSource, '--skill', 'weave', '-g', '-a', 'codex', '-y')
-                $installed = Join-Path $tempRoot '.agents/skills/weave'
-                if (-not (Test-Path -LiteralPath $installed -PathType Container)) {
-                    throw 'Isolated install did not create .agents/skills/weave.'
-                }
-
-                $runtimeFiles = @(Get-ExpectedRuntimeFiles)
-                $optionalRuntimeFiles = @(Get-OptionalRuntimeFiles)
-                $installedFiles = @(Get-ChildItem -LiteralPath $installed -File -Recurse | ForEach-Object {
-                    [System.IO.Path]::GetRelativePath($installed, $_.FullName).Replace('\', '/')
-                } | Sort-Object -Unique)
-                $missingRuntimeFiles = @($runtimeFiles | Where-Object { $_ -notin $installedFiles })
-                $allowedRuntimeFiles = @($runtimeFiles + $optionalRuntimeFiles | Sort-Object -Unique)
-                $unexpectedRuntimeFiles = @($installedFiles | Where-Object { $_ -notin $allowedRuntimeFiles })
-                if ($missingRuntimeFiles.Count -gt 0 -or $unexpectedRuntimeFiles.Count -gt 0) {
-                    throw "Packaged runtime file set differs from the exact allowlist. Missing: $($missingRuntimeFiles -join ', '); unexpected: $($unexpectedRuntimeFiles -join ', ')"
-                }
-                foreach ($relativePath in $runtimeFiles) {
-                    $source = Join-Path $repoRoot $relativePath
-                    $copy = Join-Path $installed $relativePath
-                    if (-not (Test-Path -LiteralPath $copy -PathType Leaf)) {
-                        throw "Packaged runtime file missing: $relativePath"
-                    }
-                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $copy).Hash) {
-                        throw "Packaged runtime file differs: $relativePath"
-                    }
-                }
-                foreach ($relativePath in @($optionalRuntimeFiles | Where-Object { $_ -in $installedFiles })) {
-                    $source = Join-Path $repoRoot $relativePath
-                    $copy = Join-Path $installed $relativePath
-                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $copy).Hash) {
-                        throw "Optional packaged runtime file differs: $relativePath"
-                    }
-                }
-
-                $runtimeSmoke = Join-Path $tempRoot 'runtime-smoke'
-                New-Item -ItemType Directory -Path (Join-Path $runtimeSmoke '.weave-frame') -Force | Out-Null
-                $runtimeArticle = @'
----
-title: installed runtime
-date: 2026-07-17
-tags: [deep-read]
-sources:
-  - https://example.com/source
-status: draft
----
-# installed runtime
-
-## 对我意味着什么
-
-Material impact.
-'@
-                $runtimeArticlePath = Join-Path $runtimeSmoke 'installed-runtime-deep-read_2026-07-17.md'
-                $runtimeArticle | Set-Content -LiteralPath $runtimeArticlePath -Encoding utf8NoBOM
-                @'
-Timestamp: 2026-07-17T00:00:00Z
-Prediction: installed runtime resolves sibling scripts.
-'@ | Set-Content -LiteralPath (Join-Path $runtimeSmoke '.weave-frame/pre-reveal.md') -Encoding utf8NoBOM
-                @'
-Host: Codex
-Context source categories: explicit current request
-Evidence workflow: deep-read
-Reader outcome: map
-Admitted impacts: 1
-Comprehension Gate: passed
-Voice Pass: passed
-Article Integrity: passed
-Article Recoverability: not required
-Chronology: verified
-Artifact: .weave-frame/pre-reveal.md
-'@ | Set-Content -LiteralPath (Join-Path $runtimeSmoke 'smoke-report.md') -Encoding utf8NoBOM
-
-                $runtimePwsh = (Get-Command pwsh -ErrorAction Stop).Source
-                $installedArticleCheck = Join-Path $installed 'scripts/check-article.ps1'
-                $installedRunCheck = Join-Path $installed 'scripts/check-run.ps1'
-                Push-Location $tempRoot
-                try {
-                    $null = Invoke-NativeCommand -Command $runtimePwsh -Arguments @('-NoProfile', '-File', $installedArticleCheck, '-ArticlePath', $runtimeArticlePath)
-                    $null = Invoke-NativeCommand -Command $runtimePwsh -Arguments @('-NoProfile', '-File', $installedRunCheck, '-RunDirectory', $runtimeSmoke, '-ImpactMode', 'personal')
-                    ($runtimeArticle + "`n正文结束。，") | Set-Content -LiteralPath $runtimeArticlePath -Encoding utf8NoBOM
-                    $null = @(& $runtimePwsh -NoProfile -File $installedArticleCheck -ArticlePath $runtimeArticlePath 2>&1)
-                    if ($LASTEXITCODE -eq 0) {
-                        throw 'Installed Article Integrity checker accepted a malformed article.'
-                    }
-                }
-                finally {
-                    Pop-Location
-                }
-
-                $noiseNames = @('.git', 'node_modules', '__pycache__', '.pytest_cache', '.ruff_cache', '.mypy_cache', '.DS_Store')
-                $noise = @(Get-ChildItem -LiteralPath $installed -Recurse -Force | Where-Object { $_.Name -in $noiseNames -or $_.Extension -in @('.pyc', '.log') })
-                foreach ($hostDirectory in @('.agents', '.codex')) {
-                    $hostPath = Join-Path $installed $hostDirectory
-                    if (Test-Path -LiteralPath $hostPath -PathType Container) {
-                        $noise += @(Get-ChildItem -LiteralPath $hostPath -Recurse -Force -File)
-                    }
-                }
-                if ($noise.Count -gt 0) {
-                    throw "Packaged skill contains development noise: $($noise[0].FullName)"
-                }
-            }
-            finally {
-                $env:HOME = $oldHome
-                $env:USERPROFILE = $oldUserProfile
-                $env:CODEX_HOME = $oldCodexHome
-                $env:NPM_CONFIG_CACHE = $oldNpmCache
-                $env:NPM_CONFIG_USERCONFIG = $oldNpmUserConfig
-                $env:XDG_CACHE_HOME = $oldXdgCacheHome
-                $env:XDG_CONFIG_HOME = $oldXdgConfigHome
-
-                $resolvedTemp = [System.IO.Path]::GetFullPath($tempRoot)
-                $tempBase = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
-                if ($resolvedTemp.StartsWith($tempBase, [System.StringComparison]::OrdinalIgnoreCase) -and (Split-Path -Leaf $resolvedTemp).StartsWith('weave-check-')) {
-                    Remove-Item -LiteralPath $resolvedTemp -Recurse -Force
-                }
-                else {
-                    throw "Refusing to clean unexpected path: $resolvedTemp"
-                }
-            }
-        }
-    }
-    else {
-        Write-Host '[SKIP]  skills CLI discovery and isolated install'
-    }
-
+    Invoke-Check 'historical course hashes and atomic scores' { Test-HistoricalFixtures }
+    Invoke-Check 'mechanical script behavior' { Test-ScriptBehavior }
+    if (-not $SkipInstall) { Invoke-Check 'isolated installer and installed script behavior' { Test-IsolatedInstall } }
+    else { Write-Host '[SKIP] isolated installer' }
     if ($CheckLiveInstall) {
-        Invoke-Check 'live install has no retired route collisions' {
-            $userProfilePath = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
-            if ([string]::IsNullOrWhiteSpace($userProfilePath)) {
-                throw 'Could not resolve the current user profile for live-install validation.'
-            }
-            $skillRoots = @(
-                (Join-Path $userProfilePath '.agents/skills'),
-                (Join-Path $userProfilePath '.codex/skills'),
-                (Join-Path $userProfilePath '.claude/skills')
-            )
-            $collisions = [System.Collections.Generic.List[string]]::new()
-            $liveWeavePaths = [System.Collections.Generic.List[string]]::new()
-            foreach ($skillRoot in $skillRoots) {
-                foreach ($retiredName in @('deep-read', 'source-dive', 'survey')) {
-                    $candidate = Join-Path $skillRoot $retiredName
-                    if (Test-Path -LiteralPath $candidate -PathType Container) {
-                        $collisions.Add($candidate)
-                    }
+        Invoke-Check 'read-only live installation comparison' {
+            $profilePath = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+            Assert-True (-not [string]::IsNullOrWhiteSpace($profilePath)) 'Cannot resolve user profile.'
+            $found = 0
+            foreach ($root in @('.agents/skills', '.codex/skills', '.claude/skills')) {
+                $skillRoot = Join-Path $profilePath $root
+                foreach ($retired in @('deep-read', 'source-dive', 'survey')) {
+                    Assert-True (-not (Test-Path -LiteralPath (Join-Path $skillRoot $retired))) "Retired skill collision: $skillRoot/$retired"
                 }
-                $weaveCandidate = Join-Path $skillRoot 'weave'
-                if (Test-Path -LiteralPath $weaveCandidate -PathType Container) {
-                    $liveWeavePaths.Add($weaveCandidate)
-                }
+                $installed = Join-Path $skillRoot 'weave'
+                if (Test-Path -LiteralPath $installed -PathType Container) { Test-RuntimeCopy $installed; $found++ }
             }
-            if ($collisions.Count -gt 0) {
-                throw "Retired route skills remain discoverable: $($collisions -join ', ')"
-            }
-            if ($liveWeavePaths.Count -eq 0) {
-                throw 'No live weave installation was found in the supported skill roots.'
-            }
-            $liveRuntimeFiles = @(Get-ExpectedRuntimeFiles)
-            $optionalRuntimeFiles = @(Get-OptionalRuntimeFiles)
-            foreach ($liveWeavePath in @($liveWeavePaths | Sort-Object -Unique)) {
-                $installedFiles = @(Get-ChildItem -LiteralPath $liveWeavePath -File -Recurse | ForEach-Object {
-                    [System.IO.Path]::GetRelativePath($liveWeavePath, $_.FullName).Replace('\', '/')
-                } | Sort-Object -Unique)
-                $missingRuntimeFiles = @($liveRuntimeFiles | Where-Object { $_ -notin $installedFiles })
-                $allowedRuntimeFiles = @($liveRuntimeFiles + $optionalRuntimeFiles | Sort-Object -Unique)
-                $unexpectedRuntimeFiles = @($installedFiles | Where-Object { $_ -notin $allowedRuntimeFiles })
-                if ($missingRuntimeFiles.Count -gt 0 -or $unexpectedRuntimeFiles.Count -gt 0) {
-                    throw "Live weave installation differs from the exact runtime allowlist. Missing: $($missingRuntimeFiles -join ', '); unexpected: $($unexpectedRuntimeFiles -join ', ')"
-                }
-                foreach ($relativePath in $liveRuntimeFiles) {
-                    $sourcePath = Join-Path $repoRoot $relativePath
-                    $installedPath = Join-Path $liveWeavePath $relativePath
-                    if (-not (Test-Path -LiteralPath $installedPath -PathType Leaf)) {
-                        throw "Live weave installation is missing ${relativePath}: $liveWeavePath"
-                    }
-                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $sourcePath).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $installedPath).Hash) {
-                        throw "Live weave installation differs from the repository for ${relativePath}: $liveWeavePath"
-                    }
-                }
-                foreach ($relativePath in @($optionalRuntimeFiles | Where-Object { $_ -in $installedFiles })) {
-                    $sourcePath = Join-Path $repoRoot $relativePath
-                    $installedPath = Join-Path $liveWeavePath $relativePath
-                    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $sourcePath).Hash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $installedPath).Hash) {
-                        throw "Optional live weave installation file differs for ${relativePath}: $liveWeavePath"
-                    }
-                }
-            }
+            Assert-True ($found -gt 0) 'No supported live installation found.'
         }
     }
-    else {
-        Write-Host '[SKIP]  live-install collision and content check'
-    }
-
-    Write-Host ''
-    Write-Host 'All automated weave checks passed.' -ForegroundColor Green
-    exit 0
+    else { Write-Host '[SKIP] live installation comparison' }
+    Write-Host 'Automated mechanical checks completed. Semantic quality and real host behavior require separate evaluation.' -ForegroundColor Green
 }
 catch {
     Write-Error "[FAIL] $($_.Exception.Message)"
