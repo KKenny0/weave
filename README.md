@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/weave-mark.svg" alt="weave logo" width="96" />
+  <img src="assets/weave-logo.png" alt="weave logo: a bird weaving its nest" width="96" />
 </p>
 
 <h1 align="center">weave</h1>

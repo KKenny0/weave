@@ -255,6 +255,7 @@ function Get-ExpectedRuntimeFiles {
         'README.md',
         'SKILL.md',
         'assets/weave-mark.svg',
+        'assets/weave-logo.png',
         'scripts/check.ps1',
         'scripts/check-article.ps1',
         'scripts/check-run.ps1',
